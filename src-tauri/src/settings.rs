@@ -1,0 +1,114 @@
+use std::{
+    path::PathBuf,
+    sync::{Mutex, PoisonError},
+};
+
+use serde::{Deserialize, Serialize};
+
+use crate::{error::AppError, fsutil, launch::presets::JvmPreset, meta::loaders::LoaderKind, system};
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Theme {
+    System,
+    Dark,
+    Light,
+}
+
+/// Window backdrop. Non-solid materials make the window translucent and let
+/// the OS draw a blurred backdrop behind the UI.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Material {
+    Solid,
+    Mica,
+    Acrylic,
+    Vibrancy,
+}
+
+/// What the launcher does with its own window once a game starts.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum OnLaunch {
+    Keep,
+    Minimize,
+    /// Destroys the webview (freeing its memory) and keeps a tray icon; the
+    /// window comes back when the last game exits.
+    Close,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Settings {
+    pub theme: Theme,
+    pub accent: String,
+    pub material: Material,
+    /// 0–100: how opaque panels are when a translucent material is active.
+    pub opacity: u8,
+    pub on_launch: OnLaunch,
+    pub discord_rpc: bool,
+    pub default_memory_mb: u32,
+    pub default_jvm_preset: JvmPreset,
+    pub selected_instance: Option<String>,
+    /// The curated build (manifest id) and loader picked on the Play screen.
+    pub selected_build: Option<String>,
+    pub selected_loader: Option<LoaderKind>,
+    /// Where to fetch the build manifest from; None uses the one built into the launcher.
+    pub manifest_url: Option<String>,
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            theme: Theme::System,
+            accent: "#8b7cf6".into(),
+            material: Material::Solid,
+            opacity: 85,
+            on_launch: OnLaunch::Close,
+            discord_rpc: true,
+            default_memory_mb: system::recommended_memory_mb(),
+            default_jvm_preset: JvmPreset::Balanced,
+            selected_instance: None,
+            selected_build: None,
+            selected_loader: None,
+            manifest_url: option_env!("QUARTZ_MANIFEST_URL").map(str::to_owned),
+        }
+    }
+}
+
+pub struct SettingsStore {
+    path: PathBuf,
+    data: Mutex<Settings>,
+}
+
+impl SettingsStore {
+    pub fn load(path: PathBuf) -> Result<Self, AppError> {
+        let data = fsutil::read_json(&path)?.unwrap_or_default();
+        Ok(Self { path, data: Mutex::new(data) })
+    }
+
+    pub fn get(&self) -> Settings {
+        self.data.lock().unwrap_or_else(PoisonError::into_inner).clone()
+    }
+
+    /// Applies a partial update (any subset of fields, camelCase). Going through
+    /// serde validates every value, so a bad patch is rejected as a whole.
+    pub fn update(&self, patch: serde_json::Value) -> Result<Settings, AppError> {
+        let mut guard = self.data.lock().unwrap_or_else(PoisonError::into_inner);
+        let mut merged = serde_json::to_value(&*guard)?;
+        let (Some(target), Some(patch)) = (merged.as_object_mut(), patch.as_object()) else {
+            return Err(AppError::Invalid("Settings update must be an object.".into()));
+        };
+        for (key, value) in patch {
+            target.insert(key.clone(), value.clone());
+        }
+        let next: Settings = serde_json::from_value(merged)
+            .map_err(|e| AppError::Invalid(format!("Invalid setting: {e}")))?;
+        if !next.accent.starts_with('#') || !(next.accent.len() == 7 || next.accent.len() == 4) {
+            return Err(AppError::Invalid("Accent must be a hex colour like #8b7cf6.".into()));
+        }
+        fsutil::write_json_atomic(&self.path, &next)?;
+        *guard = next.clone();
+        Ok(next)
+    }
+}

@@ -1,0 +1,52 @@
+[package]
+name = "quartz"
+version = "0.2.0"
+description = "A fast, minimal Minecraft: Java Edition launcher"
+edition = "2021"
+rust-version = "1.80"
+
+[lib]
+# Distinct from the binary name: a lib and bin both called `quartz` collide on
+# their .pdb files on Windows.
+name = "quartz_lib"
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = ["tray-icon", "macos-private-api"] }
+tauri-plugin-dialog = "2.7"
+tauri-plugin-opener = "2.5"
+tauri-plugin-single-instance = "2.4"
+tauri-plugin-updater = "2.12"
+tauri-plugin-window-state = "2.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["fs", "io-util", "macros", "net", "process", "sync", "time"] }
+# rustls with the OS trust store: no OpenSSL dependency on Linux, and corporate
+# proxies whose CA is installed system-wide keep working.
+reqwest = { version = "0.12", default-features = false, features = ["json", "http2", "multipart", "stream", "rustls-tls-native-roots", "macos-system-configuration"] }
+futures-util = "0.3"
+uuid = { version = "1", features = ["v4"] }
+md-5 = "0.10"
+sha1 = "0.10"
+base64 = "0.22"
+keyring = { version = "3.6", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
+# Reading mod metadata, Forge installers and legacy native jars.
+zip = { version = "2.4", default-features = false, features = ["deflate"] }
+# level.dat (world metadata) is gzipped NBT.
+flate2 = "1"
+toml = "0.8"
+# SRV records (_minecraft._tcp) for the server list pinger.
+hickory-resolver = "0.24"
+sysinfo = { version = "0.39", default-features = false, features = ["system"] }
+discord-rich-presence = "1.1"
+# Deleting profiles / mods moves them to the OS recycle bin instead of erasing them.
+trash = "5"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

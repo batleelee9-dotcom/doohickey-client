@@ -1,0 +1,19 @@
+{
+	"schemaVersion": 1,
+	"id": "quartz",
+	"version": "${version}",
+	"name": "Doohickey Client",
+	"description": "Doohickey's in-game client: sky, fog and weather controls and more.",
+	"authors": ["Doohickey"],
+	"license": "All-Rights-Reserved",
+	"icon": "assets/quartz/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["dev.quartz.legacy.QuartzLegacy"]
+	},
+	"mixins": ["quartz.legacy.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.14",
+		"minecraft": "1.8.9"
+	}
+}

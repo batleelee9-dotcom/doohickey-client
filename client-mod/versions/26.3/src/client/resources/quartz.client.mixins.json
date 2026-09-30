@@ -1,0 +1,24 @@
+{
+	"required": true,
+	"package": "dev.quartz.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"AbstractClientPlayerMixin",
+		"MouseHandlerMixin",
+		"OverlayTextureMixin",
+		"ParticleEngineMixin",
+		"env.AttributeTrackSamplerMixin",
+		"env.EnvironmentAttributeProbeMixin",
+		"env.FogRendererMixin",
+		"env.LevelMixin",
+		"env.LightmapMixin",
+		"ConnectScreenMixin",
+		"MinecraftSessionAccessor"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "quartz",
+	"version": "${version}",
+	"name": "Doohickey Client",
+	"description": "HUD modules, PvP tools, minimap, waypoints and capes for the Doohickey launcher. Everything is client-side.",
+	"authors": ["Doohickey"],
+	"license": "All-Rights-Reserved",
+	"icon": "assets/quartz/icon.png",
+	"environment": "client",
+	"entrypoints": {
+		"client": ["dev.quartz.client.QuartzClient"]
+	},
+	"mixins": [
+		{
+			"config": "quartz.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

@@ -1,0 +1,31 @@
+plugins {
+	id 'legacy-looming' version "${loom_version}"
+}
+
+base {
+	archivesName = 'quartz-client'
+}
+version = "${project.version}+${project.minecraft_version}"
+
+// The version-independent core (config, compat registry, feature logic) is
+// compiled into every version's jar.
+sourceSets.main.java.srcDir '../../core/src/main/java'
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.legacyfabric:yarn:${project.yarn_mappings}:v2"
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+}
+
+processResources {
+	def version = project.version
+	inputs.property "version", version
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 8
+	it.options.compilerArgs << '-Xlint:-options'
+}

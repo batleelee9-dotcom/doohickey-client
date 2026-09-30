@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "updated": "2026-09-27",
+  "builds": [
+    {
+      "id": "26.3",
+      "name": "26.3 Optimized",
+      "minecraft": "26.3",
+      "tagline": "The latest release, with Doohickey Client built in.",
+      "loaders": [
+        {
+          "kind": "fabric",
+          "version": "stable",
+          "mods": ["sodium", "lithium", "ferrite-core", "entityculling", "immediatelyfast", "moreculling", "dynamic-fps"]
+        },
+        {
+          "kind": "neoforge",
+          "version": "stable",
+          "mods": ["sodium", "lithium", "ferrite-core", "entityculling", "immediatelyfast"]
+        }
+      ]
+    },
+    {
+      "id": "1.21.11",
+      "name": "1.21.11 Optimized",
+      "minecraft": "1.21.11",
+      "tagline": "The last 1.21 release. Most modern servers support it.",
+      "loaders": [
+        {
+          "kind": "fabric",
+          "version": "stable",
+          "mods": ["sodium", "lithium", "ferrite-core", "krypton", "entityculling", "immediatelyfast", "moreculling", "dynamic-fps"]
+        },
+        {
+          "kind": "neoforge",
+          "version": "stable",
+          "mods": ["sodium", "lithium", "ferrite-core", "entityculling", "immediatelyfast"]
+        }
+      ]
+    },
+    {
+      "id": "1.20.1",
+      "name": "1.20.1 Optimized",
+      "minecraft": "1.20.1",
+      "tagline": "The modpack favourite, with the widest mod support.",
+      "loaders": [
+        {
+          "kind": "fabric",
+          "version": "stable",
+          "mods": ["sodium", "lithium", "ferrite-core", "krypton", "starlight", "modernfix", "entityculling", "immediatelyfast", "moreculling", "dynamic-fps"]
+        },
+        {
+          "kind": "forge",
+          "version": "stable",
+          "mods": ["embeddium", "radium", "ferrite-core", "modernfix", "entityculling", "immediatelyfast"]
+        }
+      ]
+    },
+    {
+      "id": "1.12.2",
+      "name": "1.12.2 Optimized",
+      "minecraft": "1.12.2",
+      "tagline": "The classic modding era.",
+      "loaders": [
+        {
+          "kind": "forge",
+          "version": "stable",
+          "mods": ["vintagefix", "patcher", "entityculling"]
+        }
+      ]
+    },
+    {
+      "id": "1.8.9",
+      "name": "1.8.9 Optimized",
+      "minecraft": "1.8.9",
+      "tagline": "PvP's home version. Fabric includes Doohickey Client.",
+      "loaders": [
+        {
+          "kind": "legacyfabric",
+          "version": "stable",
+          "mods": []
+        },
+        {
+          "kind": "forge",
+          "version": "stable",
+          "mods": ["patcher", "entityculling"]
+        }
+      ]
+    }
+  ]
+}

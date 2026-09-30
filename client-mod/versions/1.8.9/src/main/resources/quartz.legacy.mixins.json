@@ -1,0 +1,21 @@
+{
+	"required": true,
+	"package": "dev.quartz.legacy.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"client": [
+		"AccountButtonMixin",
+		"ClientPlayerInteractionManagerMixin",
+		"ConnectScreenMixin",
+		"EntityRenderDispatcherMixin",
+		"GameRendererMixin",
+		"InGameHudMixin",
+		"KeyBindingMixin",
+		"MinecraftClientAccessor",
+		"MinecraftClientMixin",
+		"ParticleManagerMixin",
+		"WorldMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

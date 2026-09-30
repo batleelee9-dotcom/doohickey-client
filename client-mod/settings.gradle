@@ -1,0 +1,7 @@
+// One command builds Doohickey Client for every Minecraft version:
+//   ./gradlew build   →  versions/<mc>/build/libs/quartz-client-<version>+<mc>.jar
+// Each version is its own build (included here) because each pins its own
+// Loom flavour, mappings and Java release.
+rootProject.name = 'quartz-client-all'
+
+file('versions').eachDir { includeBuild it }
