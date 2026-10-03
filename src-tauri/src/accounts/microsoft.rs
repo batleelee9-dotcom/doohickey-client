@@ -27,14 +27,16 @@ const MC_ENTITLEMENTS_URL: &str = "https://api.minecraftservices.com/entitlement
 const SCOPE: &str = "XboxLive.signin offline_access";
 const DEVICE_GRANT: &str = "urn:ietf:params:oauth:grant-type:device_code";
 
-pub const NO_CLIENT_ID: &str = "Microsoft sign-in isn't configured in this build. \
-    Register an Azure app and set QUARTZ_MS_CLIENT_ID (see README).";
+pub const NO_CLIENT_ID: &str = "Microsoft sign-in needs your Azure app's client ID. \
+    Paste it on the sign-in screen (see README).";
 
-/// The Azure app's client ID. A runtime env var wins over the value baked in at
-/// compile time, so a packaged build and a dev build can use different apps.
-pub fn client_id() -> Option<String> {
+/// The Azure app's client ID: a runtime env var, then the one pasted on the
+/// sign-in screen (`saved`), then the one baked in at compile time.
+pub fn client_id(saved: Option<String>) -> Option<String> {
     std::env::var("QUARTZ_MS_CLIENT_ID")
         .ok()
+        .filter(|id| !id.trim().is_empty())
+        .or(saved)
         .or_else(|| option_env!("QUARTZ_MS_CLIENT_ID").map(str::to_owned))
         .filter(|id| !id.trim().is_empty())
 }

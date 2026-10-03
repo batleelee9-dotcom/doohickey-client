@@ -7,6 +7,7 @@
   import Spinner from "../lib/components/Spinner.svelte";
   import { api, toAppError, type AppError, type AppInfo, type LoginStep } from "../lib/ipc";
   import { dur } from "../lib/platform";
+  import { store } from "../lib/store.svelte";
 
   let { info, onBack, onDone }: { info: AppInfo; onBack?: () => void; onDone: () => void } = $props();
 
@@ -26,7 +27,22 @@
   let stepIndex = $state(0);
   let copied = $state(false);
 
+  // The Azure app's client ID, pasted here; blank uses the one built into this copy.
+  let clientId = $state(store.settings?.msClientId ?? "");
+  let clientIdError = $state<string | null>(null);
+  const canSignIn = $derived(info.msConfigured || clientId.trim() !== "");
+
   async function startMicrosoft() {
+    clientIdError = null;
+    if (clientId.trim() !== (store.settings?.msClientId ?? "")) {
+      try {
+        store.settings = await api.updateSettings({ msClientId: clientId.trim() || null });
+        clientId = store.settings.msClientId ?? "";
+      } catch (e) {
+        clientIdError = toAppError(e).message;
+        return;
+      }
+    }
     error = null;
     code = null;
     stepIndex = 0;
@@ -132,7 +148,20 @@
           <p class="sub">Use the Microsoft account that owns Minecraft: Java Edition.</p>
 
           <div class="actions">
-            <button class="btn btn-primary btn-lg btn-block" onclick={startMicrosoft} disabled={!info.msConfigured}>
+            <label class="client-id">
+              <span>Azure client ID</span>
+              <input
+                class="input mono"
+                bind:value={clientId}
+                placeholder={info.msConfigured ? "Built in. Paste one to use your own" : "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
+                spellcheck="false"
+                autocomplete="off"
+              />
+            </label>
+            {#if clientIdError}
+              <p class="note error">{clientIdError}</p>
+            {/if}
+            <button class="btn btn-primary btn-lg btn-block" onclick={startMicrosoft} disabled={!canSignIn}>
               <svg width="15" height="15" viewBox="0 0 21 21" aria-hidden="true">
                 <path fill="#f25022" d="M0 0h10v10H0z" />
                 <path fill="#7fba00" d="M11 0h10v10H11z" />
@@ -141,8 +170,8 @@
               </svg>
               Continue with Microsoft
             </button>
-            {#if !info.msConfigured}
-              <p class="note">Microsoft sign-in needs an Azure client ID. Set <code>QUARTZ_MS_CLIENT_ID</code> — see README.</p>
+            {#if !canSignIn}
+              <p class="note">Paste the Application (client) ID from your Azure app's Overview page.</p>
             {/if}
 
             <div class="divider"><span>or</span></div>
@@ -335,15 +364,25 @@
     height: 1px;
     background: var(--border);
   }
+  .client-id {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .client-id .input {
+    width: 100%;
+    font-size: 12px;
+  }
+  .note.error {
+    color: var(--danger);
+  }
   .note {
     color: var(--text-faint);
     font-size: 12px;
     line-height: 1.45;
-  }
-  code {
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    color: var(--text-muted);
   }
   .field {
     display: flex;

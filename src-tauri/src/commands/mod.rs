@@ -49,7 +49,7 @@ pub fn app_info(app: AppHandle, state: State<AppState>) -> AppInfo {
     AppInfo {
         version: app.package_info().version.to_string(),
         platform: if cfg!(windows) { "windows" } else if cfg!(target_os = "macos") { "macos" } else { "linux" },
-        ms_configured: microsoft::client_id().is_some(),
+        ms_configured: microsoft::client_id(state.settings.get().ms_client_id).is_some(),
         offline_requires_microsoft: !cfg!(debug_assertions),
         total_memory_mb: system::total_memory_mb(),
         recommended_memory_mb: system::recommended_memory_mb(),

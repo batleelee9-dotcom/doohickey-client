@@ -76,7 +76,7 @@ pub async fn ms_login(
     state: State<'_, AppState>,
     on_event: Channel<LoginEvent>,
 ) -> Result<AccountsSnapshot, AppError> {
-    let client_id = microsoft::client_id().ok_or_else(|| AppError::Config(microsoft::NO_CLIENT_ID.into()))?;
+    let client_id = microsoft::client_id(state.settings.get().ms_client_id).ok_or_else(|| AppError::Config(microsoft::NO_CLIENT_ID.into()))?;
 
     let (cancel_tx, cancel_rx) = oneshot::channel();
     // Replacing the sender drops the previous one, which also cancels a login

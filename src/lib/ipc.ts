@@ -63,6 +63,8 @@ export interface Settings {
   selectedLoader: LoaderKind | null;
   /** Where the curated build list comes from; null = the one built into Doohickey. */
   manifestUrl: string | null;
+  /** Azure app (client) ID pasted on the sign-in screen; null = the built-in one. */
+  msClientId: string | null;
 }
 
 // ---- Curated builds -------------------------------------------------------------

@@ -80,7 +80,7 @@ pub async fn minecraft_token(state: &AppState, account: &Account) -> Result<Stri
     if let Some(token) = state.sessions.get(&account.id) {
         return Ok(token);
     }
-    let client_id = microsoft::client_id().ok_or_else(|| AppError::Config(microsoft::NO_CLIENT_ID.into()))?;
+    let client_id = microsoft::client_id(state.settings.get().ms_client_id).ok_or_else(|| AppError::Config(microsoft::NO_CLIENT_ID.into()))?;
     let refresh = secrets::get_refresh_token(&account.id)?.ok_or_else(|| {
         AppError::Auth(format!("{} needs to sign in again (no saved sign-in found).", account.username))
     })?;

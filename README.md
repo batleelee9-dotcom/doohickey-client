@@ -49,7 +49,7 @@ The launcher build stops with a clear message if the client jar hasn't been buil
 
 | What | How |
 |---|---|
-| Microsoft sign-in | `QUARTZ_MS_CLIENT_ID`: your own Azure app ID (see below). It's compiled in when set during `tauri build`. |
+| Microsoft sign-in | Paste your Azure app's client ID in the **Azure client ID** box on the sign-in screen, or set `QUARTZ_MS_CLIENT_ID` during `tauri build` to build it in. |
 | Build manifest | `QUARTZ_MANIFEST_URL` at build time sets the default; **Settings → Builds** overrides it per install. Leave both empty to use the bundled list. |
 | Discord Rich Presence | `QUARTZ_DISCORD_APP_ID`: an application from the Discord developer portal. |
 | Auto-updates | `QUARTZ_UPDATE_ENDPOINT`: URL of your `latest.json`. Sign releases with the private key matching the `pubkey` in `tauri.conf.json`. |

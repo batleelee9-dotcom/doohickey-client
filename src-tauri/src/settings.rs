@@ -55,6 +55,8 @@ pub struct Settings {
     pub selected_loader: Option<LoaderKind>,
     /// Where to fetch the build manifest from; None uses the one built into the launcher.
     pub manifest_url: Option<String>,
+    /// Azure app (client) ID pasted on the sign-in screen; None uses the built-in one.
+    pub ms_client_id: Option<String>,
 }
 
 impl Default for Settings {
@@ -72,6 +74,7 @@ impl Default for Settings {
             selected_build: None,
             selected_loader: None,
             manifest_url: option_env!("QUARTZ_MANIFEST_URL").map(str::to_owned),
+            ms_client_id: None,
         }
     }
 }
@@ -102,13 +105,43 @@ impl SettingsStore {
         for (key, value) in patch {
             target.insert(key.clone(), value.clone());
         }
-        let next: Settings = serde_json::from_value(merged)
+        let mut next: Settings = serde_json::from_value(merged)
             .map_err(|e| AppError::Invalid(format!("Invalid setting: {e}")))?;
+        next.ms_client_id = normalize_client_id(next.ms_client_id.as_deref())?;
         if !next.accent.starts_with('#') || !(next.accent.len() == 7 || next.accent.len() == 4) {
             return Err(AppError::Invalid("Accent must be a hex colour like #8b7cf6.".into()));
         }
         fsutil::write_json_atomic(&self.path, &next)?;
         *guard = next.clone();
         Ok(next)
+    }
+}
+
+/// Azure app IDs are GUIDs; blank means "use the built-in one".
+fn normalize_client_id(raw: Option<&str>) -> Result<Option<String>, AppError> {
+    match raw.map(str::trim).filter(|s| !s.is_empty()) {
+        None => Ok(None),
+        Some(id) => uuid::Uuid::parse_str(id).map(|u| Some(u.hyphenated().to_string())).map_err(|_| {
+            AppError::Invalid(
+                "That isn't a client ID. Copy the Application (client) ID from your Azure app's Overview page.".into(),
+            )
+        }),
+    }
+}
+
+#[cfg(test)]
+mod client_id_tests {
+    use super::normalize_client_id;
+
+    #[test]
+    fn client_ids() {
+        assert_eq!(normalize_client_id(None).unwrap(), None);
+        assert_eq!(normalize_client_id(Some("  ")).unwrap(), None);
+        assert_eq!(
+            normalize_client_id(Some(" 507B785F-1CE8-4A33-B5CF-2850E76A326D ")).unwrap().as_deref(),
+            Some("507b785f-1ce8-4a33-b5cf-2850e76a326d")
+        );
+        assert!(normalize_client_id(Some("00000000402b5328")).is_err());
+        assert!(normalize_client_id(Some("tickleme")).is_err());
     }
 }
