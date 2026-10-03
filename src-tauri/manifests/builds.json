@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated": "2026-09-27",
+  "updated": "2026-10-03",
   "builds": [
     {
       "id": "26.3",
@@ -65,7 +65,7 @@
         {
           "kind": "forge",
           "version": "stable",
-          "mods": ["vintagefix", "patcher", "entityculling"]
+          "mods": ["vintagefix", "entityculling"]
         }
       ]
     },
@@ -83,7 +83,7 @@
         {
           "kind": "forge",
           "version": "stable",
-          "mods": ["patcher", "entityculling"],
+          "mods": ["entityculling"],
           "optifine": true
         }
       ]

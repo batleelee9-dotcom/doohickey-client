@@ -259,6 +259,17 @@ pub fn remove(ctx: &ModCtx, file_name: &str) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Moves every mod the launcher installed from `platform` to the recycle bin,
+/// leaving mods the player added by hand (OptiFine, imports).
+pub fn remove_installed_from(ctx: &ModCtx, platform: &str) -> Result<(), AppError> {
+    let names: Vec<String> = ctx.index().into_iter().filter(|(_, s)| s.platform == platform).map(|(n, _)| n).collect();
+    for name in names {
+        remove(ctx, &format!("{name}.disabled"))?;
+        remove(ctx, &name)?;
+    }
+    Ok(())
+}
+
 pub fn import_file(ctx: &ModCtx, source: &Path) -> Result<String, AppError> {
     let name = source
         .file_name()

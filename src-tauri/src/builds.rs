@@ -97,6 +97,15 @@ async fn sync_mods(state: &AppState, instance: &Instance, loader: &BuildLoader, 
         return Ok(());
     }
     let ctx = ModCtx::new(&state.http, state.paths.instance(&instance.id), instance, &state.mod_cache)?;
+    // The build's mod list changed: clear everything the launcher installed for
+    // the old list, dependencies included, so dropped mods (and libraries such
+    // as OneConfig that came with them) don't linger. The cache makes the
+    // reinstall quick.
+    if !synced.wanted.is_empty() || synced.installed.iter().any(|m| !loader.mods.contains(m)) {
+        report(reporter, "Updating this build's mods".into());
+        mods::remove_installed_from(&ctx, "modrinth")?;
+        synced = Synced::default();
+    }
     let missing: Vec<&String> =
         loader.mods.iter().filter(|m| !synced.installed.contains(m) && !synced.skipped.contains(m)).collect();
     let mut complete = true;
