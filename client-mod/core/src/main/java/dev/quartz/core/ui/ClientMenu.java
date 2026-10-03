@@ -13,11 +13,12 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The Doohickey menu (Right Shift), drawn entirely through {@link RenderBackend}
- * so every Minecraft version gets the same look. Each version's screen only
- * forwards input: {@link #render}, {@link #click}, {@link #scroll} and the key
- * methods. Immediate-mode: every frame draws the menu and records what's
- * clickable, and clicks are matched against the last frame.
+ * The Doohickey menu (Right Shift), drawn entirely through {@link Smooth} so
+ * every Minecraft version gets the same smooth, anti-aliased look in the
+ * client's own font. Each version's screen only forwards input:
+ * {@link #render}, {@link #click}, {@link #scroll} and the key methods.
+ * Immediate-mode: every frame draws the menu and records what's clickable,
+ * and clicks are matched against the last frame.
  */
 public final class ClientMenu {
 	/** What the menu needs from the version's screen. */
@@ -29,31 +30,31 @@ public final class ClientMenu {
 
 	// Palette: the launcher's night sky, violet into teal.
 	private static final int ACCENT = 0xFF8B7CF6;
+	private static final int ACCENT_LIGHT = 0xFFB9AEFF;
 	private static final int TEAL = 0xFF46E0D3;
-	private static final int PANEL = 0xF20D0C15;
-	private static final int SIDEBAR = 0xF2121020;
-	private static final int CARD = 0xFF181624;
-	private static final int CARD_HOVER = 0xFF211E33;
-	private static final int BORDER = 0xFF2A2740;
-	private static final int TEXT = 0xFFF1EFFF;
-	private static final int MUTED = 0xFF9A95B4;
-	private static final int FAINT = 0xFF5C5878;
-	private static final int SWITCH_OFF = 0xFF34304A;
+	private static final int PANEL = 0xF50D0C14;
+	private static final int SIDEBAR = 0xFF11101B;
+	private static final int CARD = 0xFF17151F;
+	private static final int CARD_HOVER = 0xFF1E1B2A;
+	private static final int TEXT = 0xFFF2F0FA;
+	private static final int MUTED = 0xFFA19CB8;
+	private static final int FAINT = 0xFF67637F;
+	private static final int SWITCH_OFF = 0xFF2E2B3D;
 
-	private static final int SIDE_W = 96;
-	private static final int CARD_H = 32;
-	private static final int GAP = 6;
+	private static final int SIDE_W = 104;
+	private static final int CARD_H = 34;
+	private static final int GAP = 7;
 
 	private enum Category {
-		HUD("HUD", "Elements on your screen", HUD_ICON),
-		WORLD("World", "Sky, fog, weather and light", WORLD_ICON),
-		GAME("Game", "PvP, zoom and performance", GAME_ICON);
+		HUD("HUD", "Everything drawn on your screen", "hud"),
+		WORLD("World", "Sky, fog, weather and light", "world"),
+		GAME("Game", "PvP, zoom and performance", "game");
 
 		final String title;
 		final String subtitle;
-		final String[] icon;
+		final String icon;
 
-		Category(String title, String subtitle, String[] icon) {
+		Category(String title, String subtitle, String icon) {
 			this.title = title;
 			this.subtitle = subtitle;
 			this.icon = icon;
@@ -68,47 +69,6 @@ public final class ClientMenu {
 		}
 	}
 
-	// 8x8 pixel icons: '#' is a pixel. Drawn 1:1 in GUI pixels, so they stay as blocky as the game.
-	private static final String[] HUD_ICON = {
-		"########",
-		"#......#",
-		"#.##.#.#",
-		"#......#",
-		"#.###..#",
-		"#......#",
-		"########",
-		"..####..",
-	};
-	private static final String[] WORLD_ICON = {
-		"..####..",
-		".#.##.#.",
-		"#..##..#",
-		"########",
-		"#..##..#",
-		"#..##..#",
-		".#.##.#.",
-		"..####..",
-	};
-	private static final String[] GAME_ICON = {
-		"......##",
-		".....###",
-		"....###.",
-		"#..###..",
-		".####...",
-		"..##....",
-		".#.##...",
-		"#...#...",
-	};
-	private static final String[] SEARCH_ICON = {
-		".###...",
-		"#...#..",
-		"#...#..",
-		"#...#..",
-		".###...",
-		"....##.",
-		".....##",
-	};
-
 	/** Remembered while the game runs, so reopening lands where you left off. */
 	private static Category category = Category.HUD;
 	private static final Map<Category, Integer> SCROLL = new EnumMap<>(Category.class);
@@ -116,11 +76,12 @@ public final class ClientMenu {
 	private final Host host;
 	private final long openedAt = System.currentTimeMillis();
 	private final List<Hit> hits = new ArrayList<>();
-	/** Each switch's knob position (0 = off, 1 = on), eased towards its value. */
-	private final Map<String, Float> knobs = new HashMap<>();
+	/** Eased 0..1 values per key: switch knobs and hover highlights. */
+	private final Map<String, Float> anim = new HashMap<>();
 	private String query = "";
 	private boolean searchFocused;
 	private long lastFrame = System.nanoTime();
+	private float dt;
 	private int maxScroll;
 
 	public ClientMenu(Host host) {
@@ -128,13 +89,13 @@ public final class ClientMenu {
 	}
 
 	private static final class Hit {
-		final int x0;
-		final int y0;
-		final int x1;
-		final int y1;
+		final float x0;
+		final float y0;
+		final float x1;
+		final float y1;
 		final Runnable action;
 
-		Hit(int x0, int y0, int x1, int y1, Runnable action) {
+		Hit(float x0, float y0, float x1, float y1, Runnable action) {
 			this.x0 = x0;
 			this.y0 = y0;
 			this.x1 = x1;
@@ -196,197 +157,198 @@ public final class ClientMenu {
 	public void render(RenderBackend r, int mouseX, int mouseY) {
 		hits.clear();
 		long now = System.nanoTime();
-		float dt = Math.min(0.1f, (now - lastFrame) / 1e9f);
+		dt = Math.min(0.1f, (now - lastFrame) / 1e9f);
 		lastFrame = now;
 		int sw = r.screenWidth();
 		int sh = r.screenHeight();
 
-		// Opening: a quick slide up into place.
-		float t = Math.min(1f, (System.currentTimeMillis() - openedAt) / 180f);
+		float t = Math.min(1f, (System.currentTimeMillis() - openedAt) / 220f);
 		float ease = 1f - (1f - t) * (1f - t) * (1f - t);
 
-		backdrop(r, sw, sh, ease);
+		float pw = Math.min(470, sw - 20);
+		float ph = Math.min(268, sh - 20);
+		float px = Math.round((sw - pw) / 2);
+		float py = Math.round((sh - ph) / 2 + (1f - ease) * 12);
 
-		int pw = Math.min(460, sw - 16);
-		int ph = Math.min(262, sh - 16);
-		int px = (sw - pw) / 2;
-		int py = (sh - ph) / 2 + Math.round((1f - ease) * 10);
+		backdrop(r, sw, sh, px, py, pw, ph, ease);
 
-		// Clicking outside the panel closes it.
+		// Clicking outside the panel closes it; clicking the panel itself drops search focus.
 		hits.add(new Hit(0, 0, sw, sh, host::close));
 		hits.add(new Hit(px, py, px + pw, py + ph, () -> searchFocused = false));
 
-		round(r, px - 1, py - 1, px + pw + 1, py + ph + 1, BORDER);
-		round(r, px, py, px + pw, py + ph, PANEL);
-		gradient(r, px + 2, py, px + pw - 2, py + 2, ACCENT, TEAL);
+		Smooth.shadow(r, px, py, px + pw, py + ph, 14, 0xC0000000);
+		Smooth.roundBox(r, px, py, px + pw, py + ph, 12, PANEL, 0x26FFFFFF);
+		Smooth.gradient(r, px + 24, py + 1, px + pw - 24, py + 2, 0x008B7CF6 | 0xC0000000, 0xC046E0D3);
 
 		sidebar(r, px, py, ph, mouseX, mouseY);
-		content(r, px + SIDE_W + 12, py, pw - SIDE_W - 24, ph, mouseX, mouseY, dt);
+		content(r, px + SIDE_W + 16, py, pw - SIDE_W - 30, ph, mouseX, mouseY);
 	}
 
-	/** Dimmed world with a few twinkling pixel stars and the square moon. */
-	private static void backdrop(RenderBackend r, int sw, int sh, float ease) {
-		r.fill(0, 0, sw, sh, ((int) (0xB0 * ease) << 24) | 0x05040C);
-		long ms = System.currentTimeMillis();
-		int seed = 0x5EED;
-		for (int i = 0; i < 46; i++) {
-			seed = seed * 1103515245 + 12345;
-			int x = Math.floorMod(seed >> 8, Math.max(1, sw));
-			seed = seed * 1103515245 + 12345;
-			int y = Math.floorMod(seed >> 8, Math.max(1, sh));
-			double twinkle = 0.45 + 0.4 * Math.sin(ms / 700.0 + i * 1.7);
-			int alpha = (int) (twinkle * 200 * ease);
-			r.fill(x, y, x + 1, y + 1, (alpha << 24) | 0xFFFFFF);
-		}
-		int mx = sw - 46;
-		int my = 18;
-		r.fill(mx - 6, my - 6, mx + 22, my + 22, ((int) (0x18 * ease) << 24) | 0x9D8CFF);
-		r.fill(mx, my, mx + 16, my + 16, ((int) (0xE0 * ease) << 24) | 0xF4F1FF);
-		r.fill(mx + 3, my + 4, mx + 7, my + 8, ((int) (0xE0 * ease) << 24) | 0xD9D3F2);
-		r.fill(mx + 10, my + 9, mx + 13, my + 12, ((int) (0xE0 * ease) << 24) | 0xD9D3F2);
+	/** The world, dimmed, under two slow aurora glows in the launcher's colours. */
+	private static void backdrop(RenderBackend r, int sw, int sh, float px, float py, float pw, float ph, float ease) {
+		Smooth.rect(r, 0, 0, sw, sh, ((int) (0xA8 * ease) << 24) | 0x06050D);
+		double ms = System.currentTimeMillis() / 1000.0;
+		float drift = (float) Math.sin(ms * 0.35) * 18;
+		int a = (int) (0x70 * ease) << 24;
+		Smooth.glow(r, px + 20 + drift, py + 10, 190, a | 0x8B7CF6);
+		Smooth.glow(r, px + pw - 30 - drift, py + ph - 10, 170, a | 0x2BB8B0);
+		Smooth.glow(r, px + pw * 0.55f, py - 30 + drift * 0.5f, 120, ((int) (0x38 * ease) << 24) | 0xC3BAFF);
 	}
 
-	private void sidebar(RenderBackend r, int px, int py, int ph, int mouseX, int mouseY) {
-		r.fill(px + 1, py + 2, px + SIDE_W, py + ph - 1, SIDEBAR);
-		r.fill(px + SIDE_W, py + 2, px + SIDE_W + 1, py + ph - 1, BORDER);
+	private void sidebar(RenderBackend r, float px, float py, float ph, int mouseX, int mouseY) {
+		Smooth.roundRect(r, px + 1, py + 1, px + SIDE_W, py + ph - 1, 11, SIDEBAR);
+		Smooth.rect(r, px + SIDE_W - 12, py + 1, px + SIDE_W, py + ph - 1, SIDEBAR);
+		Smooth.rect(r, px + SIDE_W, py + 12, px + SIDE_W + 1, py + ph - 12, 0x12FFFFFF);
 
-		cube(r, px + 10, py + 12);
-		wordmark(r, px + 28, py + 13);
-		r.text("CLIENT", px + 28, py + 23, FAINT, false);
+		Smooth.logo(r, px + 12, py + 13, 18);
+		Smooth.text(r, "Doohickey", px + 35, py + 12, 10, TEXT, true);
+		Smooth.text(r, "CLIENT", px + 35, py + 24, 6.5f, FAINT, true);
 
-		int y = py + 44;
+		float y = py + 50;
 		for (Category c : Category.values()) {
 			boolean on = c == category && query.isEmpty();
-			boolean hot = inside(mouseX, mouseY, px + 6, y, px + SIDE_W - 6, y + 20);
+			boolean hot = inside(mouseX, mouseY, px + 8, y, px + SIDE_W - 8, y + 24);
+			float h = ease("nav:" + c, hot ? 1f : 0f, 16);
 			if (on) {
-				round(r, px + 6, y, px + SIDE_W - 6, y + 20, 0x408B7CF6);
-				r.fill(px + 6, y + 4, px + 8, y + 16, ACCENT);
-			} else if (hot) {
-				round(r, px + 6, y, px + SIDE_W - 6, y + 20, 0x14FFFFFF);
+				Smooth.roundRect(r, px + 8, y, px + SIDE_W - 8, y + 24, 8, 0x2E8B7CF6);
+				Smooth.glow(r, px + 22, y + 12, 16, 0x508B7CF6);
+			} else if (h > 0.01f) {
+				Smooth.roundRect(r, px + 8, y, px + SIDE_W - 8, y + 24, 8, ((int) (0x10 * h) << 24) | 0xFFFFFF);
 			}
-			icon(r, c.icon, px + 14, y + 6, on ? TEXT : hot ? MUTED : FAINT);
-			r.text(c.title, px + 28, y + 6, on ? TEXT : hot ? TEXT : MUTED, false);
+			Smooth.icon(r, c.icon, px + 16, y + 6, 12, on ? ACCENT_LIGHT : Smooth.mix(FAINT, MUTED, h));
+			Smooth.text(r, c.title, px + 34, y + 12 - Smooth.lineHeight(r, 8.5f, on) / 2, 8.5f, on ? TEXT : Smooth.mix(MUTED, TEXT, h), on);
 			final Category pick = c;
-			hits.add(new Hit(px + 6, y, px + SIDE_W - 6, y + 20, () -> {
+			hits.add(new Hit(px + 8, y, px + SIDE_W - 8, y + 24, () -> {
 				category = pick;
 				query = "";
 				searchFocused = false;
 			}));
-			y += 24;
+			y += 28;
 		}
 
-		// Who's playing, at the bottom of the sidebar.
+		// Who's playing.
 		VersionAdapter a = Quartz.adapter();
 		String name = Safe.call("menu.name", a::sessionName, "Player");
 		boolean offline = Safe.call("menu.offline", a::sessionOffline, false);
-		int ay = py + ph - 26;
-		r.fill(px + 8, ay, px + SIDE_W - 8, ay + 1, BORDER);
-		int avatar = 0xFF000000 | (Math.abs(name.hashCode()) & 0x7F7F7F) | 0x404040;
-		r.fill(px + 10, ay + 7, px + 22, ay + 19, avatar);
-		r.text(name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase(Locale.ROOT), px + 13, ay + 9, TEXT, true);
-		r.text(trim(r, name, SIDE_W - 36), px + 27, ay + 6, TEXT, false);
-		r.text(offline ? "Offline" : "Online", px + 27, ay + 15, offline ? 0xFFF5A524 : 0xFF3DD68C, false);
+		float ay = py + ph - 38;
+		Smooth.roundRect(r, px + 8, ay, px + SIDE_W - 8, ay + 30, 9, 0x0CFFFFFF);
+		int avatar = 0xFF000000 | Smooth.mix(0xFF4F42B8, 0xFF2BB8B0, (Math.abs(name.hashCode()) % 100) / 100f);
+		Smooth.circle(r, px + 23, ay + 15, 8, avatar);
+		String initial = name.isEmpty() ? "?" : name.substring(0, 1).toUpperCase(Locale.ROOT);
+		float iw = Smooth.width(r, initial, 8, true);
+		Smooth.text(r, initial, px + 23 - iw / 2, ay + 15 - Smooth.lineHeight(r, 8, true) / 2, 8, TEXT, true);
+		Smooth.text(r, Smooth.fit(r, name, 7.5f, true, SIDE_W - 52), px + 36, ay + 6, 7.5f, TEXT, true);
+		Smooth.circle(r, px + 39, ay + 21, 2, offline ? 0xFFF5A524 : 0xFF3DD68C);
+		Smooth.text(r, offline ? "Offline" : "Online", px + 44, ay + 17, 6.5f, MUTED, false);
 	}
 
-	private void content(RenderBackend r, int x, int py, int w, int ph, int mouseX, int mouseY, float dt) {
+	private void content(RenderBackend r, float x, float py, float w, float ph, int mouseX, int mouseY) {
 		boolean searching = !query.isEmpty();
 		List<Option> options = searching ? search() : category.options();
 
-		// Header: the category in large type, then the search box.
-		r.push();
-		r.translate(x, py + 12);
-		r.scale(1.5f);
-		r.text(searching ? "Search" : category.title, 0, 0, TEXT, false);
-		r.pop();
-		String sub = searching ? options.size() + " matching \"" + query + "\"" : category.subtitle;
-		r.text(trim(r, sub, w - 130), x, py + 26, FAINT, false);
-		searchBox(r, x + w - 112, py + 12, mouseX, mouseY);
+		Smooth.text(r, searching ? "Search" : category.title, x, py + 13, 14, TEXT, true);
+		String sub = searching ? options.size() + (options.size() == 1 ? " result" : " results") + " for “" + query + "”" : category.subtitle;
+		Smooth.text(r, Smooth.fit(r, sub, 7.5f, false, w - 140), x, py + 32, 7.5f, FAINT, false);
+		searchBox(r, x + w - 124, py + 14, 124, mouseX, mouseY);
 
 		// The grid, a row at a time so nothing spills past the panel.
-		int top = py + 40;
-		int bottom = py + ph - 30;
+		float top = py + 50;
+		float bottom = py + ph - 34;
 		int cols = w >= 300 ? 3 : 2;
-		int cardW = (w - GAP * (cols - 1)) / cols;
+		float cardW = (w - GAP * (cols - 1)) / cols;
 		int rows = (options.size() + cols - 1) / cols;
-		int visible = Math.max(1, (bottom - top + GAP) / (CARD_H + GAP));
+		int visible = Math.max(1, (int) ((bottom - top + GAP) / (CARD_H + GAP)));
 		maxScroll = Math.max(0, rows - visible);
 		int scroll = Math.min(SCROLL.getOrDefault(category, 0), maxScroll);
 		SCROLL.put(category, scroll);
 
 		if (options.isEmpty()) {
-			r.centeredText(searching ? "Nothing matches that." : "Nothing here on this version.", x + w / 2, top + 30, FAINT, false);
+			String empty = searching ? "Nothing matches that." : "Nothing here on this version.";
+			Smooth.text(r, empty, x + (w - Smooth.width(r, empty, 8, false)) / 2, top + 40, 8, FAINT, false);
 		}
 		for (int i = scroll * cols; i < options.size() && i < (scroll + visible) * cols; i++) {
 			int col = i % cols;
 			int row = i / cols - scroll;
-			card(r, options.get(i), x + col * (cardW + GAP), top + row * (CARD_H + GAP), cardW, mouseX, mouseY, dt);
+			card(r, options.get(i), x + col * (cardW + GAP), top + row * (CARD_H + GAP), cardW, mouseX, mouseY);
 		}
 		if (maxScroll > 0) {
-			int track = bottom - top - GAP;
-			int thumb = Math.max(12, track * visible / rows);
-			int ty = top + (track - thumb) * scroll / maxScroll;
-			r.fill(x + w + 4, top, x + w + 6, top + track, 0x20FFFFFF);
-			r.fill(x + w + 4, ty, x + w + 6, ty + thumb, ACCENT);
+			float track = bottom - top - GAP;
+			float thumb = Math.max(16, track * visible / rows);
+			float ty = top + (track - thumb) * scroll / maxScroll;
+			Smooth.roundRect(r, x + w + 6, top, x + w + 9, top + track, 1.5f, 0x14FFFFFF);
+			Smooth.roundRect(r, x + w + 6, ty, x + w + 9, ty + thumb, 1.5f, ACCENT);
 		}
 
 		// Footer.
-		int fy = py + ph - 24;
+		float fy = py + ph - 26;
 		if (!searching && category == Category.HUD) {
 			String label = "Edit HUD layout";
-			int bw = r.textWidth(label) + 20;
-			boolean hot = inside(mouseX, mouseY, x, fy, x + bw, fy + 16);
-			round(r, x, fy, x + bw, fy + 16, hot ? 0xFF9D8FFF : ACCENT);
-			r.text(label, x + 10, fy + 4, 0xFFFFFFFF, false);
-			hits.add(new Hit(x, fy, x + bw, fy + 16, host::openHudEditor));
+			float bw = Smooth.width(r, label, 8, true) + 34;
+			boolean hot = inside(mouseX, mouseY, x, fy, x + bw, fy + 18);
+			float h = ease("edit", hot ? 1f : 0f, 14);
+			if (h > 0.01f) {
+				Smooth.glow(r, x + bw / 2, fy + 9, bw * 0.7f, ((int) (0x50 * h) << 24) | 0x8B7CF6);
+			}
+			Smooth.roundRect(r, x, fy, x + bw, fy + 18, 9, Smooth.mix(ACCENT, 0xFF9F92FF, h));
+			Smooth.icon(r, "edit", x + 9, fy + 4, 10, 0xFFFFFFFF);
+			Smooth.text(r, label, x + 23, fy + 9 - Smooth.lineHeight(r, 8, true) / 2, 8, 0xFFFFFFFF, true);
+			hits.add(new Hit(x, fy, x + bw, fy + 18, host::openHudEditor));
 		}
 		String hint = maxScroll > 0 ? "Scroll for more  ·  Right Shift to close" : "Right Shift to close";
-		r.text(hint, x + w - r.textWidth(hint), fy + 4, FAINT, false);
+		Smooth.text(r, hint, x + w - Smooth.width(r, hint, 7, false), fy + 5, 7, FAINT, false);
 	}
 
-	private void searchBox(RenderBackend r, int x, int y, int mouseX, int mouseY) {
-		int w = 112;
-		boolean hot = inside(mouseX, mouseY, x, y, x + w, y + 16);
-		round(r, x - 1, y - 1, x + w + 1, y + 17, searchFocused ? ACCENT : hot ? 0xFF3A3654 : BORDER);
-		round(r, x, y, x + w, y + 16, CARD);
-		icon(r, SEARCH_ICON, x + 6, y + 4, searchFocused ? ACCENT : FAINT);
+	private void searchBox(RenderBackend r, float x, float y, float w, int mouseX, int mouseY) {
+		boolean hot = inside(mouseX, mouseY, x, y, x + w, y + 18);
+		float f = ease("search", searchFocused ? 1f : hot ? 0.5f : 0f, 14);
+		Smooth.roundBox(r, x, y, x + w, y + 18, 9, 0xFF14121D, Smooth.mix(0x1EFFFFFF, ACCENT, f));
+		Smooth.icon(r, "search", x + 7, y + 4, 10, searchFocused ? ACCENT_LIGHT : FAINT);
+		float ty = y + 9 - Smooth.lineHeight(r, 7.5f, false) / 2;
 		if (query.isEmpty() && !searchFocused) {
-			r.text("Search modules", x + 17, y + 4, FAINT, false);
+			Smooth.text(r, "Search modules", x + 21, ty, 7.5f, FAINT, false);
 		} else {
 			String shown = query;
-			while (r.textWidth(shown) > w - 26 && !shown.isEmpty()) {
+			while (!shown.isEmpty() && Smooth.width(r, shown, 7.5f, false) > w - 30) {
 				shown = shown.substring(1);
 			}
-			int end = r.text(shown, x + 17, y + 4, TEXT, false);
+			float end = Smooth.text(r, shown, x + 21, ty, 7.5f, TEXT, false);
 			if (searchFocused && System.currentTimeMillis() / 500 % 2 == 0) {
-				r.fill(end + 1, y + 3, end + 2, y + 13, TEXT);
+				Smooth.rect(r, end + 1, y + 4, end + 1.6f, y + 14, ACCENT_LIGHT);
 			}
 		}
-		hits.add(new Hit(x, y, x + w, y + 16, () -> searchFocused = true));
+		hits.add(new Hit(x, y, x + w, y + 18, () -> searchFocused = true));
 	}
 
-	private void card(RenderBackend r, Option o, int x, int y, int w, int mouseX, int mouseY, float dt) {
+	private void card(RenderBackend r, Option o, float x, float y, float w, int mouseX, int mouseY) {
 		boolean hot = inside(mouseX, mouseY, x, y, x + w, y + CARD_H);
 		Boolean on = o.on();
-		round(r, x, y, x + w, y + CARD_H, hot ? CARD_HOVER : CARD);
-		if (Boolean.TRUE.equals(on)) {
-			r.fill(x, y + 6, x + 2, y + CARD_H - 6, ACCENT);
+		float h = ease("card:" + o.label, hot ? 1f : 0f, 18);
+		boolean enabled = Boolean.TRUE.equals(on);
+		int border = enabled ? Smooth.mix(0x448B7CF6, 0x888B7CF6, h) : Smooth.mix(0x10FFFFFF, 0x24FFFFFF, h);
+		Smooth.roundBox(r, x, y, x + w, y + CARD_H, 8, Smooth.mix(CARD, CARD_HOVER, h), border);
+		if (enabled) {
+			Smooth.glow(r, x + 10, y + CARD_H / 2f, 26, 0x308B7CF6);
 		}
-		r.text(trim(r, o.label, w - (on != null ? 38 : 14)), x + 8, y + 7, TEXT, false);
+
+		float right = on != null ? 34 : 14;
+		Smooth.text(r, Smooth.fit(r, o.label, 8.5f, true, w - right - 10), x + 10, y + 7, 8.5f, TEXT, true);
 
 		if (on != null) {
-			r.text(on ? "Enabled" : "Disabled", x + 8, y + 18, on ? 0xFFB9AEFF : FAINT, false);
-			float knob = knobs.getOrDefault(o.label, on ? 1f : 0f);
-			knob += ((on ? 1f : 0f) - knob) * Math.min(1f, dt * 18f);
-			knobs.put(o.label, knob);
-			int sx = x + w - 26;
-			int sy = y + 12;
-			round(r, sx, sy, sx + 18, sy + 9, mix(SWITCH_OFF, ACCENT, knob));
-			int kx = sx + 1 + Math.round(knob * 9);
-			r.fill(kx, sy + 1, kx + 7, sy + 8, 0xFFFFFFFF);
+			Smooth.text(r, on ? "Enabled" : "Disabled", x + 10, y + 19, 7, on ? ACCENT_LIGHT : FAINT, false);
+			float knob = ease("knob:" + o.label, on ? 1f : 0f, 16);
+			float sx = x + w - 30;
+			float sy = y + CARD_H / 2f - 5.5f;
+			Smooth.roundRect(r, sx, sy, sx + 21, sy + 11, 5.5f, Smooth.mix(SWITCH_OFF, ACCENT, knob));
+			float kx = sx + 5.5f + knob * 10;
+			Smooth.circle(r, kx, sy + 5.5f + 0.6f, 4.4f, 0x40000000);
+			Smooth.circle(r, kx, sy + 5.5f, 4.2f, 0xFFFFFFFF);
 		} else {
 			String value = o.value();
-			r.text(trim(r, value, w - 24), x + 8, y + 18, 0xFFB9AEFF, false);
-			r.text(">", x + w - 12, y + 12, hot ? TEXT : FAINT, false);
+			float vw = Smooth.width(r, value, 7, true) + 12;
+			float vx = x + 10;
+			Smooth.roundRect(r, vx, y + 18, vx + vw, y + 28, 5, 0x2A8B7CF6);
+			Smooth.text(r, value, vx + 6, y + 23 - Smooth.lineHeight(r, 7, true) / 2, 7, ACCENT_LIGHT, true);
+			Smooth.text(r, "→", x + w - 16, y + CARD_H / 2f - Smooth.lineHeight(r, 8, false) / 2, 8, Smooth.mix(FAINT, TEXT, h), false);
 		}
 		hits.add(new Hit(x, y, x + w, y + CARD_H, o::click));
 	}
@@ -405,94 +367,18 @@ public final class ClientMenu {
 		return out;
 	}
 
-	// ---- Small drawing helpers ------------------------------------------------
+	/** Moves the value stored under {@code key} towards {@code target}, frame-rate independent. */
+	private float ease(String key, float target, float speed) {
+		float v = anim.containsKey(key) ? anim.get(key) : target;
+		v += (target - v) * Math.min(1f, dt * speed);
+		if (Math.abs(target - v) < 0.002f) {
+			v = target;
+		}
+		anim.put(key, v);
+		return v;
+	}
 
-	private static boolean inside(int mx, int my, int x0, int y0, int x1, int y1) {
+	private static boolean inside(int mx, int my, float x0, float y0, float x1, float y1) {
 		return mx >= x0 && mx < x1 && my >= y0 && my < y1;
-	}
-
-	/** A rectangle with its four corner pixels cut: reads as rounded at GUI scale. */
-	private static void round(RenderBackend r, int x0, int y0, int x1, int y1, int argb) {
-		if ((argb >>> 24) == 0 || x1 - x0 < 3 || y1 - y0 < 3) {
-			if ((argb >>> 24) != 0) {
-				r.fill(x0, y0, x1, y1, argb);
-			}
-			return;
-		}
-		r.fill(x0 + 1, y0, x1 - 1, y0 + 1, argb);
-		r.fill(x0, y0 + 1, x1, y1 - 1, argb);
-		r.fill(x0 + 1, y1 - 1, x1 - 1, y1, argb);
-	}
-
-	/** A left-to-right colour ramp, in 2 px steps. */
-	private static void gradient(RenderBackend r, int x0, int y0, int x1, int y1, int from, int to) {
-		int w = Math.max(1, x1 - x0);
-		for (int x = x0; x < x1; x += 2) {
-			r.fill(x, y0, Math.min(x + 2, x1), y1, mix(from, to, (x - x0) / (float) w));
-		}
-	}
-
-	private static int mix(int a, int b, float t) {
-		t = Math.max(0f, Math.min(1f, t));
-		int out = 0;
-		for (int shift = 0; shift <= 24; shift += 8) {
-			int ca = (a >>> shift) & 0xFF;
-			int cb = (b >>> shift) & 0xFF;
-			out |= Math.round(ca + (cb - ca) * t) << shift;
-		}
-		return out;
-	}
-
-	private static void icon(RenderBackend r, String[] rows, int x, int y, int color) {
-		for (int row = 0; row < rows.length; row++) {
-			String line = rows[row];
-			int start = -1;
-			for (int col = 0; col <= line.length(); col++) {
-				boolean pixel = col < line.length() && line.charAt(col) == '#';
-				if (pixel && start < 0) {
-					start = col;
-				} else if (!pixel && start >= 0) {
-					r.fill(x + start, y + row, x + col, y + row + 1, color);
-					start = -1;
-				}
-			}
-		}
-	}
-
-	/** The Doohickey cube (14 x 14): two shaded sides, then the lit top face over them. */
-	private static void cube(RenderBackend r, int x, int y) {
-		int top = 0xFFC3BAFF;
-		int left = 0xFF7263E6;
-		int right = 0xFF4F42B8;
-		r.fill(x, y + 3, x + 7, y + 11, left);
-		r.fill(x + 7, y + 3, x + 14, y + 11, right);
-		for (int row = 11; row < 14; row++) {
-			int cut = 2 * (row - 10);
-			r.fill(x + cut, y + row, x + 7, y + row + 1, left);
-			r.fill(x + 7, y + row, x + 14 - cut, y + row + 1, right);
-		}
-		for (int row = 0; row < 7; row++) {
-			int half = 1 + 2 * Math.min(row, 6 - row);
-			r.fill(x + 7 - half, y + row, x + 7 + half, y + row + 1, top);
-		}
-	}
-
-	/** "DOOHICKEY", each letter a step from violet to teal. */
-	private static void wordmark(RenderBackend r, int x, int y) {
-		String word = "DOOHICKEY";
-		for (int i = 0; i < word.length(); i++) {
-			String ch = word.substring(i, i + 1);
-			x = r.text(ch, x, y, mix(0xFFC3BAFF, TEAL, i / (float) (word.length() - 1)), true) + 1;
-		}
-	}
-
-	private static String trim(RenderBackend r, String s, int max) {
-		if (r.textWidth(s) <= max) {
-			return s;
-		}
-		while (!s.isEmpty() && r.textWidth(s + "..") > max) {
-			s = s.substring(0, s.length() - 1);
-		}
-		return s + "..";
 	}
 }

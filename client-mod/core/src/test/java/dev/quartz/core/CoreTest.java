@@ -126,10 +126,10 @@ public final class CoreTest {
 		Files.createDirectories(dir);
 		int mx = 200, my = 120;
 		image.shot(menu, mx, my, dir.resolve("menu-hud.png"));
-		// The Game tab is the third sidebar item: panel top + 44 + 2 * 24.
-		int pw = Math.min(460, 480 - 16), ph = Math.min(262, 270 - 16);
+		// The Game tab is the third sidebar item: panel top + 50 + 2 * 28.
+		int pw = Math.min(470, 480 - 20), ph = Math.min(268, 270 - 20);
 		int px = (480 - pw) / 2, py = (270 - ph) / 2;
-		menu.click(px + 30, py + 44 + 2 * 24 + 8);
+		menu.click(px + 30, py + 50 + 2 * 28 + 12);
 		ClientConfig.get().zoomEnabled = true;
 		image.shot(menu, px + 150, py + 60, dir.resolve("menu-game.png"));
 		for (char c : "zo".toCharArray()) menu.typed(c);
@@ -187,6 +187,36 @@ public final class CoreTest {
 		public void translate(float x, float y) { g.translate(x, y); }
 		public void scale(float factor) { g.scale(factor, factor); }
 		public void item(Object stack, int x, int y) { }
+		final java.util.Map<String, Integer> keys = new java.util.HashMap<>();
+		final java.util.List<java.awt.image.BufferedImage> images = new java.util.ArrayList<>();
+		public float guiScale() { return s; }
+		public int image(String key, int w, int h, java.util.function.Supplier<int[]> pixels) {
+			Integer id = keys.get(key);
+			if (id != null) return id;
+			java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+			img.setRGB(0, 0, w, h, pixels.get(), 0, w);
+			images.add(img);
+			keys.put(key, images.size() - 1);
+			return images.size() - 1;
+		}
+		public void drawImage(int handle, float[] q, int count, int argb) {
+			java.awt.image.BufferedImage src = images.get(handle);
+			g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+			for (int i = 0; i < count; i++) {
+				int o = i * 8;
+				int sx0 = Math.round(q[o + 4] * src.getWidth()), sy0 = Math.round(q[o + 5] * src.getHeight());
+				int sx1 = Math.round(q[o + 6] * src.getWidth()), sy1 = Math.round(q[o + 7] * src.getHeight());
+				int w = Math.max(1, sx1 - sx0), h = Math.max(1, sy1 - sy0);
+				java.awt.image.BufferedImage tint = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+				int ta = argb >>> 24, tr = argb >> 16 & 255, tg = argb >> 8 & 255, tb = argb & 255;
+				for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) {
+					int p = src.getRGB(Math.min(src.getWidth() - 1, sx0 + x), Math.min(src.getHeight() - 1, sy0 + y));
+					int a = (p >>> 24) * ta / 255, rr = (p >> 16 & 255) * tr / 255, gg = (p >> 8 & 255) * tg / 255, bb = (p & 255) * tb / 255;
+					tint.setRGB(x, y, a << 24 | rr << 16 | gg << 8 | bb);
+				}
+				g.drawImage(tint, new java.awt.geom.AffineTransform(new double[] {(q[o + 2] - q[o]) / w, 0, 0, (q[o + 3] - q[o + 1]) / h, q[o], q[o + 1]}), null);
+			}
+		}
 	}
 
 	public static void main(String[] args) throws Exception {

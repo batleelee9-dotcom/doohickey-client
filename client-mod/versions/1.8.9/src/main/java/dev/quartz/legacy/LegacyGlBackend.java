@@ -4,9 +4,19 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import dev.quartz.core.RenderBackend;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.util.Window;
 import net.minecraft.item.ItemStack;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
 
 /** {@link RenderBackend} for 1.8.9–1.12.2: fixed-function OpenGL through GlStateManager. */
 final class LegacyGlBackend implements RenderBackend {
@@ -68,6 +78,59 @@ final class LegacyGlBackend implements RenderBackend {
 	@Override
 	public void scale(float factor) {
 		GlStateManager.scale(factor, factor, 1f);
+	}
+
+	@Override
+	public float guiScale() {
+		return new Window(MinecraftClient.getInstance()).getScaleFactor();
+	}
+
+	/** Uploaded once and kept for the session; GL frees them with the context. */
+	private final Map<String, Integer> images = new HashMap<>();
+
+	@Override
+	public int image(String key, int width, int height, Supplier<int[]> pixels) {
+		Integer id = images.get(key);
+		if (id != null) {
+			return id;
+		}
+		NativeImageBackedTexture texture = new NativeImageBackedTexture(width, height);
+		int[] data = pixels.get();
+		System.arraycopy(data, 0, texture.getPixels(), 0, Math.min(data.length, width * height));
+		texture.upload();
+		// Linear filtering: glyphs and corners are drawn at their native size, but this keeps
+		// any fractional placement smooth instead of blocky.
+		GlStateManager.bindTexture(texture.getGlId());
+		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_LINEAR);
+		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_LINEAR);
+		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_S, GL12.GL_CLAMP_TO_EDGE);
+		GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_WRAP_T, GL12.GL_CLAMP_TO_EDGE);
+		images.put(key, texture.getGlId());
+		return texture.getGlId();
+	}
+
+	@Override
+	public void drawImage(int handle, float[] q, int count, int argb) {
+		GlStateManager.enableTexture();
+		GlStateManager.enableBlend();
+		GlStateManager.blendFuncSeparate(770, 771, 1, 0);
+		// The GUI's alpha test would cut off the soft, low-alpha edges that make this smooth.
+		GlStateManager.disableAlphaTest();
+		GlStateManager.bindTexture(handle);
+		GlStateManager.color((argb >> 16 & 255) / 255f, (argb >> 8 & 255) / 255f, (argb & 255) / 255f, (argb >>> 24) / 255f);
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder buffer = tessellator.getBuffer();
+		buffer.begin(GL11.GL_QUADS, VertexFormats.POSITION_TEXTURE);
+		for (int i = 0; i < count; i++) {
+			int o = i * 8;
+			buffer.vertex(q[o], q[o + 3], 0).texture(q[o + 4], q[o + 7]).next();
+			buffer.vertex(q[o + 2], q[o + 3], 0).texture(q[o + 6], q[o + 7]).next();
+			buffer.vertex(q[o + 2], q[o + 1], 0).texture(q[o + 6], q[o + 5]).next();
+			buffer.vertex(q[o], q[o + 1], 0).texture(q[o + 4], q[o + 5]).next();
+		}
+		tessellator.draw();
+		GlStateManager.enableAlphaTest();
+		GlStateManager.color(1f, 1f, 1f, 1f);
 	}
 
 	@Override

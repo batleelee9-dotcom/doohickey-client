@@ -50,6 +50,29 @@ public interface RenderBackend {
 	 */
 	void item(Object stack, int x, int y);
 
+	/** Screen pixels per GUI pixel (the GUI scale), so smooth drawing can rasterize at native resolution. */
+	default float guiScale() {
+		return 1f;
+	}
+
+	/**
+	 * Uploads an ARGB image once under {@code key} (later calls with the same
+	 * key return the same handle without calling {@code pixels}). Returns -1
+	 * when this backend can't draw images; smooth drawing then falls back to
+	 * plain fills and the game font.
+	 */
+	default int image(String key, int width, int height, java.util.function.Supplier<int[]> pixels) {
+		return -1;
+	}
+
+	/**
+	 * Draws {@code count} quads from an uploaded image, tinted by {@code argb}
+	 * (opaque white = as uploaded). Each quad is 8 floats in {@code quads}:
+	 * x0, y0, x1, y1 in GUI coordinates, then u0, v0, u1, v1 in 0..1.
+	 */
+	default void drawImage(int handle, float[] quads, int count, int argb) {
+	}
+
 	/** A 1-pixel rectangle outline. */
 	default void outline(int x, int y, int w, int h, int argb) {
 		fill(x, y, x + w, y + 1, argb);
