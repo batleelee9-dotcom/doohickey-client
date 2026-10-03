@@ -17,9 +17,9 @@ A fast, minimal launcher for Minecraft: Java Edition, with its own in-game clien
 - **Skins:** 3D preview; change skin and cape (Microsoft accounts).
 - **Also:** crash analyzer in plain English, game console, Discord Rich Presence, themes (dark, light, accent colours, Mica/Acrylic), Ctrl+K command palette, tray icon and signed auto-updates.
 
-**Doohickey Client (in game).** One codebase, one jar per Minecraft version, added automatically when the build supports it. Press **Right Shift** in game to set it up. Fabric **26.3** has everything below; **1.8.9** (Legacy Fabric) has the whole HUD, the World controls, the performance options, toggle sprint/sneak and the account switcher. Per-version details: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
-- **HUD:** FPS, CPS, ping, coordinates, reach, keystrokes, potion effects and armor on both versions, plus memory and toggle status on 26.3. Drag to move, scroll to resize.
-- **PvP:** toggle sprint/sneak, plus on 26.3 a custom crosshair, hit colour and damage tint.
+**Doohickey Client (in game).** One codebase, one jar per Minecraft version, added automatically when the build supports it. Press **Right Shift** in game to set it up. Fabric **26.3** has everything below; **1.8.9** (Legacy Fabric) has the whole HUD, zoom, hitboxes, the custom crosshair, the World controls, the performance options, toggle sprint/sneak and the account switcher. Per-version details: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+- **HUD (20 elements on both versions):** FPS, CPS, ping, coordinates, reach, keystrokes, potion effects, armor, clock, session time, memory, server address, direction, speed, day counter, saturation, arrow counter, combo counter, block info and biome, plus toggle status on 26.3. Drag to move, scroll to resize. The newer ones start switched off: turn them on in the HUD tab.
+- **PvP:** zoom (hold C, 2x–8x, smooth or instant), toggle sprint/sneak, hitboxes, a custom crosshair, plus on 26.3 hit colour and damage tint.
 - **Performance:** particle limiter, entity render distance (1.8.9) and dynamic render distance, which steps the view distance down while FPS stays under your target and back up when it recovers.
 - **World:** sky colour, locked time of day, fog distance and colour, weather override, fullbright (all client-side), and void-fog removal on 1.8.9.
 - **Map (26.3):** minimap and waypoints (death waypoints, labels in the world). It respects servers that disable minimaps.

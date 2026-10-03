@@ -11,7 +11,7 @@
 	"entrypoints": {
 		"client": ["dev.quartz.legacy.QuartzLegacy"]
 	},
-	"mixins": ["quartz.legacy.mixins.json"],
+	"mixins": ["quartz.legacy.mixins.json", "quartz.legacy.extra.mixins.json"],
 	"depends": {
 		"fabricloader": ">=0.14",
 		"minecraft": "1.8.9"

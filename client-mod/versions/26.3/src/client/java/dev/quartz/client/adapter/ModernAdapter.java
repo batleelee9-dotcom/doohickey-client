@@ -1,5 +1,6 @@
 package dev.quartz.client.adapter;
 
+import dev.quartz.client.QuartzClient;
 import dev.quartz.client.screen.QuartzScreen;
 import dev.quartz.core.McVersion;
 import dev.quartz.core.RenderBackend;
@@ -11,14 +12,21 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.client.gui.components.debug.DebugScreenEntries;
+import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.ServerData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import org.jspecify.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -177,6 +185,97 @@ public final class ModernAdapter implements VersionAdapter {
 			out.add(new HudData.Item(stack, wears ? stack.getMaxDamage() - stack.getDamageValue() : -1, wears ? stack.getMaxDamage() : 0));
 		}
 		return out;
+	}
+
+	@Override
+	public double @Nullable [] position() {
+		Player p = Minecraft.getInstance().player;
+		return p == null ? null : new double[] {p.getX(), p.getY(), p.getZ()};
+	}
+
+	@Override
+	public float yaw() {
+		Player p = Minecraft.getInstance().player;
+		return p == null ? 0f : p.getYRot();
+	}
+
+	@Override
+	public long worldTime() {
+		ClientLevel level = Minecraft.getInstance().level;
+		return level == null ? -1 : level.getOverworldClockTime();
+	}
+
+	@Override
+	public float saturation() {
+		Player p = Minecraft.getInstance().player;
+		return p == null ? -1f : p.getFoodData().getSaturationLevel();
+	}
+
+	@Override
+	public int arrows() {
+		Player p = Minecraft.getInstance().player;
+		int n = 0;
+		if (p != null) {
+			Inventory inv = p.getInventory();
+			for (int i = 0; i < inv.getContainerSize(); i++) {
+				ItemStack stack = inv.getItem(i);
+				if (stack.is(Items.ARROW)) {
+					n += stack.getCount();
+				}
+			}
+		}
+		return n;
+	}
+
+	@Override
+	public String targetBlock() {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null || !(mc.hitResult instanceof BlockHitResult hit) || hit.getType() != HitResult.Type.BLOCK) {
+			return "";
+		}
+		return mc.level.getBlockState(hit.getBlockPos()).getBlock().getName().getString();
+	}
+
+	@Override
+	public String biome() {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null || mc.player == null) {
+			return "";
+		}
+		return mc.level.getBiome(mc.player.blockPosition()).unwrapKey().map(k -> titleCase(k.identifier().getPath())).orElse("");
+	}
+
+	/** "dark_forest" → "Dark Forest". */
+	private static String titleCase(String id) {
+		StringBuilder out = new StringBuilder();
+		for (String word : id.split("_")) {
+			if (!word.isEmpty()) {
+				out.append(out.isEmpty() ? "" : " ").append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+			}
+		}
+		return out.toString();
+	}
+
+	@Override
+	public int hurtTime() {
+		Player p = Minecraft.getInstance().player;
+		return p == null ? 0 : p.hurtTime;
+	}
+
+	@Override
+	public boolean hitboxes() {
+		return Minecraft.getInstance().debugEntries.isCurrentlyEnabled(DebugScreenEntries.ENTITY_HITBOXES);
+	}
+
+	@Override
+	public void setHitboxes(boolean shown) {
+		Minecraft.getInstance().debugEntries.setStatus(DebugScreenEntries.ENTITY_HITBOXES,
+			shown ? DebugScreenEntryStatus.ALWAYS_ON : DebugScreenEntryStatus.NEVER);
+	}
+
+	@Override
+	public boolean zoomKeyDown() {
+		return Minecraft.getInstance().gui.screen() == null && QuartzClient.zoomHeld();
 	}
 
 	@Override

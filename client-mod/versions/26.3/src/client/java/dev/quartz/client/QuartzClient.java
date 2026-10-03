@@ -43,6 +43,7 @@ public final class QuartzClient implements ClientModInitializer {
 	private static KeyMapping sneakKey;
 	private static KeyMapping waypointKey;
 	private static KeyMapping zoomKey;
+	private static KeyMapping fovZoomKey;
 
 	private static Identifier id(String path) {
 		return Identifier.fromNamespaceAndPath("quartz", path);
@@ -59,6 +60,8 @@ public final class QuartzClient implements ClientModInitializer {
 		sneakKey = key("key.quartz.toggle_sneak", InputConstants.UNKNOWN.getValue(), category);
 		waypointKey = key("key.quartz.waypoint", InputConstants.KEY_B, category);
 		zoomKey = key("key.quartz.minimap_zoom", InputConstants.UNKNOWN.getValue(), category);
+		// C, like OptiFine and most clients.
+		fovZoomKey = key("key.quartz.zoom", InputConstants.KEY_C, category);
 
 		// Damage tint sits under the vanilla HUD; our modules and waypoint
 		// labels draw on top of it.
@@ -99,6 +102,11 @@ public final class QuartzClient implements ClientModInitializer {
 		});
 		ClientReceiveMessageEvents.GAME.register((message, overlay) -> FairPlay.onMessage(message));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> FairPlay.reset());
+	}
+
+	/** Held, not toggled: zoom lasts as long as the key is down. */
+	public static boolean zoomHeld() {
+		return fovZoomKey != null && fovZoomKey.isDown();
 	}
 
 	private static KeyMapping key(String name, int key, KeyMapping.Category category) {

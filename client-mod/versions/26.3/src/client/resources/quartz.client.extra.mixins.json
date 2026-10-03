@@ -1,0 +1,11 @@
+{
+	"required": false,
+	"package": "dev.quartz.client.mixin.extra",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"CameraZoomMixin"
+	],
+	"injectors": {
+		"defaultRequire": 0
+	}
+}

@@ -18,7 +18,9 @@ import java.util.List;
 public final class HudModules {
 	public static final List<HudModule> ALL = List.of(
 		core("fps"), core("cps"), new Ping(), core("coordinates"), core("keystrokes"),
-		new Armor(), new Potions(), new Reach(), new Memory(), new ToggleStatus()
+		new Armor(), new Potions(), new Reach(), new ToggleStatus(),
+		core("clock"), core("session"), core("memory"), core("server"), core("direction"), core("speed"),
+		core("day"), core("saturation"), core("arrows"), core("combo"), core("block"), core("biome")
 	);
 
 	private HudModules() {
@@ -188,30 +190,6 @@ public final class HudModules {
 		private String text() {
 			double reach = PvpTweaks.lastReach();
 			return reach <= 0 ? "— blocks" : String.format("%.2f blocks", reach);
-		}
-
-		public int width() {
-			return boxWidth(text());
-		}
-
-		public int height() {
-			return 16;
-		}
-
-		public void render(GuiGraphicsExtractor g, boolean preview) {
-			textBox(g, text(), width());
-		}
-	}
-
-	static final class Memory extends HudModule {
-		Memory() {
-			super("memory", "Memory", false, 0.0f, 0.3f);
-		}
-
-		private String text() {
-			Runtime rt = Runtime.getRuntime();
-			long used = (rt.totalMemory() - rt.freeMemory()) / 1_048_576;
-			return used + " / " + rt.maxMemory() / 1_048_576 + " MB";
 		}
 
 		public int width() {

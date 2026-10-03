@@ -15,6 +15,10 @@
 		{
 			"config": "quartz.client.mixins.json",
 			"environment": "client"
+		},
+		{
+			"config": "quartz.client.extra.mixins.json",
+			"environment": "client"
 		}
 	],
 	"depends": {

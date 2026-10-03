@@ -4,6 +4,7 @@ import dev.quartz.core.Feature;
 import dev.quartz.core.Quartz;
 import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.perf.PerformanceSettings;
+import dev.quartz.core.pvp.CrosshairStyle;
 import dev.quartz.core.pvp.PvpState;
 
 import java.util.ArrayList;
@@ -18,6 +19,16 @@ public final class GameOptions {
 	private static final List<String> TARGET_NAMES = Arrays.asList("30 FPS", "60 FPS", "90 FPS", "120 FPS", "144 FPS");
 	private static final List<Integer> ENTITY_DISTANCES = Arrays.asList(0, 32, 48, 64, 96, 128);
 	private static final List<String> ENTITY_NAMES = Arrays.asList("Unlimited", "32 blocks", "48 blocks", "64 blocks", "96 blocks", "128 blocks");
+	private static final List<Float> ZOOM_LEVELS = Arrays.asList(2f, 3f, 4f, 6f, 8f);
+	private static final List<String> ZOOM_NAMES = Arrays.asList("2x", "3x", "4x", "6x", "8x");
+	private static final List<Integer> CROSSHAIR_STYLES = Arrays.asList(0, 1, 2, 3, 4);
+	private static final List<Integer> CROSSHAIR_COLORS = new ArrayList<>();
+
+	static {
+		for (int color : CrosshairStyle.COLORS) {
+			CROSSHAIR_COLORS.add(color);
+		}
+	}
 
 	private GameOptions() {
 	}
@@ -34,6 +45,19 @@ public final class GameOptions {
 		}
 		add(options, Option.choice(Feature.ENTITY_DISTANCE, "Entity distance", ENTITY_DISTANCES, ENTITY_NAMES,
 			() -> p().entityDistance, v -> p().entityDistance = v));
+		add(options, Option.toggle(Feature.ZOOM, "Zoom (hold C)", () -> c().zoomEnabled, v -> c().zoomEnabled = v));
+		if (c().zoomEnabled) {
+			add(options, Option.choice(Feature.ZOOM, "Zoom level", ZOOM_LEVELS, ZOOM_NAMES, () -> c().zoomFactor, v -> c().zoomFactor = v));
+			add(options, Option.toggle(Feature.ZOOM, "Smooth zoom", () -> c().zoomSmooth, v -> c().zoomSmooth = v));
+		}
+		add(options, Option.toggle(Feature.HITBOXES, "Hitboxes", () -> Quartz.adapter().hitboxes(), v -> Quartz.adapter().setHitboxes(v)));
+		add(options, Option.toggle(Feature.CUSTOM_CROSSHAIR, "Custom crosshair", () -> c().customCrosshair, v -> c().customCrosshair = v));
+		if (c().customCrosshair) {
+			add(options, Option.choice(Feature.CUSTOM_CROSSHAIR, "Crosshair", CROSSHAIR_STYLES, Arrays.asList(CrosshairStyle.STYLES),
+				() -> c().crosshairStyle, v -> c().crosshairStyle = v));
+			add(options, Option.choice(Feature.CUSTOM_CROSSHAIR, "Crosshair colour", CROSSHAIR_COLORS, Arrays.asList(CrosshairStyle.COLOR_NAMES),
+				() -> c().crosshairColor, v -> c().crosshairColor = v));
+		}
 		return options;
 	}
 

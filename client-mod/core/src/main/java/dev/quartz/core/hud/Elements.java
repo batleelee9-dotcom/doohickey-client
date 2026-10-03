@@ -6,6 +6,9 @@ import dev.quartz.core.RenderBackend;
 import dev.quartz.core.VersionAdapter;
 import dev.quartz.core.config.ClientConfig;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -18,7 +21,11 @@ final class Elements {
 	/** A single-line text element. */
 	abstract static class TextElement extends HudElement {
 		TextElement(String id, String name, Feature feature, float defaultX, float defaultY) {
-			super(id, name, feature, true, defaultX, defaultY);
+			this(id, name, feature, true, defaultX, defaultY);
+		}
+
+		TextElement(String id, String name, Feature feature, boolean enabled, float defaultX, float defaultY) {
+			super(id, name, feature, enabled, defaultX, defaultY);
 		}
 
 		abstract String text();
@@ -98,6 +105,177 @@ final class Elements {
 		String text() {
 			double last = ReachTracker.last();
 			return last < 0 ? "0.00 blocks" : String.format(Locale.ROOT, "%.2f blocks", last);
+		}
+	}
+
+	// ---- Off by default: switch them on in the HUD menu --------------------
+
+	static final class Clock extends TextElement {
+		private static final DateTimeFormatter FORMAT = DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT);
+
+		Clock() {
+			super("clock", "Clock", Feature.HUD_CLOCK, false, 1.0f, 0.0f);
+		}
+
+		@Override
+		String text() {
+			return LocalTime.now().format(FORMAT);
+		}
+	}
+
+	static final class Session extends TextElement {
+		Session() {
+			super("session", "Session time", Feature.HUD_CLOCK, false, 1.0f, 0.06f);
+		}
+
+		@Override
+		String text() {
+			long s = PlayerStats.sessionMs() / 1000;
+			return s >= 3600
+				? String.format(Locale.ROOT, "%d:%02d:%02d", s / 3600, s / 60 % 60, s % 60)
+				: String.format(Locale.ROOT, "%d:%02d", s / 60, s % 60);
+		}
+	}
+
+	static final class Memory extends TextElement {
+		Memory() {
+			super("memory", "Memory", Feature.HUD_MEMORY, false, 1.0f, 0.12f);
+		}
+
+		@Override
+		String text() {
+			Runtime rt = Runtime.getRuntime();
+			long used = (rt.totalMemory() - rt.freeMemory()) >> 20;
+			long max = rt.maxMemory() >> 20;
+			return used * 100 / Math.max(1, max) + "% " + used + "/" + max + " MB";
+		}
+	}
+
+	static final class Server extends TextElement {
+		Server() {
+			super("server", "Server address", Feature.HUD_SERVER_IP, false, 0.5f, 0.0f);
+		}
+
+		@Override
+		public boolean hasContent() {
+			return !Quartz.adapter().worldKey().isEmpty();
+		}
+
+		@Override
+		String text() {
+			String key = Quartz.adapter().worldKey();
+			return key.startsWith("server:") ? key.substring("server:".length()) : "Singleplayer";
+		}
+	}
+
+	static final class Direction extends TextElement {
+		private static final String[] POINTS = {"N", "NE", "E", "SE", "S", "SW", "W", "NW"};
+
+		Direction() {
+			super("direction", "Direction", Feature.HUD_DIRECTION, false, 0.5f, 0.06f);
+		}
+
+		@Override
+		String text() {
+			// The game's yaw is 0 at south and turns clockwise; a compass bearing is 0 at north.
+			float bearing = ((Quartz.adapter().yaw() + 180f) % 360f + 360f) % 360f;
+			return POINTS[Math.round(bearing / 45f) % 8] + "  " + Math.round(bearing) + "°";
+		}
+	}
+
+	static final class Speed extends TextElement {
+		Speed() {
+			super("speed", "Speed", Feature.HUD_SPEED, false, 0.0f, 0.3f);
+		}
+
+		@Override
+		String text() {
+			return String.format(Locale.ROOT, "%.2f m/s", PlayerStats.speed());
+		}
+	}
+
+	static final class Day extends TextElement {
+		Day() {
+			super("day", "Day counter", Feature.HUD_DAY, false, 1.0f, 0.18f);
+		}
+
+		@Override
+		public boolean hasContent() {
+			return Quartz.adapter().worldTime() >= 0;
+		}
+
+		@Override
+		String text() {
+			return "Day " + Math.max(0, Quartz.adapter().worldTime()) / 24000;
+		}
+	}
+
+	static final class Saturation extends TextElement {
+		Saturation() {
+			super("saturation", "Saturation", Feature.HUD_SATURATION, false, 0.0f, 0.36f);
+		}
+
+		@Override
+		String text() {
+			return String.format(Locale.ROOT, "Saturation %.1f", Math.max(0f, Quartz.adapter().saturation()));
+		}
+	}
+
+	static final class Arrows extends TextElement {
+		Arrows() {
+			super("arrows", "Arrow counter", Feature.HUD_ITEM_COUNTER, false, 1.0f, 0.8f);
+		}
+
+		@Override
+		public boolean hasContent() {
+			return Quartz.adapter().arrows() > 0;
+		}
+
+		@Override
+		String text() {
+			int n = Quartz.adapter().arrows();
+			return n + (n == 1 ? " arrow" : " arrows");
+		}
+	}
+
+	static final class Combo extends TextElement {
+		Combo() {
+			super("combo", "Combo counter", Feature.HUD_COMBO, false, 0.0f, 0.42f);
+		}
+
+		@Override
+		String text() {
+			int n = PlayerStats.combo();
+			return n == 0 ? "No combo" : n + " combo";
+		}
+	}
+
+	static final class BlockInfo extends TextElement {
+		BlockInfo() {
+			super("block", "Block info", Feature.HUD_BLOCK_INFO, false, 0.5f, 0.12f);
+		}
+
+		@Override
+		public boolean hasContent() {
+			return !Quartz.adapter().targetBlock().isEmpty();
+		}
+
+		@Override
+		String text() {
+			String block = Quartz.adapter().targetBlock();
+			return block.isEmpty() ? "Grass Block" : block;
+		}
+	}
+
+	static final class Biome extends TextElement {
+		Biome() {
+			super("biome", "Biome", Feature.HUD_BIOME, false, 0.0f, 0.48f);
+		}
+
+		@Override
+		String text() {
+			String biome = Quartz.adapter().biome();
+			return biome.isEmpty() ? "Plains" : biome;
 		}
 	}
 

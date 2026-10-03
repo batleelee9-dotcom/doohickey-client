@@ -2,9 +2,12 @@ package dev.quartz.legacy;
 
 import dev.quartz.core.Feature;
 import dev.quartz.core.Quartz;
+import dev.quartz.core.RenderBackend;
+import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.hud.CpsTracker;
 import dev.quartz.core.hud.Hud;
+import dev.quartz.core.pvp.CrosshairStyle;
 import dev.quartz.core.pvp.PvpState;
 import net.fabricmc.api.ClientModInitializer;
 import net.minecraft.client.MinecraftClient;
@@ -64,6 +67,11 @@ public final class QuartzLegacy implements ClientModInitializer {
 		}
 	}
 
+	/** Doohickey's crosshair is drawn instead of vanilla's (CrosshairMixin hides that one). */
+	public static boolean customCrosshair() {
+		return ClientConfig.get().customCrosshair && Quartz.available(Feature.CUSTOM_CROSSHAIR);
+	}
+
 	/** After the vanilla HUD (hooked in InGameHud#render). */
 	public static void renderHud() {
 		MinecraftClient client = MinecraftClient.getInstance();
@@ -71,6 +79,10 @@ public final class QuartzLegacy implements ClientModInitializer {
 		if (client.options.hudHidden || client.options.debugEnabled || client.currentScreen instanceof HudEditorLegacyScreen) {
 			return;
 		}
-		Hud.renderAll(Quartz.adapter().render());
+		RenderBackend r = Quartz.adapter().render();
+		if (customCrosshair()) {
+			Safe.run("crosshair", () -> CrosshairStyle.draw(r, r.screenWidth() / 2, r.screenHeight() / 2));
+		}
+		Hud.renderAll(r);
 	}
 }

@@ -76,6 +76,10 @@ public final class ClientConfig {
 	public boolean damageTint = true;
 	public int particlePercent = 100;
 	public boolean sprintToggled = false;
+	/** Zoom (hold C): how far in, and whether it eases in and out. */
+	public boolean zoomEnabled = true;
+	public float zoomFactor = 4.0f;
+	public boolean zoomSmooth = true;
 
 	// Map
 	public int minimapZoom = 1;

@@ -52,6 +52,10 @@ public enum Feature {
 	HUD_SERVER_IP(Category.HUD, "Server address"),
 	HUD_MEMORY(Category.HUD, "Memory usage"),
 	HUD_DIRECTION(Category.HUD, "Direction / compass"),
+	HUD_SPEED(Category.HUD, "Speedometer"),
+	HUD_DAY(Category.HUD, "Day counter"),
+	HUD_SATURATION(Category.HUD, "Saturation"),
+	HUD_BLOCK_INFO(Category.HUD, "Block info"),
 
 	// PvP / gameplay
 	TOGGLE_SPRINT_SNEAK(Category.PVP, "Toggle sprint and sneak"),
@@ -60,7 +64,7 @@ public enum Feature {
 	BLOCKHIT_ANIMATION(Category.PVP, "1.7 blockhit animation"),
 	HIT_COLOR(Category.PVP, "Hit colour"),
 	NO_HIT_DELAY(Category.PVP, "No hit delay", true),
-	HITBOXES(Category.PVP, "Coloured hitboxes"),
+	HITBOXES(Category.PVP, "Hitboxes"),
 	NAMETAGS(Category.PVP, "Nametag tweaks"),
 	AUTO_TOOL(Category.PVP, "Auto tool / weapon", true),
 	RAW_INPUT(Category.PVP, "Raw mouse input"),

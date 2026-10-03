@@ -26,7 +26,7 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | View and hand bobbing | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Hurt camera shake | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Damage tint | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
-| Custom crosshair | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Custom crosshair | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Dynamic crosshair | ⚠ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 1.8.9 has no attack cooldown; only bow charge can be shown. |
 | Block outline | ✅ | ✅ | ✅ | ⚠ | ⚠ | ⚠ | ⚠ | Core-profile OpenGL (1.17+) can't draw lines thicker than 1 px on every GPU. |
 | Item physics / 2D items | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
@@ -39,20 +39,24 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Ping | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | TPS | ⚠ | ⚠ | ⚠ | ⚠ | ⚠ | ⚠ | ⚠ | Servers don't report TPS; it's estimated from world-time packets. |
 | Coordinates and facing | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
-| Biome and dimension | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Biome and dimension | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Keystrokes | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Armor status | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Potion effects | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Reach display | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Measured from your own hits; purely informational. |
-| Combo counter | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Combo counter | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Scoreboard | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Chat customization | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| Item and arrow counter | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Item and arrow counter | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Ping and FPS graphs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| Clock and session timer | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| Server address | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| Memory usage | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
-| Direction / compass | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Clock and session timer | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Server address | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Memory usage | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Direction / compass | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Speedometer | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Day counter | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Saturation | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Block info | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | **PVP** | | | | | | | | |
 | Toggle sprint and sneak | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Sprint reset on hit [OPT-IN / RISK] | ✅ | N/A | N/A | N/A | N/A | N/A | N/A | Automates a combat technique; many servers treat that as a macro. |
@@ -60,11 +64,11 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | 1.7 blockhit animation | ✅ | ⚠ | ⚠ | ⚠ | ⚠ | ⚠ | ⚠ | Sword blocking was removed in 1.9; newer versions can only restyle the swing. |
 | Hit colour | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | No hit delay [OPT-IN / RISK] | ✅ | N/A | N/A | N/A | N/A | N/A | N/A | Removes 1.8.9's click delay after a miss; a gameplay change some servers ban. |
-| Coloured hitboxes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Hitboxes | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Nametag tweaks | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Auto tool / weapon [OPT-IN / RISK] | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Switches hotbar slots for you; forbidden on many PvP servers. |
 | Raw mouse input | ⚠ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 1.8.9 (LWJGL 2) needs a separate raw-input library. |
-| Zoom | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Zoom | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Freelook [OPT-IN / RISK] | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Some servers (e.g. Hypixel) ask clients to disable it. |
 | Ping-based reach display | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Display only; never changes reach. |
 | **PERFORMANCE** | | | | | | | | |

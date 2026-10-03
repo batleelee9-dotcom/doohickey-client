@@ -15,7 +15,10 @@ public final class Hud {
 	/** Every element the core provides; versions may add their own on top. */
 	public static final List<HudElement> ELEMENTS = Collections.unmodifiableList(Arrays.<HudElement>asList(
 		new Elements.Fps(), new Elements.Cps(), new Elements.Ping(), new Elements.Coordinates(), new Elements.Reach(),
-		new Elements.Keystrokes(), new Elements.Potions(), new Elements.Armor()));
+		new Elements.Keystrokes(), new Elements.Potions(), new Elements.Armor(),
+		new Elements.Clock(), new Elements.Session(), new Elements.Memory(), new Elements.Server(), new Elements.Direction(),
+		new Elements.Speed(), new Elements.Day(), new Elements.Saturation(), new Elements.Arrows(), new Elements.Combo(),
+		new Elements.BlockInfo(), new Elements.Biome()));
 
 	private Hud() {
 	}

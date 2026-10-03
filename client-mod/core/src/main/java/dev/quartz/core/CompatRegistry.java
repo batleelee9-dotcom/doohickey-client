@@ -97,6 +97,10 @@ public final class CompatRegistry {
 		row(Feature.HUD_SERVER_IP, "YYYYYYY", null);
 		row(Feature.HUD_MEMORY, "YYYYYYY", null);
 		row(Feature.HUD_DIRECTION, "YYYYYYY", null);
+		row(Feature.HUD_SPEED, "YYYYYYY", null);
+		row(Feature.HUD_DAY, "YYYYYYY", null);
+		row(Feature.HUD_SATURATION, "YYYYYYY", null);
+		row(Feature.HUD_BLOCK_INFO, "YYYYYYY", null);
 
 		row(Feature.TOGGLE_SPRINT_SNEAK, "YYYYYYY", null);
 		row(Feature.SPRINT_RESET, "Y------", "Automates a combat technique; many servers treat that as a macro.");
@@ -148,14 +152,20 @@ public final class CompatRegistry {
 			Feature.SKY_COLOR, Feature.TIME_LOCK, Feature.FOG, Feature.FOG_COLOR, Feature.WEATHER_OVERRIDE, Feature.VOID_FOG_REMOVAL,
 			Feature.FULLBRIGHT, Feature.DYNAMIC_RENDER_DISTANCE, Feature.PARTICLES, Feature.ENTITY_DISTANCE, Feature.TOGGLE_SPRINT_SNEAK,
 			Feature.HUD_EDITOR, Feature.HUD_FPS, Feature.HUD_CPS, Feature.HUD_PING, Feature.HUD_COORDINATES, Feature.HUD_KEYSTROKES,
-			Feature.HUD_ARMOR, Feature.HUD_POTIONS, Feature.HUD_REACH,
+			Feature.HUD_ARMOR, Feature.HUD_POTIONS, Feature.HUD_REACH, Feature.HUD_MEMORY, Feature.HUD_CLOCK, Feature.HUD_SERVER_IP,
+			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
+			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
+			Feature.CUSTOM_CROSSHAIR, Feature.ZOOM, Feature.HITBOXES,
 			Feature.ACCOUNT_SWITCHER);
 		implemented(McVersion.V26_3,
 			Feature.SKY_COLOR, Feature.TIME_LOCK, Feature.FOG, Feature.FOG_COLOR, Feature.WEATHER_OVERRIDE,
 			Feature.FULLBRIGHT, Feature.DYNAMIC_RENDER_DISTANCE,
 			Feature.PARTICLES, Feature.DAMAGE_TINT, Feature.CUSTOM_CROSSHAIR,
 			Feature.HUD_EDITOR, Feature.HUD_FPS, Feature.HUD_CPS, Feature.HUD_PING, Feature.HUD_COORDINATES, Feature.HUD_KEYSTROKES,
-			Feature.HUD_ARMOR, Feature.HUD_POTIONS, Feature.HUD_REACH, Feature.HUD_MEMORY,
+			Feature.HUD_ARMOR, Feature.HUD_POTIONS, Feature.HUD_REACH, Feature.HUD_MEMORY, Feature.HUD_CLOCK, Feature.HUD_SERVER_IP,
+			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
+			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
+			Feature.ZOOM, Feature.HITBOXES,
 			Feature.TOGGLE_SPRINT_SNEAK, Feature.HIT_COLOR, Feature.CAPES, Feature.WEARABLES, Feature.MINIMAP_WAYPOINTS,
 			Feature.ACCOUNT_SWITCHER);
 

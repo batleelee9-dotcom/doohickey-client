@@ -1,0 +1,12 @@
+{
+	"required": false,
+	"package": "dev.quartz.legacy.mixin.extra",
+	"compatibilityLevel": "JAVA_8",
+	"client": [
+		"CrosshairMixin",
+		"ZoomMixin"
+	],
+	"injectors": {
+		"defaultRequire": 0
+	}
+}

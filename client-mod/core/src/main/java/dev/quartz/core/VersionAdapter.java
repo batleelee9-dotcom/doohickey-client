@@ -64,6 +64,38 @@ public interface VersionAdapter {
 	/** Helmet, chestplate, leggings, boots and the held item — whichever are present. */
 	List<HudData.Item> armor();
 
+	/** Precise position {x, y, z} (for the speedometer), or null outside a world. */
+	double[] position();
+
+	/** Yaw in degrees as the game reports it: 0 = south, 90 = west. */
+	float yaw();
+
+	/** World time in ticks (for the day counter), or -1 outside a world. */
+	long worldTime();
+
+	/** Food saturation, or -1 outside a world. */
+	float saturation();
+
+	/** Arrows in the player's inventory. */
+	int arrows();
+
+	/** Name of the block under the crosshair, or "" when it's on nothing. */
+	String targetBlock();
+
+	/** The biome at the player's feet, or "" outside a world. */
+	String biome();
+
+	/** Ticks left on the player's hurt animation; rises just after taking damage. */
+	int hurtTime();
+
+	/** Vanilla's hitbox view (F3+B). */
+	boolean hitboxes();
+
+	void setHitboxes(boolean shown);
+
+	/** Whether the zoom key is held right now (never while a screen is open). */
+	boolean zoomKeyDown();
+
 	/** Opens the in-game Doohickey menu. */
 	void openMenu();
 

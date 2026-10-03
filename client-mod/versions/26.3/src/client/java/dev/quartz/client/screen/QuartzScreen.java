@@ -44,6 +44,8 @@ public final class QuartzScreen extends Screen {
 	private @Nullable HudModule dragging;
 	private double grabX;
 	private double grabY;
+	/** Where the settings panel ends, so its background fits however many options there are. */
+	private int panelBottom;
 
 	public QuartzScreen() {
 		super(Component.literal("Doohickey Client"));
@@ -59,7 +61,8 @@ public final class QuartzScreen extends Screen {
 			return;
 		}
 
-		int panelW = 340;
+		// Wide enough for four columns of HUD modules; narrower windows shrink it.
+		int panelW = Math.min(440, this.width - 20);
 		int left = (this.width - panelW) / 2;
 		int top = Math.max(24, this.height / 2 - 120);
 		int tabW = (panelW - 2 * (Tab.values().length - 1)) / Tab.values().length;
@@ -72,7 +75,8 @@ public final class QuartzScreen extends Screen {
 		}
 
 		// Cosmetics leaves room on the right for a live preview of your player.
-		Grid grid = tab == Tab.COSMETICS ? new Grid(left, top + 28, panelW - PREVIEW_W - 8, 1) : new Grid(left, top + 28, panelW, 2);
+		Grid grid = tab == Tab.COSMETICS ? new Grid(left, top + 28, panelW - PREVIEW_W - 8, 1)
+			: new Grid(left, top + 28, panelW, tab == Tab.HUD ? 4 : 2);
 		switch (tab) {
 			case HUD -> {
 				for (HudModule m : HudRenderer.modules()) {
@@ -105,6 +109,9 @@ public final class QuartzScreen extends Screen {
 				grid.toggle("Damage tint", c.damageTint, () -> c.damageTint = !c.damageTint);
 				grid.cycle("Particles", new String[] {"100%", "75%", "50%", "25%", "Off"}, indexOf(PARTICLES, c.particlePercent),
 					i -> c.particlePercent = PARTICLES[i]);
+				for (Option o : GameOptions.of(Feature.ZOOM, Feature.HITBOXES)) {
+					grid.action(o.text(), o::click);
+				}
 			}
 			case WORLD -> {
 				// Shared with every Minecraft version; options this version lacks are left out.
@@ -133,6 +140,7 @@ public final class QuartzScreen extends Screen {
 			}
 		}
 		add(left + panelW / 2 - 60, grid.bottom() + 10, 120, "Edit HUD layout", () -> settingsOpen = false);
+		panelBottom = grid.bottom() + 38;
 	}
 
 	private Button add(int x, int y, int w, String label, Runnable action) {
@@ -224,11 +232,12 @@ public final class QuartzScreen extends Screen {
 			}
 			g.centeredText(this.font, "Drag to move · Scroll to resize · Right Shift to close", this.width / 2, 32, 0xFFCCCCCC);
 		} else {
-			int panelW = 340;
+			int panelW = Math.min(440, this.width - 20);
 			int left = (this.width - panelW) / 2;
 			int top = Math.max(24, this.height / 2 - 120);
-			g.fill(left - 8, top - 22, left + panelW + 8, top + 250, 0xE0101014);
-			g.outline(left - 8, top - 22, panelW + 16, 272, 0xFF2A2A30);
+			int bottom = Math.max(top + 250, panelBottom);
+			g.fill(left - 8, top - 22, left + panelW + 8, bottom, 0xE0101014);
+			g.outline(left - 8, top - 22, panelW + 16, bottom - top + 22, 0xFF2A2A30);
 			g.text(this.font, "Doohickey Client", left, top - 14, 0xFFB8ADFF, false);
 			if (tab == Tab.COSMETICS && this.minecraft.player != null) {
 				int x1 = left + panelW;

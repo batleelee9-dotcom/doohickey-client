@@ -4,5 +4,6 @@
 	"key.quartz.toggle_sprint": "Toggle sprint",
 	"key.quartz.toggle_sneak": "Toggle sneak",
 	"key.quartz.waypoint": "Add waypoint here",
-	"key.quartz.minimap_zoom": "Minimap zoom"
+	"key.quartz.minimap_zoom": "Minimap zoom",
+	"key.quartz.zoom": "Zoom"
 }

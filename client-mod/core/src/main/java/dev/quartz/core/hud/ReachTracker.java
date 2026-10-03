@@ -9,6 +9,7 @@ public final class ReachTracker {
 
 	public static void record(double blocks) {
 		last = blocks;
+		PlayerStats.hit();
 	}
 
 	/** Blocks, or -1 before the first hit. */

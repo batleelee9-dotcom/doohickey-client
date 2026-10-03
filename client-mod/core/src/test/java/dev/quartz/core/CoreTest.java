@@ -28,6 +28,13 @@ import java.nio.file.attribute.FileTime;
 public final class CoreTest {
 	private static int failures;
 
+	/** What a text element shows: draw it and read back the last string. */
+	private static String textOf(FakeAdapter adapter, String id) {
+		HudElement e = Hud.ELEMENTS.stream().filter(x -> x.id.equals(id)).findFirst().get();
+		e.render(adapter.backend, false);
+		return adapter.backend.lastText;
+	}
+
 	private static void check(boolean ok, String what) {
 		System.out.println((ok ? "  ok   " : "  FAIL ") + what);
 		if (!ok) {
@@ -41,7 +48,8 @@ public final class CoreTest {
 		public int screenWidth() { return 400; }
 		public int screenHeight() { return 240; }
 		public void fill(int x0, int y0, int x1, int y1, int argb) { }
-		public int text(String text, int x, int y, int argb, boolean shadow) { return x + textWidth(text); }
+		String lastText = "";
+		public int text(String text, int x, int y, int argb, boolean shadow) { lastText = text; return x + textWidth(text); }
 		public int textWidth(String text) { return text.length() * 6; }
 		public int fontHeight() { return 9; }
 		public void push() { }
@@ -75,6 +83,21 @@ public final class CoreTest {
 		public int ping() { return 42; }
 		public java.util.List<HudData.Effect> effects() { return java.util.Collections.singletonList(new HudData.Effect("Speed II", "1:30", false)); }
 		public java.util.List<HudData.Item> armor() { return java.util.Collections.emptyList(); }
+		double[] position = {0, 64, 0};
+		public double[] position() { return position; }
+		public float yaw() { return 225f; }
+		public long worldTime() { return 24000L * 12 + 6000; }
+		public float saturation() { return 5f; }
+		public int arrows() { return 0; }
+		public String targetBlock() { return "Stone"; }
+		public String biome() { return "Plains"; }
+		int hurt;
+		public int hurtTime() { return hurt; }
+		boolean hitboxes;
+		public boolean hitboxes() { return hitboxes; }
+		public void setHitboxes(boolean shown) { hitboxes = shown; }
+		boolean zoomKey;
+		public boolean zoomKeyDown() { return zoomKey; }
 		public void openMenu() { }
 		public void notifyPlayer(String message) { }
 		public void runOnMainThread(Runnable task) { task.run(); }
@@ -113,7 +136,7 @@ public final class CoreTest {
 		check(CompatRegistry.available(Feature.VOID_FOG_REMOVAL, McVersion.V1_8_9), "void fog removal on 1.8.9");
 		check(!CompatRegistry.available(Feature.VOID_FOG_REMOVAL, McVersion.V26_3), "no void fog removal on 26.3 (removed in 1.18)");
 		check(!CompatRegistry.available(Feature.SKY_COLOR, McVersion.V1_12_2), "nothing available on versions without a build");
-		check(Hud.available().size() == 8 && HudOptions.all().size() == 8, "8 shared HUD elements on 1.8.9");
+		check(Hud.available().size() == 20 && HudOptions.all().size() == 20, "20 shared HUD elements on 1.8.9");
 		check(WorldOptions.all().size() == 7, "7 World options on 1.8.9");
 		adapter.version = McVersion.V26_3;
 		check(WorldOptions.all().size() == 6, "6 World options on 26.3 (void fog hidden)");
@@ -140,6 +163,33 @@ public final class CoreTest {
 		check(potions.hasContent() && potions.height(adapter.backend) == 15, "one potion line");
 		dev.quartz.core.hud.ReachTracker.record(3.14159);
 		check(dev.quartz.core.hud.ReachTracker.last() > 3.14 && dev.quartz.core.hud.ReachTracker.last() < 3.15, "reach recorded");
+
+		System.out.println("new HUD elements");
+		check(dev.quartz.core.hud.PlayerStats.combo() == 1, "a landed hit starts a combo");
+		dev.quartz.core.hud.ReachTracker.record(2.5);
+		check(dev.quartz.core.hud.PlayerStats.combo() == 2, "and the next one extends it");
+		dev.quartz.core.hud.PlayerStats.tick(adapter);
+		adapter.position = new double[] {0.5, 64, 0};
+		dev.quartz.core.hud.PlayerStats.tick(adapter);
+		check(Math.abs(dev.quartz.core.hud.PlayerStats.speed() - 10.0) < 0.001, "half a block a tick is 10 m/s");
+		adapter.hurt = 10;
+		dev.quartz.core.hud.PlayerStats.tick(adapter);
+		check(dev.quartz.core.hud.PlayerStats.combo() == 0, "taking damage ends the combo");
+		check(textOf(adapter, "direction").equals("NE  45°"), "yaw 225 reads as north-east");
+		check(textOf(adapter, "day").equals("Day 12"), "day counter");
+		check(textOf(adapter, "block").equals("Stone"), "block info");
+
+		System.out.println("zoom and hitboxes");
+		check(dev.quartz.core.pvp.Zoom.apply(70f) == 70f, "no zoom without the key");
+		adapter.zoomKey = true;
+		ClientConfig.get().zoomSmooth = false;
+		check(dev.quartz.core.pvp.Zoom.apply(70f) == 17.5f, "4x zoom divides the FOV by 4");
+		adapter.zoomKey = false;
+		check(dev.quartz.core.pvp.Zoom.apply(70f) == 70f, "and lets go when the key does");
+		dev.quartz.core.ui.Option hitboxes = dev.quartz.core.ui.GameOptions.all().stream()
+			.filter(o -> o.feature == Feature.HITBOXES).findFirst().get();
+		hitboxes.click();
+		check(adapter.hitboxes, "the Hitboxes option switches vanilla's hitbox view");
 
 		System.out.println("world controls");
 		EnvironmentSettings env = ClientConfig.get().environment;

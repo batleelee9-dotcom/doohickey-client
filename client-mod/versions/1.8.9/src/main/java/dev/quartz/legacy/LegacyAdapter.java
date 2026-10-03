@@ -19,8 +19,11 @@ import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import org.lwjgl.input.Keyboard;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -193,6 +196,84 @@ final class LegacyAdapter implements VersionAdapter {
 		}
 		boolean wears = stack.isDamageable();
 		out.add(new HudData.Item(stack, wears ? stack.getMaxDamage() - stack.getDamage() : -1, wears ? stack.getMaxDamage() : 0));
+	}
+
+	@Override
+	public double[] position() {
+		PlayerEntity p = MinecraftClient.getInstance().player;
+		return p == null ? null : new double[] {p.x, p.y, p.z};
+	}
+
+	@Override
+	public float yaw() {
+		PlayerEntity p = MinecraftClient.getInstance().player;
+		return p == null ? 0f : p.yaw;
+	}
+
+	@Override
+	public long worldTime() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		return client.world == null ? -1 : client.world.getTimeOfDay();
+	}
+
+	@Override
+	public float saturation() {
+		PlayerEntity p = MinecraftClient.getInstance().player;
+		return p == null ? -1f : p.getHungerManager().getSaturationLevel();
+	}
+
+	@Override
+	public int arrows() {
+		PlayerEntity p = MinecraftClient.getInstance().player;
+		int n = 0;
+		if (p != null) {
+			for (ItemStack stack : p.inventory.main) {
+				if (stack != null && stack.getItem() == Items.ARROW) {
+					n += stack.count;
+				}
+			}
+		}
+		return n;
+	}
+
+	@Override
+	public String targetBlock() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		BlockHitResult hit = client.result;
+		if (client.world == null || hit == null || hit.type != BlockHitResult.Type.BLOCK || hit.getBlockPos() == null) {
+			return "";
+		}
+		return client.world.getBlockState(hit.getBlockPos()).getBlock().getTranslatedName();
+	}
+
+	@Override
+	public String biome() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client.world == null || client.player == null) {
+			return "";
+		}
+		return client.world.getBiome(new BlockPos(client.player)).name;
+	}
+
+	@Override
+	public int hurtTime() {
+		PlayerEntity p = MinecraftClient.getInstance().player;
+		return p == null ? 0 : p.hurtTime;
+	}
+
+	@Override
+	public boolean hitboxes() {
+		return MinecraftClient.getInstance().getEntityRenderManager().getRenderHitboxes();
+	}
+
+	@Override
+	public void setHitboxes(boolean shown) {
+		MinecraftClient.getInstance().getEntityRenderManager().setRenderHitboxes(shown);
+	}
+
+	@Override
+	public boolean zoomKeyDown() {
+		return MinecraftClient.getInstance().currentScreen == null && Keyboard.isKeyDown(Keyboard.KEY_C);
 	}
 
 	@Override

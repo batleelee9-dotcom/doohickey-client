@@ -2,6 +2,7 @@ package dev.quartz.core;
 
 import dev.quartz.core.accounts.LauncherBridge;
 import dev.quartz.core.config.ClientConfig;
+import dev.quartz.core.hud.PlayerStats;
 import dev.quartz.core.perf.Performance;
 
 import java.io.IOException;
@@ -44,6 +45,7 @@ public final class Quartz {
 	/** Once per client tick, from each version's tick hook. */
 	public static void tick() {
 		Safe.run("perf.tick", () -> Performance.tick(adapter));
+		Safe.run("stats.tick", () -> PlayerStats.tick(adapter));
 		if (++ticks % 20 == 0) {
 			Safe.run("config.reload", () -> ClientConfig.get().pollReload());
 		}
