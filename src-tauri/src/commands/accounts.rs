@@ -1,7 +1,7 @@
-use std::sync::PoisonError;
+use std::sync::{Arc, Mutex, PoisonError};
 
 use serde::Serialize;
-use tauri::{ipc::Channel, State};
+use tauri::{ipc::Channel, AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder, WindowEvent};
 use tokio::sync::oneshot;
 use uuid::Uuid;
 
@@ -12,6 +12,7 @@ use crate::{
     },
     error::AppError,
     state::AppState,
+    window,
 };
 
 #[tauri::command]
@@ -65,14 +66,15 @@ pub fn remove_account(state: State<AppState>, id: String) -> Result<AccountsSnap
 #[derive(Clone, Serialize)]
 #[serde(tag = "event", content = "data", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum LoginEvent {
-    DeviceCode { user_code: String, verification_uri: String, expires_in: u64 },
     Step { step: LoginStep },
 }
 
-/// Full Microsoft sign-in. Resolves once the account is stored and active, or
-/// with `AppError::Cancelled` if `ms_login_cancel` is called first.
+/// Full Microsoft sign-in in a login window inside the launcher. Resolves once
+/// the account is stored and active, or with `AppError::Cancelled` if the
+/// window is closed or `ms_login_cancel` is called first.
 #[tauri::command]
 pub async fn ms_login(
+    app: AppHandle,
     state: State<'_, AppState>,
     on_event: Channel<LoginEvent>,
 ) -> Result<AccountsSnapshot, AppError> {
@@ -83,14 +85,16 @@ pub async fn ms_login(
     // that is still waiting (e.g. "Continue with Microsoft" clicked twice).
     *state.login_cancel.lock().unwrap_or_else(PoisonError::into_inner) = Some(cancel_tx);
 
+    let pkce = microsoft::Pkce::new();
+    let (redirect_tx, redirect_rx) = oneshot::channel();
+    let window = open_login_window(&app, &pkce.authorize_url(&client_id), redirect_tx)?;
+
     let login = async {
-        let code = microsoft::request_device_code(&state.http, &client_id).await?;
-        let _ = on_event.send(LoginEvent::DeviceCode {
-            user_code: code.user_code.clone(),
-            verification_uri: code.verification_uri.clone(),
-            expires_in: code.expires_in,
-        });
-        let tokens = microsoft::poll_device_token(&state.http, &client_id, &code).await?;
+        // Closing the window drops the sender, which reads as a cancel.
+        let redirect = redirect_rx.await.map_err(|_| AppError::Cancelled)?;
+        let _ = window.destroy();
+        let code = pkce.code_from_redirect(&redirect)?;
+        let tokens = microsoft::exchange_code(&state.http, &client_id, &code, &pkce).await?;
         let (profile, session) = microsoft::login_minecraft(&state.http, &tokens.access_token, |step| {
             let _ = on_event.send(LoginEvent::Step { step });
         })
@@ -99,10 +103,12 @@ pub async fn ms_login(
     };
 
     // Dropping `login` when cancel wins aborts whatever request is in flight.
-    let (tokens, profile, session) = tokio::select! {
-        result = login => result?,
-        _ = cancel_rx => return Err(AppError::Cancelled),
+    let result = tokio::select! {
+        result = login => result,
+        _ = cancel_rx => Err(AppError::Cancelled),
     };
+    let _ = window.destroy();
+    let (tokens, profile, session) = result?;
 
     let id = Uuid::parse_str(&profile.id)
         .map_err(|_| AppError::Auth("Minecraft returned an invalid profile ID.".into()))?
@@ -121,6 +127,41 @@ pub async fn ms_login(
         added_at: now,
         last_used_at: now,
     })
+}
+
+/// Opens Microsoft's sign-in page in its own window. When Microsoft redirects
+/// to `REDIRECT_URI` the navigation is stopped and the URL (carrying the code)
+/// is sent on `redirect`. The page is remote, so the window gets no IPC access
+/// (the capability file only covers the main window).
+fn open_login_window(app: &AppHandle, url: &str, redirect: oneshot::Sender<String>) -> Result<WebviewWindow, AppError> {
+    let failed = |e: tauri::Error| AppError::Auth(format!("Couldn't open the Microsoft sign-in window: {e}"));
+    let url = url.parse().map_err(|_| AppError::Auth("Couldn't build the Microsoft sign-in address.".into()))?;
+    let slot = Arc::new(Mutex::new(Some(redirect)));
+    let on_redirect = slot.clone();
+    let label = format!("ms-login-{}", Uuid::new_v4().simple());
+    let mut builder = WebviewWindowBuilder::new(app, label, WebviewUrl::External(url))
+        .title("Sign in with Microsoft")
+        .inner_size(480.0, 640.0)
+        .center()
+        .on_navigation(move |url| {
+            if !url.as_str().starts_with(microsoft::REDIRECT_URI) {
+                return true;
+            }
+            if let Some(tx) = on_redirect.lock().unwrap_or_else(PoisonError::into_inner).take() {
+                let _ = tx.send(url.to_string());
+            }
+            false
+        });
+    if let Some(main) = app.get_webview_window(window::MAIN) {
+        builder = builder.parent(&main).map_err(failed)?;
+    }
+    let login = builder.build().map_err(failed)?;
+    login.on_window_event(move |event| {
+        if let WindowEvent::Destroyed = event {
+            slot.lock().unwrap_or_else(PoisonError::into_inner).take();
+        }
+    });
+    Ok(login)
 }
 
 #[tauri::command]

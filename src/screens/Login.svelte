@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { openUrl } from "@tauri-apps/plugin-opener";
   import { fade, fly } from "svelte/transition";
   import { accounts } from "../lib/accounts.svelte";
   import Icon from "../lib/components/Icon.svelte";
@@ -15,7 +14,7 @@
   let phase = $state<Phase>("choose");
   let error = $state<AppError | null>(null);
 
-  // ---- Microsoft (device-code flow) -------------------------------------
+  // ---- Microsoft (sign-in window) ---------------------------------------
 
   const STEPS: { id: "signin" | LoginStep; label: string }[] = [
     { id: "signin", label: "Sign in with Microsoft" },
@@ -23,9 +22,7 @@
     { id: "minecraft", label: "Log in to Minecraft" },
     { id: "profile", label: "Load your profile" },
   ];
-  let code = $state<{ userCode: string; verificationUri: string } | null>(null);
   let stepIndex = $state(0);
-  let copied = $state(false);
 
   // The Azure app's client ID, pasted here; blank uses the one built into this copy.
   let clientId = $state(store.settings?.msClientId ?? "");
@@ -44,17 +41,11 @@
       }
     }
     error = null;
-    code = null;
     stepIndex = 0;
     phase = "microsoft";
     try {
       const snapshot = await api.msLogin((e) => {
-        if (e.event === "deviceCode") {
-          code = e.data;
-          void copy(e.data.userCode);
-        } else {
-          stepIndex = STEPS.findIndex((s) => s.id === e.data.step);
-        }
+        stepIndex = STEPS.findIndex((s) => s.id === e.data.step);
       });
       accounts.apply(snapshot);
       onDone();
@@ -67,26 +58,6 @@
         error = err;
         phase = "failed";
       }
-    }
-  }
-
-  async function copy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-      copied = true;
-    } catch {
-      // Clipboard can be unavailable (e.g. window not focused); the code is on screen anyway.
-    }
-  }
-
-  /** microsoft.com/link pre-fills the code when given as ?otc=, saving a paste. */
-  function linkUrl(c: { userCode: string; verificationUri: string }) {
-    try {
-      const url = new URL(c.verificationUri);
-      if (url.pathname === "/link") url.searchParams.set("otc", c.userCode);
-      return url.toString();
-    } catch {
-      return c.verificationUri;
     }
   }
 
@@ -231,36 +202,21 @@
           </form>
         {:else}
           <h1>Sign in with Microsoft</h1>
-          {#if code}
-            {@const c = code}
-            <p class="sub">Enter this code on the Microsoft page. It's already on your clipboard.</p>
-            <button class="code" title="Copy code" onclick={() => copy(c.userCode)}>
-              <span data-selectable>{c.userCode}</span>
-              <span class="code-hint">{copied ? "Copied" : "Click to copy"}</span>
-            </button>
-            <div class="actions">
-              <button class="btn btn-primary btn-lg btn-block" onclick={() => openUrl(linkUrl(c))}>
-                Open microsoft.com/link
-                <Icon name="external" size={14} />
-              </button>
-            </div>
-            <ol class="steps">
-              {#each STEPS as s, i (s.id)}
-                <li class:done={i < stepIndex} class:current={i === stepIndex}>
-                  <span class="dot">
-                    {#if i < stepIndex}
-                      <Icon name="check" size={10} />
-                    {:else if i === stepIndex}
-                      <Spinner size={12} />
-                    {/if}
-                  </span>
-                  {i === 0 && stepIndex === 0 ? "Waiting for you to sign in…" : s.label}
-                </li>
-              {/each}
-            </ol>
-          {:else}
-            <p class="sub waiting"><Spinner /> Requesting a sign-in code…</p>
-          {/if}
+          <p class="sub">Finish signing in in the Microsoft window. It closes by itself when you're done.</p>
+          <ol class="steps">
+            {#each STEPS as s, i (s.id)}
+              <li class:done={i < stepIndex} class:current={i === stepIndex}>
+                <span class="dot">
+                  {#if i < stepIndex}
+                    <Icon name="check" size={10} />
+                  {:else if i === stepIndex}
+                    <Spinner size={12} />
+                  {/if}
+                </span>
+                {i === 0 && stepIndex === 0 ? "Waiting for you to sign in…" : s.label}
+              </li>
+            {/each}
+          </ol>
           <button class="btn btn-ghost btn-block" onclick={() => api.msLoginCancel()}>Cancel</button>
         {/if}
       </div>
@@ -338,11 +294,6 @@
     color: var(--text-muted);
     text-wrap: balance;
   }
-  .waiting {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
   .actions {
     display: flex;
     flex-direction: column;
@@ -402,34 +353,6 @@
   }
   .field-help.invalid {
     color: var(--danger);
-  }
-  .code {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    width: 100%;
-    margin-bottom: 14px;
-    padding: 16px;
-    border: 1px dashed var(--border-strong);
-    border-radius: var(--radius-lg);
-    background: var(--bg-subtle);
-    cursor: pointer;
-    transition: border-color 0.15s;
-  }
-  .code:hover {
-    border-color: var(--accent);
-  }
-  .code span:first-child {
-    font-family: var(--font-mono);
-    font-size: 28px;
-    font-weight: 600;
-    letter-spacing: 0.16em;
-    color: var(--text);
-  }
-  .code-hint {
-    color: var(--text-faint);
-    font-size: 11.5px;
   }
   .steps {
     display: grid;

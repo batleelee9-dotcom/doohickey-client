@@ -24,7 +24,6 @@ export interface AccountsSnapshot {
 export type LoginStep = "xbox" | "minecraft" | "profile";
 
 export type LoginEvent =
-  | { event: "deviceCode"; data: { userCode: string; verificationUri: string; expiresIn: number } }
   | { event: "step"; data: { step: LoginStep } };
 
 // ---- App & settings ------------------------------------------------------------

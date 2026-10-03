@@ -1,23 +1,28 @@
 //! Microsoft → Xbox Live → Minecraft sign-in.
 //!
-//! 1. OAuth 2.0 device-code flow against Microsoft's consumer tenant. The user
-//!    signs in in their own browser (password managers and passkeys work; we
-//!    never see a password).
+//! 1. OAuth 2.0 authorization-code flow with PKCE against Microsoft's consumer
+//!    tenant, in a login window inside the launcher. Microsoft's own page takes
+//!    the password; the launcher only sees the redirect carrying the code.
 //! 2. The Microsoft access token is exchanged for an Xbox Live user token (XBL).
 //! 3. XBL is traded for an XSTS token scoped to Minecraft services.
 //! 4. Minecraft services accept `XBL3.0 x=<userhash>;<xsts>` and return a
 //!    Minecraft access token, which is used to read the player's profile.
 
-use std::time::{Duration, Instant};
-
-use reqwest::{Client, StatusCode};
+use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use reqwest::{Client, StatusCode, Url};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use sha2::{Digest, Sha256};
+use uuid::Uuid;
 
 use crate::error::AppError;
 
-const DEVICE_CODE_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode";
+const AUTHORIZE_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize";
 const TOKEN_URL: &str = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token";
+/// Azure's standard redirect for desktop apps. The login window stops at it
+/// and never loads it; it must be added to the Azure app under
+/// Authentication → Mobile and desktop applications.
+pub const REDIRECT_URI: &str = "https://login.microsoftonline.com/common/oauth2/nativeclient";
 const XBL_URL: &str = "https://user.auth.xboxlive.com/user/authenticate";
 const XSTS_URL: &str = "https://xsts.auth.xboxlive.com/xsts/authorize";
 const MC_LOGIN_URL: &str = "https://api.minecraftservices.com/authentications/login_with_xbox";
@@ -25,7 +30,6 @@ const MC_PROFILE_URL: &str = "https://api.minecraftservices.com/minecraft/profil
 const MC_ENTITLEMENTS_URL: &str = "https://api.minecraftservices.com/entitlements/mcstore";
 
 const SCOPE: &str = "XboxLive.signin offline_access";
-const DEVICE_GRANT: &str = "urn:ietf:params:oauth:grant-type:device_code";
 
 pub const NO_CLIENT_ID: &str = "Microsoft sign-in needs your Azure app's client ID. \
     Paste it on the sign-in screen (see README).";
@@ -39,15 +43,6 @@ pub fn client_id(saved: Option<String>) -> Option<String> {
         .or(saved)
         .or_else(|| option_env!("QUARTZ_MS_CLIENT_ID").map(str::to_owned))
         .filter(|id| !id.trim().is_empty())
-}
-
-#[derive(Deserialize)]
-pub struct DeviceCode {
-    pub device_code: String,
-    pub user_code: String,
-    pub verification_uri: String,
-    pub expires_in: u64,
-    pub interval: u64,
 }
 
 #[derive(Deserialize)]
@@ -97,56 +92,72 @@ struct OAuthError {
     error_description: String,
 }
 
-pub async fn request_device_code(http: &Client, client_id: &str) -> Result<DeviceCode, AppError> {
+/// One sign-in attempt: the PKCE verifier stays here, only its hash goes to Microsoft.
+pub struct Pkce {
+    pub verifier: String,
+    pub state: String,
+}
+
+impl Pkce {
+    pub fn new() -> Self {
+        // Two v4 UUIDs = 244 random bits from the OS RNG.
+        let random = || URL_SAFE_NO_PAD.encode([*Uuid::new_v4().as_bytes(), *Uuid::new_v4().as_bytes()].concat());
+        Self { verifier: random(), state: random() }
+    }
+
+    /// The Microsoft sign-in page to open in the login window.
+    pub fn authorize_url(&self, client_id: &str) -> String {
+        let challenge = URL_SAFE_NO_PAD.encode(Sha256::digest(self.verifier.as_bytes()));
+        let mut url = Url::parse(AUTHORIZE_URL).expect("valid constant URL");
+        url.query_pairs_mut()
+            .append_pair("client_id", client_id)
+            .append_pair("response_type", "code")
+            .append_pair("redirect_uri", REDIRECT_URI)
+            .append_pair("response_mode", "query")
+            .append_pair("scope", SCOPE)
+            .append_pair("code_challenge", &challenge)
+            .append_pair("code_challenge_method", "S256")
+            .append_pair("state", &self.state)
+            // Lets the player pick or add an account instead of reusing the last one.
+            .append_pair("prompt", "select_account");
+        url.into()
+    }
+
+    /// Reads the authorization code from the URL Microsoft redirected to.
+    pub fn code_from_redirect(&self, redirect: &str) -> Result<String, AppError> {
+        let url = Url::parse(redirect).map_err(|_| unexpected("Microsoft"))?;
+        let param = |name: &str| url.query_pairs().find(|(k, _)| k == name).map(|(_, v)| v.into_owned());
+        if let Some(error) = param("error") {
+            if error == "access_denied" {
+                return Err(AppError::Auth("Sign-in was cancelled in the Microsoft window.".into()));
+            }
+            return Err(describe_oauth_error(&OAuthError { error, error_description: param("error_description").unwrap_or_default() }));
+        }
+        if param("state").as_deref() != Some(self.state.as_str()) {
+            return Err(AppError::Auth("The sign-in response didn't match this request. Try again.".into()));
+        }
+        param("code").ok_or_else(|| unexpected("Microsoft"))
+    }
+}
+
+/// Trades the authorization code (plus the PKCE verifier) for tokens.
+pub async fn exchange_code(http: &Client, client_id: &str, code: &str, pkce: &Pkce) -> Result<MsTokens, AppError> {
     let res = http
-        .post(DEVICE_CODE_URL)
-        .form(&[("client_id", client_id), ("scope", SCOPE)])
+        .post(TOKEN_URL)
+        .form(&[
+            ("grant_type", "authorization_code"),
+            ("client_id", client_id),
+            ("code", code),
+            ("redirect_uri", REDIRECT_URI),
+            ("code_verifier", pkce.verifier.as_str()),
+            ("scope", SCOPE),
+        ])
         .send()
         .await?;
     if res.status().is_success() {
         return Ok(res.json().await?);
     }
     Err(describe_oauth_error(&res.json().await.unwrap_or_default()))
-}
-
-/// Polls until the user finishes signing in, declines, or the code expires.
-pub async fn poll_device_token(
-    http: &Client,
-    client_id: &str,
-    code: &DeviceCode,
-) -> Result<MsTokens, AppError> {
-    let deadline = Instant::now() + Duration::from_secs(code.expires_in);
-    let mut interval = Duration::from_secs(code.interval.max(1));
-    loop {
-        tokio::time::sleep(interval).await;
-        if Instant::now() >= deadline {
-            return Err(code_expired());
-        }
-        let res = http
-            .post(TOKEN_URL)
-            .form(&[
-                ("grant_type", DEVICE_GRANT),
-                ("client_id", client_id),
-                ("device_code", code.device_code.as_str()),
-            ])
-            .send()
-            .await?;
-        if res.status().is_success() {
-            return Ok(res.json().await?);
-        }
-        let err: OAuthError = res.json().await.unwrap_or_default();
-        match err.error.as_str() {
-            // The user hasn't finished in the browser yet.
-            "authorization_pending" => {}
-            // RFC 8628 §3.5: add 5 seconds to the interval on every slow_down.
-            "slow_down" => interval += Duration::from_secs(5),
-            "authorization_declined" | "access_denied" => {
-                return Err(AppError::Auth("Sign-in was declined in the browser.".into()))
-            }
-            "expired_token" | "code_expired" => return Err(code_expired()),
-            _ => return Err(describe_oauth_error(&err)),
-        }
-    }
 }
 
 /// Exchanges a stored refresh token for fresh tokens (Microsoft rotates the
@@ -384,17 +395,23 @@ async fn owns_minecraft(http: &Client, mc_token: &str) -> Result<bool, AppError>
 /// common ones here are caused by how the Azure app was registered.
 fn describe_oauth_error(err: &OAuthError) -> AppError {
     let desc = &err.error_description;
-    if desc.contains("AADSTS7000218") {
+    if desc.contains("AADSTS50011") || desc.contains("AADSTS500113") {
+        return AppError::Config(format!(
+            "The Azure app is missing the sign-in redirect. In the Azure portal, open the app's \
+             Authentication page, choose Add a platform → Mobile and desktop applications, and tick {REDIRECT_URI}."
+        ));
+    }
+    if desc.contains("AADSTS7000218") || desc.contains("AADSTS70002") {
         return AppError::Config(
-            "The Azure app doesn't allow public client flows. In the Azure portal, open the app's \
-             Authentication page and turn on \"Allow public client flows\"."
+            "The Azure app isn't set up as a desktop app. On its Authentication page, add the redirect under \
+             \"Mobile and desktop applications\" (not \"Web\") and turn on \"Allow public client flows\"."
                 .into(),
         );
     }
     if desc.contains("AADSTS700016") || desc.contains("AADSTS700038") || err.error == "unauthorized_client" {
         return AppError::Config(
             "The configured Microsoft client ID wasn't recognised for personal Microsoft accounts. \
-             Check QUARTZ_MS_CLIENT_ID and that the Azure app supports personal accounts."
+             Check the client ID on the sign-in screen and that the Azure app supports personal accounts."
                 .into(),
         );
     }
@@ -404,10 +421,6 @@ fn describe_oauth_error(err: &OAuthError) -> AppError {
     AppError::Auth(format!("Microsoft sign-in failed: {detail}"))
 }
 
-fn code_expired() -> AppError {
-    AppError::Auth("The sign-in code expired before it was used. Start again to get a new one.".into())
-}
-
 fn unexpected(service: &str) -> AppError {
     AppError::Auth(format!("{service} sent an unexpected response. Try again in a moment."))
 }
@@ -415,6 +428,25 @@ fn unexpected(service: &str) -> AppError {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pkce_round_trip() {
+        let pkce = Pkce::new();
+        assert!((43..=128).contains(&pkce.verifier.len()), "RFC 7636 verifier length");
+        let url = Url::parse(&pkce.authorize_url("507b785f-1ce8-4a33-b5cf-2850e76a326d")).unwrap();
+        let q = |k: &str| url.query_pairs().find(|(n, _)| n == k).map(|(_, v)| v.into_owned()).unwrap();
+        assert_eq!(q("code_challenge"), URL_SAFE_NO_PAD.encode(Sha256::digest(pkce.verifier.as_bytes())));
+        assert_eq!(q("redirect_uri"), REDIRECT_URI);
+
+        let ok = format!("{REDIRECT_URI}?code=abc&state={}", pkce.state);
+        assert_eq!(pkce.code_from_redirect(&ok).unwrap(), "abc");
+        // A redirect for some other request (wrong state) is refused.
+        assert!(pkce.code_from_redirect(&format!("{REDIRECT_URI}?code=abc&state=nope")).is_err());
+        let cancelled = format!("{REDIRECT_URI}?error=access_denied&state={}", pkce.state);
+        assert!(matches!(pkce.code_from_redirect(&cancelled), Err(AppError::Auth(_))));
+        let bad_app = format!("{REDIRECT_URI}?error=invalid_request&error_description=AADSTS50011%3A+mismatch");
+        assert!(matches!(pkce.code_from_redirect(&bad_app), Err(AppError::Config(_))));
+    }
 
     #[test]
     fn parses_xbox_token_shape() {
