@@ -83,7 +83,8 @@
         {
           "kind": "forge",
           "version": "stable",
-          "mods": ["patcher", "entityculling"]
+          "mods": ["patcher", "entityculling"],
+          "optifine": true
         }
       ]
     }

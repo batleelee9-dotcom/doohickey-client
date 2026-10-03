@@ -49,6 +49,10 @@ pub struct BuildLoader {
     /// Modrinth slugs, installed with their required dependencies.
     #[serde(default)]
     pub mods: Vec<String>,
+    /// Offer "Add OptiFine": the player downloads it (its licence forbids
+    /// launchers fetching or bundling it) and the launcher installs it.
+    #[serde(default)]
+    pub optifine: bool,
 }
 
 fn stable() -> String {
@@ -167,6 +171,7 @@ pub struct LoaderView {
     /// Whether this combination ships Doohickey Client.
     pub quartz_client: bool,
     pub instance_id: String,
+    pub optifine: bool,
 }
 
 pub fn view(manifest: &Manifest, source: Source, problem: Option<String>) -> ManifestView {
@@ -190,6 +195,7 @@ pub fn view(manifest: &Manifest, source: Source, problem: Option<String>) -> Man
                         mods: l.mods.clone(),
                         quartz_client: client_mod::supports_version(l.kind, &b.minecraft),
                         instance_id: instance_id(&b.id, l.kind),
+                        optifine: l.optifine,
                     })
                     .collect(),
             })

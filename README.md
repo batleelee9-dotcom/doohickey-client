@@ -123,6 +123,6 @@ Lunar Client hasn't been measured on the same machine. To compare, run `.\script
 - **Microsoft sign-in needs your own Azure app ID approved by Mojang.** Without one, use offline accounts (singleplayer and LAN).
 - Not built yet: custom sky gradients/cubemaps, 1.7 animations, and the crosshair and hit colour on 1.8.9. Entity culling comes from the EntityCulling mod on the builds where it exists, not from Doohickey Client.
 - Cosmetics are visible only to you: there is no cosmetics server.
-- **OptiFine** isn't auto-installed, because its licence forbids it. Sodium + Iris cover the same ground.
+- **OptiFine** isn't downloaded or bundled, because its licence forbids it. On 1.8.9 Forge, download it from optifine.net and choose the file on the Play screen; the launcher checks it and installs it. Elsewhere, Sodium + Iris cover the same ground.
 
 Design notes: [ARCHITECTURE.md](ARCHITECTURE.md) (launcher) and [docs/CLIENT.md](docs/CLIENT.md) (in-game client).
