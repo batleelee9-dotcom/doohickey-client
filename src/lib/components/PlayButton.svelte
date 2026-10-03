@@ -12,7 +12,7 @@
     /** The install whose progress and running state this button shows. */
     id: string;
     onlaunch: () => void;
-    size?: "sm" | "md" | "lg";
+    size?: "sm" | "md" | "lg" | "xl";
     label?: string;
   } = $props();
 
@@ -40,13 +40,13 @@
 >
   {#if launch}
     {#if pct !== null}<span class="fill" style:width="{pct}%"></span>{/if}
-    <Spinner size={size === "lg" ? 15 : 13} />
+    <Spinner size={size === "lg" || size === "xl" ? 16 : 13} />
     <span class="text">{size === "sm" ? (pct !== null ? `${Math.round(pct)}%` : "…") : launch.message}{#if pct !== null && size !== "sm"}&nbsp;· {Math.round(pct)}%{/if}</span>
   {:else if running}
-    <Icon name="stop" size={size === "lg" ? 14 : 12} filled />
+    <Icon name="stop" size={size === "lg" || size === "xl" ? 15 : 12} filled />
     <span class="text">Stop</span>
   {:else}
-    <Icon name="play" size={size === "lg" ? 14 : 12} filled />
+    <Icon name="play" size={size === "lg" || size === "xl" ? 15 : 12} filled />
     <span class="text">{label}</span>
   {/if}
 </button>
@@ -94,6 +94,35 @@
     padding: 0 22px;
     font-size: 14.5px;
     box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 35%, transparent);
+  }
+  /* The hero's launch button: the one thing on the home screen meant to be pressed. */
+  .xl {
+    height: 54px;
+    min-width: 210px;
+    padding: 0 30px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 80%, white), var(--accent) 45%, color-mix(in srgb, var(--accent) 70%, black));
+    font-size: 15px;
+    font-weight: 750;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    box-shadow:
+      0 10px 30px color-mix(in srgb, var(--accent) 45%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 0.25);
+  }
+  .xl:hover {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 70%, white), color-mix(in srgb, var(--accent) 90%, white) 45%, var(--accent));
+    box-shadow:
+      0 12px 38px color-mix(in srgb, var(--accent) 60%, transparent),
+      inset 0 1px 0 rgb(255 255 255 / 0.3);
+  }
+  .xl.busy,
+  .xl.running {
+    background: rgb(255 255 255 / 0.1);
+    backdrop-filter: blur(12px);
+    letter-spacing: 0.02em;
+    text-transform: none;
+    font-weight: 600;
   }
   .busy {
     background: var(--bg-active);

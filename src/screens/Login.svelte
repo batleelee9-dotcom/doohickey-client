@@ -2,6 +2,7 @@
   import { fade, fly } from "svelte/transition";
   import { accounts } from "../lib/accounts.svelte";
   import Icon from "../lib/components/Icon.svelte";
+  import HeroArt from "../lib/components/HeroArt.svelte";
   import Logo from "../lib/components/Logo.svelte";
   import Spinner from "../lib/components/Spinner.svelte";
   import { api, toAppError, type AppError, type AppInfo, type LoginStep } from "../lib/ipc";
@@ -103,6 +104,7 @@
 </script>
 
 <div class="login">
+  <div class="backdrop"><HeroArt seed="doohickey" tone={0} /></div>
   {#if onBack && phase === "choose"}
     <button class="back btn btn-ghost btn-sm" onclick={onBack} transition:fade={{ duration: dur(120) }}>
       ← Back
@@ -243,14 +245,17 @@
     padding: 32px 32px 56px;
     overflow: auto;
   }
-  /* A faint accent glow behind the panel — depth without decoration. */
-  .login::before {
+  /* The same night landscape as the home screen, dimmed so the card reads clearly. */
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+  }
+  .backdrop::after {
     content: "";
     position: absolute;
     inset: 0;
-    background: radial-gradient(640px circle at 50% 28%, var(--accent-soft), transparent 70%);
-    opacity: 0.55;
-    pointer-events: none;
+    background: radial-gradient(70% 80% at 50% 45%, rgb(5 4 12 / 0.35), rgb(5 4 12 / 0.8));
   }
   .back {
     position: absolute;
@@ -263,7 +268,13 @@
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 348px;
+    max-width: 400px;
+    padding: 36px 26px 28px;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 22px;
+    background: color-mix(in srgb, var(--bg-solid) 80%, transparent);
+    backdrop-filter: blur(18px);
+    box-shadow: 0 30px 80px rgb(0 0 0 / 0.5);
     text-align: center;
   }
   .mark {
