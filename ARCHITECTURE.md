@@ -58,7 +58,7 @@ cool/
 │   ├── manifests/builds.json          the bundled build manifest (fallback for the remote one)
 │   └── src/
 │       ├── lib.rs · state.rs · error.rs · paths.rs · fsutil.rs · settings.rs · system.rs · window.rs
-│       ├── accounts/                  Microsoft (device code → XBL → XSTS → MC), offline, keychain, session cache
+│       ├── accounts/                  Microsoft (login window + PKCE → XBL → XSTS → MC), offline, keychain, session cache
 │       ├── meta/                      Mojang manifests + rules, Fabric/Quilt/Legacy Fabric profiles, Forge/NeoForge installers
 │       ├── download.rs · java.rs      bounded-concurrency verified downloads; Mojang Java runtimes
 │       ├── install.rs · launch/       prepare (game, loader, libraries, assets, natives) → args → supervise
@@ -85,7 +85,7 @@ cool/
 - **One door.** Rust commands live in `src-tauri/src/commands/<area>.rs`; only `src/lib/ipc.ts` calls `invoke`.
 - **Errors are data.** Every command returns `Result<T, AppError>`, serialized as `{ kind, message }`, with a message written for the player.
 - **Cancellation.** Long operations park a `oneshot::Sender`; cancelling drops the in-flight future inside `tokio::select!`.
-- **Least privilege.** The webview may open only `microsoft.com/link` and https links via Rust; `open_path` refuses anything outside the data folder. The CSP forbids remote scripts; images only from Mojang, Modrinth and CurseForge CDNs.
+- **Least privilege.** The main webview can't open URLs itself; the Microsoft login window is a separate window with no IPC access; `open_path` refuses anything outside the data folder. The CSP forbids remote scripts; images only from Mojang, Modrinth and CurseForge CDNs.
 
 ## 5. Data on disk
 

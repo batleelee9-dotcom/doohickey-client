@@ -12,7 +12,7 @@ A fast, minimal launcher for Minecraft: Java Edition, with its own in-game clien
 - **Curated versions:** 26.3, 1.21.11, 1.20.1, 1.12.2 and 1.8.9, each an "Optimized" build. Loaders are only the maintained ones for that version: Fabric and NeoForge on 1.20.2+, Fabric and Forge on 1.20.1, Forge on 1.12.2, Legacy Fabric and Forge on 1.8.9.
 - **One-click launch:** Play installs the game, the loader, the right Java (8 to 25), a tuned performance set from Modrinth (Sodium, Lithium, FerriteCore, Krypton, Starlight, ModernFix, EntityCulling, ImmediatelyFast…, whichever exist for that version and loader) and Doohickey Client where there's a build for it. If Modrinth is unreachable, the game still launches with what's already installed.
 - **Remote manifest:** the version list is a JSON file (see [Build manifest](#build-manifest)), so builds and mod sets change without a launcher update. A copy ships inside the app and the last good download is cached, so it works offline.
-- **Accounts:** Microsoft sign-in (device code) when you have an approved Azure app ID, and offline accounts. Offline accounts are for **singleplayer and LAN only**: joining a public server with one is refused before the game starts.
+- **Accounts:** Microsoft sign-in in a window inside the launcher (Microsoft's own page, with PKCE) when you have an approved Azure app ID, and offline accounts. Offline accounts are for **singleplayer and LAN only**: joining a public server with one is refused before the game starts.
 - **Servers:** live status and MOTD, favorites, one-click join with the selected build.
 - **Skins:** 3D preview; change skin and cape (Microsoft accounts).
 - **Also:** crash analyzer in plain English, game console, Discord Rich Presence, themes (dark, light, accent colours, Mica/Acrylic), Ctrl+K command palette, tray icon and signed auto-updates.
@@ -58,8 +58,8 @@ The launcher build stops with a clear message if the client jar hasn't been buil
 
 ### Microsoft sign-in setup (one-time)
 
-1. In the Azure portal, open **Microsoft Entra ID → App registrations → New registration**. Choose **Personal Microsoft accounts only** and leave the redirect URI empty.
-2. Under **Authentication → Advanced settings**, set **Allow public client flows** to **Yes**. Copy the **Application (client) ID**.
+1. In the Azure portal, open **Microsoft Entra ID → App registrations → New registration**. Choose **Personal Microsoft accounts only**.
+2. Under **Authentication**, choose **Add a platform → Mobile and desktop applications** and tick `https://login.microsoftonline.com/common/oauth2/nativeclient`. Copy the **Application (client) ID** from Overview.
 3. Apply for Minecraft API access at <https://aka.ms/mce-reviewappid>. Until Mojang allow-lists your ID, sign-in stops at "Log in to Minecraft", and Doohickey shows a "Couldn't sign in" screen with the reason and a Retry button.
 
 Never borrow another launcher's client ID (including the official launcher's): Mojang approves each ID for one app, and using someone else's breaks their terms. Refresh tokens live in the OS keychain.
