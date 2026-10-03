@@ -27,10 +27,24 @@ public final class QuartzLegacy implements ClientModInitializer {
 		Quartz.init(new LegacyAdapter());
 	}
 
-	/** Every client tick (hooked in MinecraftClient#tick). */
+	/**
+	 * Set by the Right Shift press, acted on at the end of the tick. Opening the
+	 * menu straight away handed that same key event to the new menu, whose
+	 * "Right Shift closes me" rule shut it again in the same frame.
+	 */
+	private static boolean menuRequested;
+
+	/** Every client tick (hooked at the end of MinecraftClient#tick). */
 	public static void tick() {
 		Quartz.tick();
-		holdToggledKeys(MinecraftClient.getInstance());
+		MinecraftClient client = MinecraftClient.getInstance();
+		holdToggledKeys(client);
+		if (menuRequested) {
+			menuRequested = false;
+			if (client.currentScreen == null && client.world != null) {
+				Quartz.adapter().openMenu();
+			}
+		}
 	}
 
 	/**
@@ -63,7 +77,7 @@ public final class QuartzLegacy implements ClientModInitializer {
 		}
 		MinecraftClient client = MinecraftClient.getInstance();
 		if (keyCode == Keyboard.KEY_RSHIFT && client.currentScreen == null && client.world != null) {
-			Quartz.adapter().openMenu();
+			menuRequested = true;
 		}
 	}
 

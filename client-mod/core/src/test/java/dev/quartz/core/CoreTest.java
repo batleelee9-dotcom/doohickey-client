@@ -67,7 +67,8 @@ public final class CoreTest {
 		FakeAdapter(Path config) { this.config = config; }
 		public McVersion version() { return version; }
 		public Path configDir() { return config; }
-		public RenderBackend render() { return backend; }
+		RenderBackend renderer;
+		public RenderBackend render() { return renderer != null ? renderer : backend; }
 		public boolean inWorld() { return true; }
 		public String dimension() { return "minecraft:overworld"; }
 		public String worldKey() { return "world:test"; }
@@ -109,7 +110,90 @@ public final class CoreTest {
 		public void switchSession(LauncherBridge.Session session) { }
 	}
 
+	/** `--menu-preview <dir>`: draws the Right Shift menu to PNGs, no Minecraft needed. */
+	private static void menuPreview(Path dir) throws Exception {
+		Path game = Files.createTempDirectory("quartz-menu-preview");
+		Files.createDirectories(game.resolve("config"));
+		FakeAdapter adapter = new FakeAdapter(game.resolve("config"));
+		Quartz.init(adapter);
+		ImageBackend image = new ImageBackend(480, 270, 3);
+		adapter.renderer = image;
+		dev.quartz.core.ui.ClientMenu menu = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {
+			public void close() { }
+			public void openHudEditor() { }
+		});
+		Thread.sleep(250);
+		Files.createDirectories(dir);
+		int mx = 200, my = 120;
+		image.shot(menu, mx, my, dir.resolve("menu-hud.png"));
+		// The Game tab is the third sidebar item: panel top + 44 + 2 * 24.
+		int pw = Math.min(460, 480 - 16), ph = Math.min(262, 270 - 16);
+		int px = (480 - pw) / 2, py = (270 - ph) / 2;
+		menu.click(px + 30, py + 44 + 2 * 24 + 8);
+		ClientConfig.get().zoomEnabled = true;
+		image.shot(menu, px + 150, py + 60, dir.resolve("menu-game.png"));
+		for (char c : "zo".toCharArray()) menu.typed(c);
+		image.shot(menu, mx, my, dir.resolve("menu-search.png"));
+		System.out.println("menu previews written to " + dir);
+	}
+
+	/** Java2D stand-in for the game's renderer: real layout and colours, approximate font. */
+	static final class ImageBackend implements RenderBackend {
+		final int w, h, s;
+		java.awt.image.BufferedImage img;
+		java.awt.Graphics2D g;
+		final java.util.ArrayDeque<java.awt.geom.AffineTransform> stack = new java.util.ArrayDeque<>();
+		final java.awt.Font font = new java.awt.Font("Dialog", java.awt.Font.PLAIN, 8);
+
+		ImageBackend(int w, int h, int s) { this.w = w; this.h = h; this.s = s; }
+
+		void shot(dev.quartz.core.ui.ClientMenu menu, int mx, int my, Path out) throws Exception {
+			for (int frame = 0; frame < 3; frame++) {
+				img = new java.awt.image.BufferedImage(w * s, h * s, java.awt.image.BufferedImage.TYPE_INT_RGB);
+				g = img.createGraphics();
+				g.scale(s, s);
+				g.setFont(font);
+				// A stand-in daytime world behind the menu: sky over grass.
+				g.setPaint(new java.awt.GradientPaint(0, 0, new java.awt.Color(0x7FA9FF), 0, h * 0.6f, new java.awt.Color(0xC4D8FF)));
+				g.fillRect(0, 0, w, h);
+				g.setColor(new java.awt.Color(0x5D8C3A));
+				g.fillRect(0, (int) (h * 0.6), w, h);
+				menu.render(this, mx, my);
+				Thread.sleep(40);
+			}
+			javax.imageio.ImageIO.write(img, "png", out.toFile());
+		}
+
+		public Kind kind() { return Kind.LEGACY_OPENGL; }
+		public int screenWidth() { return w; }
+		public int screenHeight() { return h; }
+		public void fill(int x0, int y0, int x1, int y1, int argb) {
+			g.setColor(new java.awt.Color(argb, true));
+			g.fill(new java.awt.geom.Rectangle2D.Float(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x1 - x0), Math.abs(y1 - y0)));
+		}
+		public int text(String text, int x, int y, int argb, boolean shadow) {
+			if (shadow) {
+				g.setColor(new java.awt.Color((argb & 0xFCFCFC) >> 2 | 0xFF000000, true));
+				g.drawString(text, x + 1, y + 8);
+			}
+			g.setColor(new java.awt.Color(argb | 0xFF000000, true));
+			g.drawString(text, x, y + 7);
+			return x + textWidth(text);
+		}
+		public int textWidth(String text) { return g == null ? text.length() * 6 : g.getFontMetrics(font).stringWidth(text); }
+		public int fontHeight() { return 9; }
+		public void push() { stack.push(g.getTransform()); }
+		public void pop() { g.setTransform(stack.pop()); }
+		public void translate(float x, float y) { g.translate(x, y); }
+		public void scale(float factor) { g.scale(factor, factor); }
+		public void item(Object stack, int x, int y) { }
+	}
+
 	public static void main(String[] args) throws Exception {
+		if (args.length == 2 && args[0].equals("--menu-preview")) {
+			menuPreview(java.nio.file.Paths.get(args[1]));
+			return;
+		}
 		Path game = Files.createTempDirectory("quartz-core-test");
 		Path config = game.resolve("config");
 		Files.createDirectories(config);

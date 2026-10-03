@@ -24,6 +24,11 @@ public abstract class Option {
 
 	public abstract String value();
 
+	/** For on/off options, whether it's on; null for options with more than two values. */
+	public Boolean on() {
+		return null;
+	}
+
 	/** Advances to the next value and saves. */
 	public final void click() {
 		advance();
@@ -41,6 +46,11 @@ public abstract class Option {
 			@Override
 			public String value() {
 				return get.getAsBoolean() ? "On" : "Off";
+			}
+
+			@Override
+			public Boolean on() {
+				return get.getAsBoolean();
 			}
 
 			@Override
