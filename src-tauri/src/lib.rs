@@ -124,7 +124,6 @@ pub fn run() {
             commands::accounts::ms_login_cancel,
             commands::builds::get_manifest,
             commands::builds::launch_build,
-            commands::builds::add_optifine,
             commands::builds::install_build,
             commands::instances::list_instances,
             commands::instances::create_instance,

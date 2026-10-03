@@ -9,8 +9,8 @@ A fast, minimal launcher for Minecraft: Java Edition, with its own in-game clien
 ## What it does
 
 **Launcher.** One screen, no profiles: pick a version, pick a loader, press Play.
-- **Curated versions:** 26.3, 1.21.11, 1.20.1, 1.12.2 and 1.8.9, each an "Optimized" build. Loaders are only the maintained ones for that version: Fabric and NeoForge on 1.20.2+, Fabric and Forge on 1.20.1, Forge on 1.12.2, Legacy Fabric and Forge on 1.8.9.
-- **One-click launch:** Play installs the game, the loader, the right Java (8 to 25), a tuned performance set from Modrinth (Sodium, Lithium, FerriteCore, Krypton, Starlight, ModernFix, EntityCulling, ImmediatelyFast…, whichever exist for that version and loader) and Doohickey Client where there's a build for it. If Modrinth is unreachable, the game still launches with what's already installed.
+- **Curated versions:** 26.3, 1.21.11, 1.20.1, 1.12.2 and 1.8.9, each an "Optimized" build. Loaders are only the maintained ones for that version: Fabric and NeoForge on 1.20.2+, Fabric and Forge on 1.20.1, Forge on 1.12.2, Legacy Fabric on 1.8.9 (with Doohickey Client built in, the way Lunar runs 1.8.9).
+- **One-click launch:** Play installs the game, the loader, the right Java (8 to 25), optimization mods from Modrinth (Sodium, Lithium, FerriteCore, Krypton, Starlight, ModernFix, EntityCulling, ImmediatelyFast…, whichever exist for that version and loader) and nothing else: no menus or config libraries like OneConfig and Doohickey Client where there's a build for it. If Modrinth is unreachable, the game still launches with what's already installed.
 - **Remote manifest:** the version list is a JSON file (see [Build manifest](#build-manifest)), so builds and mod sets change without a launcher update. A copy ships inside the app and the last good download is cached, so it works offline.
 - **Accounts:** Microsoft sign-in in a window inside the launcher (Microsoft's own page, with PKCE) when you have an approved Azure app ID, and offline accounts. Offline accounts are for **singleplayer and LAN only**: joining a public server with one is refused before the game starts.
 - **Servers:** live status and MOTD, favorites, one-click join with the selected build.
@@ -81,8 +81,7 @@ Release builds allow offline accounts only after a Microsoft account that owns t
       "minecraft": "1.8.9",
       "tagline": "Classic PvP.",
       "loaders": [
-        { "kind": "legacyfabric", "version": "stable", "mods": [] },
-        { "kind": "forge", "version": "stable", "mods": ["patcher", "entityculling"] }
+        { "kind": "legacyfabric", "version": "stable", "mods": [] }
       ]
     }
   ]
@@ -123,6 +122,6 @@ Lunar Client hasn't been measured on the same machine. To compare, run `.\script
 - **Microsoft sign-in needs your own Azure app ID approved by Mojang.** Without one, use offline accounts (singleplayer and LAN).
 - Not built yet: custom sky gradients/cubemaps, 1.7 animations, and the crosshair and hit colour on 1.8.9. Entity culling comes from the EntityCulling mod on the builds where it exists, not from Doohickey Client.
 - Cosmetics are visible only to you: there is no cosmetics server.
-- **OptiFine** isn't downloaded or bundled, because its licence forbids it. On 1.8.9 Forge, download it from optifine.net and choose the file on the Play screen; the launcher checks it and installs it. Elsewhere, Sodium + Iris cover the same ground.
+- **OptiFine** isn't offered: its licence forbids launchers from bundling or downloading it, and on 1.8.9 it needs Forge. Sodium + Iris cover the same ground on newer versions.
 
 Design notes: [ARCHITECTURE.md](ARCHITECTURE.md) (launcher) and [docs/CLIENT.md](docs/CLIENT.md) (in-game client).

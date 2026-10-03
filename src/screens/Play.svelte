@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { open } from "@tauri-apps/plugin-dialog";
   import { fly } from "svelte/transition";
   import { accounts } from "../lib/accounts.svelte";
   import Icon from "../lib/components/Icon.svelte";
@@ -7,7 +6,7 @@
   import PlayButton from "../lib/components/PlayButton.svelte";
   import Spinner from "../lib/components/Spinner.svelte";
   import { buildLoaderLabel, isLanAddress, modName } from "../lib/format";
-  import { api, type BuildView } from "../lib/ipc";
+  import type { BuildView } from "../lib/ipc";
   import { dur } from "../lib/platform";
   import { pings } from "../lib/pings.svelte";
   import { router } from "../lib/router.svelte";
@@ -25,38 +24,6 @@
 
   function pick(b: BuildView) {
     store.selectBuild(b.id);
-  }
-
-  // OptiFine: the player downloads it (its licence forbids launchers fetching
-  // it); the launcher checks the file and installs it into this build.
-  let optifineFile = $state<string | null>(null);
-  let addingOptifine = $state(false);
-
-  $effect(() => {
-    const l = loader;
-    optifineFile = null;
-    if (!l?.optifine) return;
-    api
-      .listMods(l.instanceId)
-      .then((mods) => {
-        if (loader === l) optifineFile = mods.find((m) => /optifine/i.test(m.fileName))?.fileName ?? null;
-      })
-      .catch(() => {}); // Not installed yet.
-  });
-
-  async function chooseOptifine() {
-    if (!build || !loader) return;
-    const path = await open({ multiple: false, filters: [{ name: "OptiFine", extensions: ["jar"] }] });
-    if (typeof path !== "string") return;
-    addingOptifine = true;
-    try {
-      optifineFile = await api.addOptifine(build.id, loader.kind, path);
-      store.toast("success", `OptiFine added to ${build.name}.`);
-    } catch (e) {
-      store.error(e);
-    } finally {
-      addingOptifine = false;
-    }
   }
 </script>
 
@@ -91,24 +58,10 @@
             {#each loader.mods as m (m)}
               <span class="chip">{modName(m)}</span>
             {/each}
-            {#if optifineFile}
-              <span class="chip" title={optifineFile}>OptiFine</span>
-            {/if}
             {#if !loader.quartzClient && !loader.mods.length}
               <span class="faint">Vanilla {buildLoaderLabel(loader.kind)}, nothing extra.</span>
             {/if}
           </div>
-          {#if loader.optifine && !optifineFile}
-            <p class="faint small optifine">
-              {#if addingOptifine}
-                <Spinner size={12} /> Adding OptiFine…
-              {:else}
-                Want OptiFine?
-                <button class="link" onclick={() => api.openExternal("https://optifine.net/downloads")}>Download it for {build.minecraft}</button>,
-                then <button class="link" onclick={chooseOptifine}>choose the file</button>.
-              {/if}
-            </p>
-          {/if}
           {#if offline}
             <p class="faint small"><Icon name="alert" size={12} /> Offline account: singleplayer and LAN only.</p>
           {/if}
@@ -296,23 +249,6 @@
   }
   .tile-name {
     font-weight: 550;
-  }
-  .optifine {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 4px;
-    margin-top: 10px;
-  }
-  .link {
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--accent);
-    font: inherit;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-    cursor: pointer;
   }
   .source {
     display: flex;

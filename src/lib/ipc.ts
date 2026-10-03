@@ -75,8 +75,6 @@ export interface BuildLoaderView {
   quartzClient: boolean;
   /** The hidden install this build + loader launches from. */
   instanceId: string;
-  /** Offer "Add OptiFine" (the player downloads it; the launcher installs it). */
-  optifine: boolean;
 }
 
 export interface BuildView {
@@ -395,7 +393,6 @@ export const api = {
   getManifest: () => invoke<ManifestView>("get_manifest"),
   installBuild: (buildId: string, loader: LoaderKind, onProgress: (p: LaunchProgress) => void) =>
     invoke<void>("install_build", { buildId, loader, onProgress: channel(onProgress) }),
-  addOptifine: (buildId: string, loader: LoaderKind, path: string) => invoke<string>("add_optifine", { buildId, loader, path }),
   launchBuild: (buildId: string, loader: LoaderKind, quickJoin: string | null, onProgress: (p: LaunchProgress) => void) =>
     invoke<RunningInfo>("launch_build", { buildId, loader, quickJoin, onProgress: channel(onProgress) }),
   launchInstance: (id: string, quickJoin: string | null, onProgress: (p: LaunchProgress) => void, world: string | null = null) =>

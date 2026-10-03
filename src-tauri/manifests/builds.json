@@ -73,18 +73,12 @@
       "id": "1.8.9",
       "name": "1.8.9 Optimized",
       "minecraft": "1.8.9",
-      "tagline": "PvP's home version. Fabric includes Doohickey Client.",
+      "tagline": "PvP's home version, with Doohickey Client built in.",
       "loaders": [
         {
           "kind": "legacyfabric",
           "version": "stable",
           "mods": []
-        },
-        {
-          "kind": "forge",
-          "version": "stable",
-          "mods": ["entityculling"],
-          "optifine": true
         }
       ]
     }
