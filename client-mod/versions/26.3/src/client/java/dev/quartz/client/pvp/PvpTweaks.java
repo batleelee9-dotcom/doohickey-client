@@ -8,6 +8,7 @@ import dev.quartz.core.fx.Effects;
 import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.Sprites;
 import dev.quartz.core.fx.View;
+import dev.quartz.core.fx.Weather;
 import dev.quartz.core.hud.ReachTracker;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -98,7 +99,7 @@ public final class PvpTweaks {
 
 	/** Name tags and the client's own hit particles, placed with this frame's camera. Under the vanilla HUD. */
 	public static void renderWorldOverlays(GuiGraphicsExtractor g, DeltaTracker delta) {
-		if (Sprites.alive() == 0 && !NameTags.pending()) {
+		if (Sprites.alive() == 0 && !NameTags.pending() && Weather.active() == 0) {
 			return;
 		}
 		View.setPartialTicks(delta.getGameTimeDeltaPartialTick(false));
@@ -107,6 +108,7 @@ public final class PvpTweaks {
 		Vec3 pos = camera.position();
 		View.set(VIEW, pos.x, pos.y, pos.z);
 		PipelineBackend.begin(g);
+		Safe.run("weather", Weather::renderHud);
 		Safe.run("nametags", NameTags::renderHud);
 		Safe.run("sprites", Sprites::renderHud);
 	}

@@ -13,7 +13,7 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 |---|---|---|---|---|---|---|---|---|
 | **WORLD** | | | | | | | | |
 | Sky colour | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
-| Custom sky texture | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Shader packs draw their own sky and take precedence. |
+| Atmosphere: custom skies and ambient weather | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Shader packs draw their own sky and take precedence. |
 | Client-side time | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Visual only: the server's time, mob spawning and crops are unaffected. |
 | Fog distance | ✅ ● | ✅ | ✅ | ⚠ | ✅ | ✅ | ✅ ● | 1.18.2 sets shader fog through RenderSystem, which shader packs override. |
 | Fog colour | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |

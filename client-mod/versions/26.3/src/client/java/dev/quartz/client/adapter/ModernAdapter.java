@@ -367,9 +367,7 @@ public final class ModernAdapter implements VersionAdapter {
 		t.z = pos.z;
 		t.name = p.getDisplayName().getString();
 		t.nameColour = 0xFF000000 | p.getTeamColor();
-		t.health = p.getHealth();
-		t.maxHealth = p.getMaxHealth();
-		t.absorption = p.getAbsorptionAmount();
+		dev.quartz.core.fx.NameTags.health(t, scoreHealth(p), p.getHealth(), p.getMaxHealth(), p.getAbsorptionAmount(), p == Minecraft.getInstance().player);
 		net.minecraft.world.entity.EquipmentSlot[] slots = {net.minecraft.world.entity.EquipmentSlot.HEAD, net.minecraft.world.entity.EquipmentSlot.CHEST,
 			net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET};
 		for (int i = 0; i < 4; i++) {
@@ -378,6 +376,32 @@ public final class ModernAdapter implements VersionAdapter {
 		}
 		t.items[4] = p.getMainHandItem().isEmpty() ? null : p.getMainHandItem();
 		return true;
+	}
+
+	private static final net.minecraft.world.scores.DisplaySlot[] HEALTH_SLOTS = {
+		net.minecraft.world.scores.DisplaySlot.BELOW_NAME, net.minecraft.world.scores.DisplaySlot.LIST};
+
+	/** The server's health score for a player (below the name, else in the tab list), or -1 if it shows none. */
+	private static int scoreHealth(net.minecraft.world.entity.player.Player p) {
+		net.minecraft.world.scores.Scoreboard board = p.level().getScoreboard();
+		for (net.minecraft.world.scores.DisplaySlot slot : HEALTH_SLOTS) {
+			net.minecraft.world.scores.Objective objective = board.getDisplayObjective(slot);
+			if (objective != null && (objective.getCriteria() == net.minecraft.world.scores.criteria.ObjectiveCriteria.HEALTH
+				|| objective.getDisplayName().getString().indexOf('❤') >= 0)) {
+				net.minecraft.world.scores.ReadOnlyScoreInfo info = board.getPlayerScoreInfo(p, objective);
+				if (info != null) {
+					return info.value();
+				}
+			}
+		}
+		return -1;
+	}
+
+	@Override
+	public boolean skyVisible() {
+		Minecraft mc = Minecraft.getInstance();
+		return mc.level != null && mc.level.canSeeSky(net.minecraft.core.BlockPos.containing(
+			dev.quartz.core.fx.View.camX(), dev.quartz.core.fx.View.camY(), dev.quartz.core.fx.View.camZ()));
 	}
 
 	@Override

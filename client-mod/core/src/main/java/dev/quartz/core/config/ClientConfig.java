@@ -117,6 +117,13 @@ public final class ClientConfig {
 	public boolean nameTagTeamColours = true;
 	public boolean nameTagSelf = false;
 
+	// Atmosphere: a sky from fx.Atmosphere.SKIES, fog tint (0 = match sky) and density (0 = untouched), weather from fx.Weather.KINDS.
+	public String atmosphereSky = "off";
+	public int atmosphereFogColor = 0;
+	public int atmosphereFog = 0;
+	public String atmosphereWeather = "off";
+	public boolean atmosphereMotion = true;
+
 	// World: sky, fog, weather, time
 	public EnvironmentSettings environment = new EnvironmentSettings();
 

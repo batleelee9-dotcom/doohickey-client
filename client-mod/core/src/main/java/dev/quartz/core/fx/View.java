@@ -44,6 +44,18 @@ public final class View {
 		valid = false;
 	}
 
+	public static double camX() {
+		return camX;
+	}
+
+	public static double camY() {
+		return camY;
+	}
+
+	public static double camZ() {
+		return camZ;
+	}
+
 	public static boolean valid() {
 		return valid;
 	}

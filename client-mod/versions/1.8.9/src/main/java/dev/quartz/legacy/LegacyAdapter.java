@@ -33,6 +33,9 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardObjective;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.opengl.Display;
 
@@ -355,14 +358,31 @@ final class LegacyAdapter implements VersionAdapter {
 		String formatted = p.getName().asFormattedString();
 		t.name = NameTags.strip(formatted);
 		t.nameColour = NameTags.colourOf(formatted);
-		t.health = p.getHealth();
-		t.maxHealth = p.getMaxHealth();
-		t.absorption = p.getAbsorption();
+		NameTags.health(t, scoreHealth(p), p.getHealth(), p.getMaxHealth(), p.getAbsorption(), p == MinecraftClient.getInstance().player);
 		for (int i = 0; i < 4; i++) {
 			t.items[i] = p.getArmorSlot(3 - i);
 		}
 		t.items[4] = p.getStackInHand();
 		return true;
+	}
+
+	/** The server's health score for a player (below the name, else in the tab list), or -1 if it shows none. */
+	private static int scoreHealth(PlayerEntity p) {
+		Scoreboard board = p.getScoreboard();
+		for (int slot = 2; slot >= 0; slot -= 2) {
+			ScoreboardObjective objective = board.getObjectiveForSlot(slot);
+			if (objective != null && (objective.getCriterion() == ScoreboardCriterion.HEALTH || objective.getDisplayName().indexOf('❤') >= 0)
+				&& board.playerHasObjective(p.getTranslationKey(), objective)) {
+				return board.getPlayerScore(p.getTranslationKey(), objective).getScore();
+			}
+		}
+		return -1;
+	}
+
+	@Override
+	public boolean skyVisible() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		return client.world != null && client.world.hasDirectSunlight(new BlockPos(View.camX(), View.camY() + 1.6, View.camZ()));
 	}
 
 	@Override

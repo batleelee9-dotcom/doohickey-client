@@ -113,7 +113,7 @@ public final class CoreTest {
 			if (!(p instanceof double[])) return false;
 			double[] at = (double[]) p;
 			t.x = at[0]; t.y = at[1]; t.z = at[2];
-			t.name = "_Maxim07_"; t.nameColour = 0xFFFFFFFF; t.health = 11; t.maxHealth = 20; t.absorption = 0;
+			t.name = "_Maxim07_"; t.nameColour = 0xFFFFFFFF; t.health = 11; t.maxHealth = 20; t.absorption = 0; t.healthKnown = true;
 			java.util.Arrays.fill(t.items, null);
 			return true;
 		}
@@ -231,6 +231,37 @@ public final class CoreTest {
 		}
 		image.frames(() -> dev.quartz.core.fx.Sprites.render(image), 6, dir.resolve("hit-particles.png"));
 		dev.quartz.core.fx.Sprites.clear();
+		// Each sky as a panorama, sampled back out of the painted atlas through the cube mapping.
+		for (String sky : new String[] {"aurora", "nebula", "golden", "synthwave", "eclipse"}) {
+			ClientConfig.get().atmosphereSky = sky;
+			int[] atlas = null;
+			for (int i = 0; i < 600 && (atlas = dev.quartz.core.fx.Atmosphere.atlas()) == null; i++) {
+				Thread.sleep(20);
+			}
+			int panoW = 960, panoH = 300, f = dev.quartz.core.fx.Atmosphere.FACE;
+			java.awt.image.BufferedImage pano = new java.awt.image.BufferedImage(panoW, panoH, java.awt.image.BufferedImage.TYPE_INT_RGB);
+			for (int qy = 0; qy < panoH; qy++) {
+				double el = Math.toRadians(80 - 100.0 * qy / panoH);
+				for (int qx = 0; qx < panoW; qx++) {
+					double az = Math.toRadians(360.0 * qx / panoW);
+					double dx = Math.cos(el) * Math.cos(az), dy = Math.sin(el), dz = Math.cos(el) * Math.sin(az);
+					int best = 0;
+					double bestDot = -2;
+					for (int face = 0; face < 6; face++) {
+						float[] a = dev.quartz.core.fx.Atmosphere.FACES[face];
+						double d = dx * a[0] + dy * a[1] + dz * a[2];
+						if (d > bestDot) { bestDot = d; best = face; }
+					}
+					float[] a = dev.quartz.core.fx.Atmosphere.FACES[best];
+					double ss = (dx * a[3] + dy * a[4] + dz * a[5]) / bestDot, tt = (dx * a[6] + dy * a[7] + dz * a[8]) / bestDot;
+					int tx = Math.min(f - 1, (int) ((ss + 1) / 2 * f)), ty = Math.min(f - 1, (int) ((1 - tt) / 2 * f));
+					pano.setRGB(qx, qy, atlas[((best / 3) * f + ty) * f * 3 + (best % 3) * f + tx]);
+				}
+			}
+			javax.imageio.ImageIO.write(pano, "png", dir.resolve("sky-" + sky + ".png").toFile());
+		}
+		ClientConfig.get().atmosphereSky = "off";
+
 		// Name tags at a few distances.
 		ClientConfig.get().nameTags = true;
 		dev.quartz.core.fx.View.set(perspective(70, 480 / 270f), 0, 0, 0);
@@ -569,6 +600,29 @@ public final class CoreTest {
 		check(dev.quartz.core.fx.Sprites.alive() == 0, "and they draw (or skip cleanly) without image support");
 		dev.quartz.core.fx.View.clear();
 
+		System.out.println("name tag health");
+		dev.quartz.core.fx.NameTags.Tag tag = new dev.quartz.core.fx.NameTags.Tag();
+		dev.quartz.core.fx.NameTags.health(tag, 14, 1f, 20f, 0f, false);
+		check(tag.healthKnown && tag.health == 14, "the server's health score wins over the synced value");
+		dev.quartz.core.fx.NameTags.health(tag, -1, 1f, 20f, 0f, false);
+		check(!tag.healthKnown, "a stranger at exactly 1 (servers fake it) shows no health rather than a wrong one");
+		dev.quartz.core.fx.NameTags.health(tag, -1, 15.5f, 20f, 4f, false);
+		check(tag.healthKnown && tag.health == 15.5f && tag.absorption == 4f, "real synced health (singleplayer, honest servers) shows");
+		dev.quartz.core.fx.NameTags.health(tag, -1, 1f, 20f, 0f, true);
+		check(tag.healthKnown, "your own health is always real");
+		check(dev.quartz.core.fx.NameTags.strip("§b[MVP§c+§b] Steve").equals("[MVP+] Steve") && dev.quartz.core.fx.NameTags.colourOf("§b[MVP§c+§b] Steve") == 0xFF55FFFF, "rank codes stripped, rank colour kept");
+
+		System.out.println("atmosphere");
+		ClientConfig.get().atmosphereSky = "aurora";
+		ClientConfig.get().atmosphereFog = 2;
+		check(dev.quartz.core.env.EnvironmentModule.fogColor() == 0x123050, "fog matches the sky's horizon");
+		check(dev.quartz.core.env.EnvironmentModule.overridesFog() && dev.quartz.core.env.EnvironmentModule.fogEnd(128, 128) < 128, "medium fog closes in");
+		ClientConfig.get().atmosphereFogColor = 3;
+		check(dev.quartz.core.env.EnvironmentModule.fogColor() == 0xFF8FB8, "or takes a colour of your own");
+		ClientConfig.get().atmosphereSky = "off";
+		ClientConfig.get().atmosphereFog = 0;
+		ClientConfig.get().atmosphereFogColor = 0;
+
 		System.out.println("rice hat");
 		check(!dev.quartz.core.fx.RiceHat.enabled(), "off by default");
 		int[] vertices = {0};
@@ -589,7 +643,7 @@ public final class CoreTest {
 		System.out.println("menu modules");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 21, "21 HUD modules on 1.8.9 (20 elements + style)");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.SOUND).size() == 3, "3 sound modules");
-		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 14, "14 visual modules on 1.8.9");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 15, "15 visual modules on 1.8.9");
 		dev.quartz.core.ui.ClientMenu smoke = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {
 			public void close() { }
 			public void openHudEditor() { }

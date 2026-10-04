@@ -132,6 +132,11 @@ public interface VersionAdapter {
 		return false;
 	}
 
+	/** Whether open sky is above the camera (ambient weather fades out under a roof). */
+	default boolean skyVisible() {
+		return true;
+	}
+
 	/** Your own player while the camera is in third person (for your own tag), else null. */
 	default Object selfTagEntity() {
 		return null;

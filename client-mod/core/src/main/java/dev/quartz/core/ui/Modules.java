@@ -5,7 +5,9 @@ import dev.quartz.core.Quartz;
 import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.fx.EffectSettings;
 import dev.quartz.core.fx.Effects;
+import dev.quartz.core.fx.Atmosphere;
 import dev.quartz.core.fx.NameTags;
+import dev.quartz.core.fx.Weather;
 import dev.quartz.core.fx.RiceHat;
 import dev.quartz.core.hud.Hud;
 import dev.quartz.core.hud.HudElement;
@@ -126,6 +128,12 @@ public final class Modules {
 					Option.choice(Feature.RICE_HAT, "Tilt", ints(-30, -20, -10, 0, 10, 20, 30), names("°", -30, -20, -10, 0, 10, 20, 30), () -> c().riceHatTilt, v -> c().riceHatTilt = v),
 					Option.choice(Feature.RICE_HAT, "Opacity", ints(40, 60, 80, 100), names("%", 40, 60, 80, 100), () -> c().riceHatOpacity, v -> c().riceHatOpacity = v),
 					Option.choice(Feature.RICE_HAT, "Spin", ints(0, 1, 3), Arrays.asList("Off", "Slow", "Fast"), () -> c().riceHatSpin, v -> c().riceHatSpin = v)));
+				add(out, new Module("Atmosphere", "Hand-painted skies, tinted fog and ambient weather", Feature.SKY_TEXTURE,
+					Option.choice(Feature.SKY_TEXTURE, "Sky", list(Atmosphere.SKIES), list(Atmosphere.SKY_NAMES), () -> c().atmosphereSky, v -> c().atmosphereSky = v),
+					Option.choice(Feature.SKY_TEXTURE, "Weather", list(Weather.KINDS), list(Weather.NAMES), () -> c().atmosphereWeather, v -> c().atmosphereWeather = v),
+					Option.choice(Feature.FOG, "Fog", ints(0, 1, 2, 3), list(Atmosphere.DENSITY_NAMES), () -> c().atmosphereFog, v -> c().atmosphereFog = v),
+					Option.choice(Feature.FOG_COLOR, "Fog colour", ints(0, 1, 2, 3, 4, 5, 6), list(Atmosphere.FOG_NAMES), () -> c().atmosphereFogColor, v -> c().atmosphereFogColor = v),
+					Option.toggle(Feature.SKY_TEXTURE, "Drifting sky", () -> c().atmosphereMotion, v -> c().atmosphereMotion = v)));
 				add(out, new Module("Name tags", "Player tags with health, armour and held item", Feature.NAMETAGS,
 					Option.toggle(Feature.NAMETAGS, "Name tags", () -> c().nameTags, v -> c().nameTags = v),
 					Option.choice(Feature.NAMETAGS, "Health", ints(0, 1, 2), list(NameTags.HEALTH_NAMES), () -> c().nameTagHealth, v -> c().nameTagHealth = v),

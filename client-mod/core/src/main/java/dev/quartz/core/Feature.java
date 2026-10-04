@@ -11,7 +11,7 @@ package dev.quartz.core;
 public enum Feature {
 	// Visual / world
 	SKY_COLOR(Category.WORLD, "Sky colour"),
-	SKY_TEXTURE(Category.WORLD, "Custom sky texture"),
+	SKY_TEXTURE(Category.WORLD, "Atmosphere: custom skies and ambient weather"),
 	TIME_LOCK(Category.WORLD, "Client-side time"),
 	FOG(Category.WORLD, "Fog distance"),
 	FOG_COLOR(Category.WORLD, "Fog colour"),

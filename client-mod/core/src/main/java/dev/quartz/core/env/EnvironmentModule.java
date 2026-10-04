@@ -1,6 +1,7 @@
 package dev.quartz.core.env;
 
 import dev.quartz.core.Feature;
+import dev.quartz.core.fx.Atmosphere;
 import dev.quartz.core.Quartz;
 import dev.quartz.core.config.ClientConfig;
 
@@ -67,13 +68,21 @@ public final class EnvironmentModule {
 
 	/** Whether the open-air fog distance is being replaced. */
 	public static boolean overridesFog() {
-		return Quartz.available(Feature.FOG) && settings().fog != EnvironmentSettings.Fog.VANILLA;
+		return Quartz.available(Feature.FOG) && (settings().fog != EnvironmentSettings.Fog.VANILLA || Atmosphere.density() > 0);
 	}
+
+	// Atmosphere fog: where it starts and ends, as shares of the render distance (light, medium, heavy).
+	private static final float[] ATMOSPHERE_START = {0, 0.55f, 0.22f, 0.02f};
+	private static final float[] ATMOSPHERE_END = {0, 1.0f, 0.7f, 0.38f};
 
 	/** Fog start in blocks for open air, given the render distance and vanilla's value. */
 	public static float fogStart(float renderDistanceBlocks, float vanilla) {
 		if (!overridesFog()) {
 			return vanilla;
+		}
+		int density = Atmosphere.density();
+		if (density > 0) {
+			return renderDistanceBlocks * ATMOSPHERE_START[density];
 		}
 		switch (settings().fog) {
 			case OFF: return FAR;
@@ -87,6 +96,10 @@ public final class EnvironmentModule {
 		if (!overridesFog()) {
 			return vanilla;
 		}
+		int density = Atmosphere.density();
+		if (density > 0) {
+			return renderDistanceBlocks * ATMOSPHERE_END[density];
+		}
 		switch (settings().fog) {
 			case OFF: return FAR + 1f;
 			case LIGHT: return renderDistanceBlocks;
@@ -97,6 +110,11 @@ public final class EnvironmentModule {
 
 	/** Fog colour as 0xRRGGBB, or {@link #VANILLA}. */
 	public static int fogColor() {
+		// An atmosphere sky tints the fog to its horizon (or the chosen colour), so land melts into it.
+		int atmosphere = Atmosphere.fogColor();
+		if (atmosphere >= 0) {
+			return atmosphere;
+		}
 		EnvironmentSettings s = settings();
 		return Quartz.available(Feature.FOG_COLOR) && s.customFogColor ? s.fogColor & 0xFFFFFF : VANILLA;
 	}

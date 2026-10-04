@@ -382,6 +382,19 @@ public final class Smooth {
 			case "bolt":
 				g.fill(poly(13.5f, 2, 5, 13.5f, 11, 13.5f, 9.5f, 22, 19, 9.5f, 13, 9.5f));
 				break;
+			case "heart": {
+				java.awt.geom.Path2D.Float p = new java.awt.geom.Path2D.Float();
+				p.moveTo(12, 21);
+				p.curveTo(4, 15, 1.5f, 11, 1.5f, 7.5f);
+				p.curveTo(1.5f, 4, 4.2f, 2, 7, 2);
+				p.curveTo(9.2f, 2, 11, 3.3f, 12, 5);
+				p.curveTo(13, 3.3f, 14.8f, 2, 17, 2);
+				p.curveTo(19.8f, 2, 22.5f, 4, 22.5f, 7.5f);
+				p.curveTo(22.5f, 11, 20, 15, 12, 21);
+				p.closePath();
+				g.fill(p);
+				break;
+			}
 			case "more":
 				g.fill(new Ellipse2D.Float(10, 3, 4, 4));
 				g.fill(new Ellipse2D.Float(10, 10, 4, 4));
@@ -422,6 +435,11 @@ public final class Smooth {
 			case "p.bubble":
 				g.draw(new Ellipse2D.Float(3, 3, 18, 18));
 				g.fill(new Ellipse2D.Float(7, 6.5f, 4, 4));
+				break;
+			case "p.dot":
+				g.setPaint(new RadialGradientPaint(12, 12, 11, new float[] {0f, 0.35f, 1f},
+					new Color[] {Color.WHITE, new Color(255, 255, 255, 150), new Color(255, 255, 255, 0)}));
+				g.fill(new Ellipse2D.Float(1, 1, 22, 22));
 				break;
 			case "p.confetti":
 				g.fill(new RoundRectangle2D.Float(1, 1, 22, 22, 5, 5));

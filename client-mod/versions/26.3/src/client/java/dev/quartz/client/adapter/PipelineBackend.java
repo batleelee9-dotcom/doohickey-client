@@ -40,7 +40,7 @@ public final class PipelineBackend implements RenderBackend {
 		return INSTANCE;
 	}
 
-	static PipelineBackend current() {
+	public static PipelineBackend current() {
 		if (INSTANCE.g == null) {
 			throw new IllegalStateException("No frame is being drawn");
 		}
@@ -151,6 +151,11 @@ public final class PipelineBackend implements RenderBackend {
 		sizes.add(new int[] {width, height});
 		handles.put(key, ids.size() - 1);
 		return ids.size() - 1;
+	}
+
+	/** The texture behind an {@link #image} handle (the sky draws it outside the GUI). */
+	public net.minecraft.client.renderer.texture.AbstractTexture texture(int handle) {
+		return Minecraft.getInstance().getTextureManager().getTexture(ids.get(handle));
 	}
 
 	@Override

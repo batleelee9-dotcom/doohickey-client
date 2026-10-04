@@ -162,7 +162,7 @@ public final class CompatRegistry {
 			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
 			Feature.CUSTOM_CROSSHAIR, Feature.ZOOM, Feature.ASPECT_RATIO, Feature.HITBOXES,
-			Feature.RICE_HAT, Feature.NAMETAGS, Feature.FPS_CAP, Feature.TILE_ENTITY_CULLING, Feature.PARTICLE_CULLING,
+			Feature.RICE_HAT, Feature.NAMETAGS, Feature.SKY_TEXTURE, Feature.FPS_CAP, Feature.TILE_ENTITY_CULLING, Feature.PARTICLE_CULLING,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.ACCOUNT_SWITCHER);
 		implemented(McVersion.V26_3,
@@ -174,7 +174,7 @@ public final class CompatRegistry {
 			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
 			Feature.ZOOM, Feature.ASPECT_RATIO, Feature.HITBOXES,
-			Feature.RICE_HAT, Feature.NAMETAGS, Feature.FPS_CAP,
+			Feature.RICE_HAT, Feature.NAMETAGS, Feature.SKY_TEXTURE, Feature.FPS_CAP,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.TOGGLE_SPRINT_SNEAK, Feature.HIT_COLOR, Feature.CAPES, Feature.WEARABLES, Feature.MINIMAP_WAYPOINTS,
 			Feature.ACCOUNT_SWITCHER);

@@ -12,6 +12,7 @@
 		"NameTagMixin",
 		"ParticleCullMixin",
 		"PlayerRendererMixin",
+		"SkyMixin",
 		"ZoomMixin"
 	],
 	"injectors": {

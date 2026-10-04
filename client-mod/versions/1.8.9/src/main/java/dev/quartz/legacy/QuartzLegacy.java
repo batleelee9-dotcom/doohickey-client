@@ -7,6 +7,7 @@ import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.Sprites;
+import dev.quartz.core.fx.Weather;
 import dev.quartz.core.hud.CpsTracker;
 import dev.quartz.core.hud.Hud;
 import dev.quartz.core.pvp.CrosshairStyle;
@@ -99,6 +100,7 @@ public final class QuartzLegacy implements ClientModInitializer {
 			return;
 		}
 		// Hit particles sit in the world, so they show with F3 open too.
+		Safe.run("weather", Weather::renderHud);
 		Safe.run("nametags", NameTags::renderHud);
 		Safe.run("sprites", Sprites::renderHud);
 		if (client.options.debugEnabled) {
