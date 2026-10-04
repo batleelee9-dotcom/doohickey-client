@@ -193,20 +193,25 @@ public final class CoreTest {
 		Files.createDirectories(dir);
 		int mx = 200, my = 120;
 		image.shot(menu, mx, my, dir.resolve("menu-hud.png"));
+		// A bigger GUI (1080p at scale 2): the panel grows.
+		ImageBackend large = new ImageBackend(960, 540, 2);
+		adapter.renderer = large;
+		large.shot(menu, 420, 200, dir.resolve("menu-large.png"));
+		adapter.renderer = image;
 		menu.scroll(2.5);
 		Thread.sleep(120);
 		image.shot(menu, mx, my, dir.resolve("menu-scrolled.png"));
 		menu.scroll(-10);
 		Thread.sleep(120);
 		image.shot(menu, mx, my, dir.resolve("menu-hud.png"));
-		// Sidebar items start at panel top + 46, 25 apart; Visual is the third.
+		// Sidebar items start at panel top + 57, 24 apart; Visual is the third.
 		int pw = Math.min(480, 480 - 20), ph = Math.min(268, 270 - 20);
 		int px = (480 - pw) / 2, py = (270 - ph) / 2;
-		menu.click(px + 30, py + 46 + 2 * 25 + 11);
+		menu.click(px + 30, py + 57 + 2 * 24 + 10);
 		ClientConfig.get().effects.hitEffects = true;
 		image.shot(menu, px + 150, py + 60, dir.resolve("menu-visual.png"));
-		// The first card's gear opens its settings page.
-		menu.click(px + 184, py + 68);
+		// The second card's gear (Rice hat) opens its settings page.
+		menu.click(px + 405, py + 74);
 		image.shot(menu, px + 200, py + 90, dir.resolve("menu-settings.png"));
 		menu.escape();
 		for (char c : "zo".toCharArray()) menu.typed(c);

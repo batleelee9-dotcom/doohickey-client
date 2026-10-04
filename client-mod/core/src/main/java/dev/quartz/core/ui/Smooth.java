@@ -296,6 +296,14 @@ public final class Smooth {
 		}
 	}
 
+	private static java.awt.geom.Path2D.Float chevron(float x0, float y0, float x1, float y1, float x2, float y2) {
+		java.awt.geom.Path2D.Float p = new java.awt.geom.Path2D.Float();
+		p.moveTo(x0, y0);
+		p.lineTo(x1, y1);
+		p.lineTo(x2, y2);
+		return p;
+	}
+
 	/** A star with {@code points} tips, outer and inner radius, in icon units. */
 	private static java.awt.geom.Path2D.Float star(int points, float cx, float cy, float outer, float inner) {
 		java.awt.geom.Path2D.Float p = new java.awt.geom.Path2D.Float();
@@ -373,6 +381,16 @@ public final class Smooth {
 				break;
 			case "bolt":
 				g.fill(poly(13.5f, 2, 5, 13.5f, 11, 13.5f, 9.5f, 22, 19, 9.5f, 13, 9.5f));
+				break;
+			case "close":
+				g.draw(new Line2D.Float(6, 6, 18, 18));
+				g.draw(new Line2D.Float(18, 6, 6, 18));
+				break;
+			case "left":
+				g.draw(chevron(15, 5, 8, 12, 15, 19));
+				break;
+			case "right":
+				g.draw(chevron(9, 5, 16, 12, 9, 19));
 				break;
 			// Particle sprites (fx.Sprites): white, tinted when drawn.
 			case "p.snow":
