@@ -6,6 +6,7 @@
 		"AspectRatioCameraMixin",
 		"AspectRatioHandMixin",
 		"CameraZoomMixin",
+		"DamageEventMixin",
 		"HurtCameraMixin"
 	],
 	"injectors": {

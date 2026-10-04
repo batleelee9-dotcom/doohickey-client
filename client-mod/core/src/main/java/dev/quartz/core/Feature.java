@@ -80,7 +80,7 @@ public enum Feature {
 	TILE_ENTITY_CULLING(Category.PERFORMANCE, "Block entity culling"),
 	PARTICLE_CULLING(Category.PERFORMANCE, "Particle culling"),
 	CHUNK_THROTTLE(Category.PERFORMANCE, "Chunk update throttling"),
-	FPS_CAP(Category.PERFORMANCE, "FPS cap / vsync"),
+	FPS_CAP(Category.PERFORMANCE, "Max FPS preset (no vsync or cap, fast graphics)"),
 	DYNAMIC_RENDER_DISTANCE(Category.PERFORMANCE, "Dynamic render distance"),
 	SMART_ANIMATIONS(Category.PERFORMANCE, "Smart animations"),
 	BORDERLESS(Category.PERFORMANCE, "Borderless fullscreen"),
@@ -97,6 +97,7 @@ public enum Feature {
 	// Cosmetics
 	CAPES(Category.COSMETICS, "Capes"),
 	WEARABLES(Category.COSMETICS, "Wings, hats, bandanas, halos"),
+	RICE_HAT(Category.COSMETICS, "Rice hat"),
 	EMOTES(Category.COSMETICS, "Emotes"),
 	KILL_EFFECTS(Category.COSMETICS, "Kill effects"),
 	BREAK_PARTICLES(Category.COSMETICS, "Block-break particles"),

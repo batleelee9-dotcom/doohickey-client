@@ -24,6 +24,6 @@ public abstract class ClientPlayerInteractionManagerMixin {
 				ReachTracker.record(player.getCameraPosVec(1.0f).distanceTo(hit.pos));
 			}
 		});
-		Safe.run("effects.hit", () -> Effects.onHit(target));
+		Safe.run("effects.attack", () -> Effects.onAttack(target));
 	}
 }

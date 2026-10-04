@@ -268,6 +268,52 @@ public final class Smooth {
 		r.drawImage(h, QUADS, 1, argb);
 	}
 
+	/**
+	 * A particle sprite (an icon named "p.…") centred on {@code cx, cy},
+	 * {@code w}×{@code h} GUI units. Sizes snap to a few device-pixel steps so
+	 * shrinking particles reuse a handful of textures.
+	 */
+	public static void sprite(RenderBackend r, String name, float cx, float cy, float w, float h, int argb) {
+		int px = Math.round(Math.max(w, h) * r.guiScale());
+		if (px < 2) {
+			return;
+		}
+		px = px <= 16 ? Math.max(4, px) : px <= 48 ? (px + 3) & ~3 : Math.min(256, (px + 7) & ~7);
+		int[] slot = slot(r, name);
+		if (slot[px] == -2) {
+			int size = px;
+			slot[px] = r.image("smooth:icon:" + name + ":" + px, px, px, () -> raster(size, size, g -> {
+				float k = size / 24f;
+				g.scale(k, k);
+				g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+				drawIcon(g, name);
+			}));
+		}
+		int handle = slot[px];
+		if (handle >= 0) {
+			quad(0, cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2, 0, 0, 1, 1);
+			r.drawImage(handle, QUADS, 1, argb);
+		}
+	}
+
+	/** A star with {@code points} tips, outer and inner radius, in icon units. */
+	private static java.awt.geom.Path2D.Float star(int points, float cx, float cy, float outer, float inner) {
+		java.awt.geom.Path2D.Float p = new java.awt.geom.Path2D.Float();
+		for (int i = 0; i < points * 2; i++) {
+			double a = Math.PI * i / points - Math.PI / 2;
+			float rad = i % 2 == 0 ? outer : inner;
+			float x = cx + (float) Math.cos(a) * rad;
+			float y = cy + (float) Math.sin(a) * rad;
+			if (i == 0) {
+				p.moveTo(x, y);
+			} else {
+				p.lineTo(x, y);
+			}
+		}
+		p.closePath();
+		return p;
+	}
+
 	private static void drawIcon(java.awt.Graphics2D g, String name) {
 		switch (name) {
 			case "hud":
@@ -327,6 +373,35 @@ public final class Smooth {
 				break;
 			case "bolt":
 				g.fill(poly(13.5f, 2, 5, 13.5f, 11, 13.5f, 9.5f, 22, 19, 9.5f, 13, 9.5f));
+				break;
+			// Particle sprites (fx.Sprites): white, tinted when drawn.
+			case "p.snow":
+				g.setStroke(new BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+				for (int i = 0; i < 6; i++) {
+					java.awt.geom.AffineTransform t = g.getTransform();
+					g.rotate(Math.PI / 3 * i, 12, 12);
+					g.draw(new Line2D.Float(12, 12, 12, 2.5f));
+					g.draw(new Line2D.Float(12, 6.5f, 9, 4));
+					g.draw(new Line2D.Float(12, 6.5f, 15, 4));
+					g.setTransform(t);
+				}
+				break;
+			case "p.star":
+				g.fill(star(5, 12, 12.6f, 11, 4.6f));
+				break;
+			case "p.sparkle":
+				g.fill(star(4, 12, 12, 11.5f, 2.6f));
+				break;
+			case "p.petal":
+				g.rotate(Math.toRadians(35), 12, 12);
+				g.fill(new Ellipse2D.Float(7, 2, 10, 20));
+				break;
+			case "p.bubble":
+				g.draw(new Ellipse2D.Float(3, 3, 18, 18));
+				g.fill(new Ellipse2D.Float(7, 6.5f, 4, 4));
+				break;
+			case "p.confetti":
+				g.fill(new RoundRectangle2D.Float(1, 1, 22, 22, 5, 5));
 				break;
 			default:
 				g.fill(new Ellipse2D.Float(6, 6, 12, 12));

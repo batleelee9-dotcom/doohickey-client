@@ -5,7 +5,7 @@ import java.util.Arrays;
 /** Hit effects, trails, kill effects and sounds, stored in client.json. All client-side. */
 public final class EffectSettings {
 	public boolean hitEffects = false;
-	public String hitEffect = "magic";
+	public String hitEffect = "snow";
 	/** Particles per hit, as a multiple of the base burst (1–5). */
 	public int hitAmount = 2;
 
@@ -13,7 +13,7 @@ public final class EffectSettings {
 	public String trailStyle = "hearts";
 
 	public boolean killEffects = false;
-	public String killEffect = "burst";
+	public String killEffect = "confetti";
 
 	public boolean hitSounds = false;
 	public String hitSound = "custom";

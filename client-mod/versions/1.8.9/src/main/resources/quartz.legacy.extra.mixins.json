@@ -4,8 +4,13 @@
 	"compatibilityLevel": "JAVA_8",
 	"client": [
 		"AspectRatioMixin",
+		"BlockEntityDistanceMixin",
+		"CameraCaptureMixin",
 		"CrosshairMixin",
 		"HurtCameraMixin",
+		"LivingEntityHurtMixin",
+		"ParticleCullMixin",
+		"PlayerRendererMixin",
 		"ZoomMixin"
 	],
 	"injectors": {

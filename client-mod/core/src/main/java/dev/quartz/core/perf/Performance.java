@@ -2,6 +2,7 @@ package dev.quartz.core.perf;
 
 import dev.quartz.core.Feature;
 import dev.quartz.core.Quartz;
+import dev.quartz.core.Safe;
 import dev.quartz.core.VersionAdapter;
 import dev.quartz.core.config.ClientConfig;
 
@@ -29,6 +30,14 @@ public final class Performance {
 	/** Once per client tick. */
 	public static void tick(VersionAdapter adapter) {
 		PerformanceSettings s = settings();
+		// Max FPS: applied or undone once each time the switch changes (it starts on).
+		if (s.maxFps != s.maxFpsApplied && Quartz.available(Feature.FPS_CAP)) {
+			boolean on = s.maxFps;
+			// Marked first, so a failure doesn't retry every tick.
+			s.maxFpsApplied = on;
+			Safe.run("perf.maxfps", () -> adapter.applyMaxFps(on, s.maxFpsRestore));
+			ClientConfig.get().save();
+		}
 		boolean on = Quartz.available(Feature.DYNAMIC_RENDER_DISTANCE) && s.dynamicRenderDistance && adapter.inWorld();
 		if (!on) {
 			// Leaving a world or switching off: give the player their distance back.
@@ -79,6 +88,12 @@ public final class Performance {
 			return true;
 		}
 		return percent > 0 && ThreadLocalRandom.current().nextInt(100) < percent;
+	}
+
+	/** Whether a block entity (sign, chest, head...) this far away (squared blocks) should be drawn. */
+	public static boolean drawBlockEntity(double distanceSquared) {
+		int limit = settings().blockEntityDistance;
+		return limit <= 0 || !Quartz.available(Feature.TILE_ENTITY_CULLING) || distanceSquared <= (double) limit * limit;
 	}
 
 	/** Whether an entity this far away (squared blocks) should be drawn. */

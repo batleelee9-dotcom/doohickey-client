@@ -108,6 +108,10 @@ public final class CoreTest {
 		public void particles(String kind, double x, double y, double z, int count, double spread, double speed) { particleLog.add(kind + "x" + count); }
 		public void playSound(String name, float volume, float pitch) { soundLog.add(name); }
 		public float healthFraction() { return health; }
+		boolean projectileNear;
+		public boolean ownProjectileNear(Object e) { return projectileNear; }
+		final java.util.List<Boolean> maxFpsLog = new java.util.ArrayList<>();
+		public void applyMaxFps(boolean on, java.util.Map<String, String> restore) { maxFpsLog.add(on); if (on) restore.put("vsync", "true"); else restore.clear(); }
 		public void openMenu() { }
 		public void notifyPlayer(String message) { }
 		public void runOnMainThread(Runnable task) { task.run(); }
@@ -117,6 +121,19 @@ public final class CoreTest {
 		public boolean sessionOffline() { return offline; }
 		public boolean canSwitchSession() { return true; }
 		public void switchSession(LauncherBridge.Session session) { }
+	}
+
+	/** An OpenGL perspective projection (camera looking down -Z), column-major. */
+	static float[] perspective(float fovDegrees, float aspect) {
+		float f = (float) (1 / Math.tan(Math.toRadians(fovDegrees) / 2));
+		float near = 0.05f, far = 256f;
+		float[] m = new float[16];
+		m[0] = f / aspect;
+		m[5] = f;
+		m[10] = (far + near) / (near - far);
+		m[11] = -1;
+		m[14] = 2 * far * near / (near - far);
+		return m;
 	}
 
 	/** `--menu-preview <dir>`: draws the Right Shift menu to PNGs, no Minecraft needed. */
@@ -153,6 +170,53 @@ public final class CoreTest {
 		menu.escape();
 		for (char c : "zo".toCharArray()) menu.typed(c);
 		image.shot(menu, mx, my, dir.resolve("menu-search.png"));
+		// Hit particles over the stand-in world, a short moment after each burst.
+		dev.quartz.core.fx.View.set(perspective(70, 480 / 270f), 0, 0, 0);
+		for (int k = 0; k < dev.quartz.core.fx.Sprites.KINDS.length; k++) {
+			dev.quartz.core.fx.Sprites.spawn(k, (k - 2.5) * 1.6, 0.3, -6, 14, 0.4);
+		}
+		image.frames(() -> dev.quartz.core.fx.Sprites.render(image), 6, dir.resolve("hit-particles.png"));
+		dev.quartz.core.fx.Sprites.clear();
+		// The rice hat on a stand-in head, seen from slightly above and to the side.
+		ClientConfig.get().riceHatColor = 0;
+		java.awt.image.BufferedImage hat = new java.awt.image.BufferedImage(480, 300, java.awt.image.BufferedImage.TYPE_INT_RGB);
+		java.awt.Graphics2D hg = hat.createGraphics();
+		hg.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+		hg.setColor(new java.awt.Color(0x7FA9FF));
+		hg.fillRect(0, 0, 480, 300);
+		dev.quartz.core.fx.View.set(perspective(50, 480 / 300f), 0, 0, 0);
+		float[] q = new float[4];
+		// Model pixels to world: head pivot 1.6 blocks ahead, tilted so we see the top.
+		java.util.function.BiFunction<float[], float[], Boolean> at = (v, out) -> {
+			double tilt = Math.toRadians(25), yaw = Math.toRadians(30);
+			double x = v[0] / 16, y = -v[1] / 16, z = v[2] / 16;
+			double x1 = x * Math.cos(yaw) - z * Math.sin(yaw), z1 = x * Math.sin(yaw) + z * Math.cos(yaw);
+			double y2 = y * Math.cos(tilt) - z1 * Math.sin(tilt), z2 = y * Math.sin(tilt) + z1 * Math.cos(tilt);
+			return dev.quartz.core.fx.View.project(x1, y2 - 0.25, z2 - 2.2, 480, 300, out);
+		};
+		float[][] cube = {{-4,-8,-4},{4,-8,-4},{4,0,-4},{-4,0,-4},{-4,-8,4},{4,-8,4},{4,0,4},{-4,0,4}};
+		int[][] faces = {{0,1,2,3},{4,5,6,7},{0,4,7,3},{1,5,6,2},{0,1,5,4}};
+		hg.setColor(new java.awt.Color(0xC69C6D));
+		for (int[] face : faces) {
+			java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+			for (int i = 0; i < 4; i++) { at.apply(cube[face[i]], q); if (i == 0) path.moveTo(q[0], q[1]); else path.lineTo(q[0], q[1]); }
+			path.closePath();
+			hg.fill(path);
+			hg.setColor(new java.awt.Color(0x8B6A47));
+			hg.draw(path);
+			hg.setColor(new java.awt.Color(0xC69C6D));
+		}
+		java.util.List<float[]> tri = new java.util.ArrayList<>();
+		dev.quartz.core.fx.RiceHat.build((x, y, z, argb) -> tri.add(new float[] {x, y, z, Float.intBitsToFloat(argb)}), 1.5f);
+		for (int t = 0; t < tri.size(); t += 3) {
+			java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+			for (int i = 0; i < 3; i++) { float[] v = tri.get(t + i); at.apply(v, q); if (i == 0) path.moveTo(q[0], q[1]); else path.lineTo(q[0], q[1]); }
+			path.closePath();
+			hg.setColor(new java.awt.Color(Float.floatToRawIntBits(tri.get(t + 1)[3]), true));
+			hg.fill(path);
+		}
+		javax.imageio.ImageIO.write(hat, "png", dir.resolve("rice-hat.png").toFile());
+		dev.quartz.core.fx.View.clear();
 		System.out.println("menu previews written to " + dir);
 	}
 
@@ -167,7 +231,11 @@ public final class CoreTest {
 		ImageBackend(int w, int h, int s) { this.w = w; this.h = h; this.s = s; }
 
 		void shot(dev.quartz.core.ui.ClientMenu menu, int mx, int my, Path out) throws Exception {
-			for (int frame = 0; frame < 3; frame++) {
+			frames(() -> menu.render(this, mx, my), 3, out);
+		}
+
+		void frames(Runnable draw, int count, Path out) throws Exception {
+			for (int frame = 0; frame < count; frame++) {
 				img = new java.awt.image.BufferedImage(w * s, h * s, java.awt.image.BufferedImage.TYPE_INT_RGB);
 				g = img.createGraphics();
 				g.scale(s, s);
@@ -177,7 +245,7 @@ public final class CoreTest {
 				g.fillRect(0, 0, w, h);
 				g.setColor(new java.awt.Color(0x5D8C3A));
 				g.fillRect(0, (int) (h * 0.6), w, h);
-				menu.render(this, mx, my);
+				draw.run();
 				Thread.sleep(40);
 			}
 			javax.imageio.ImageIO.write(img, "png", out.toFile());
@@ -386,9 +454,31 @@ public final class CoreTest {
 		fx.hitAmount = 3;
 		fx.hitSounds = true;
 		fx.hitSound = "pling";
-		dev.quartz.core.fx.Effects.onHit(new Object());
-		check(adapter.particleLog.contains("heartsx18"), "a hit spawns its effect (6 particles per amount step)");
+		Object target = new Object();
+		dev.quartz.core.fx.Effects.onAttack(target);
+		check(adapter.particleLog.isEmpty() && adapter.soundLog.isEmpty(), "a swing alone plays nothing (it may not have done damage)");
+		dev.quartz.core.fx.Effects.onDamaged(new Object(), dev.quartz.core.fx.Effects.UNKNOWN);
+		check(adapter.soundLog.isEmpty(), "damage to something you didn't swing at isn't yours");
+		dev.quartz.core.fx.Effects.onDamaged(target, dev.quartz.core.fx.Effects.UNKNOWN);
+		check(adapter.particleLog.contains("heartsx18"), "the server confirming damage to your target spawns its effect (6 particles per amount step)");
 		check(adapter.soundLog.contains("pling"), "and plays the hit sound");
+		adapter.soundLog.clear();
+		dev.quartz.core.fx.Effects.onDamaged(target, dev.quartz.core.fx.Effects.UNKNOWN);
+		check(adapter.soundLog.isEmpty(), "one swing, one hit sound");
+		adapter.projectileNear = true;
+		dev.quartz.core.fx.Effects.onDamaged(target, dev.quartz.core.fx.Effects.UNKNOWN);
+		check(adapter.soundLog.contains("pling"), "your projectile next to it counts as your hit");
+		adapter.projectileNear = false;
+		adapter.soundLog.clear();
+		dev.quartz.core.fx.Effects.onDamaged(new Object(), dev.quartz.core.fx.Effects.NOT_YOURS);
+		check(adapter.soundLog.isEmpty(), "someone else's hit is ignored");
+		dev.quartz.core.fx.Effects.onDamaged(new Object(), dev.quartz.core.fx.Effects.YOURS);
+		check(adapter.soundLog.contains("pling"), "a hit the version credits to you plays (26.3 knows the attacker)");
+		fx.hitEffect = "snow";
+		dev.quartz.core.fx.Effects.onDamaged(new Object(), dev.quartz.core.fx.Effects.YOURS);
+		check(dev.quartz.core.fx.Sprites.alive() == 15, "snowflakes are the client's own particles (5 per amount step)");
+		dev.quartz.core.fx.Sprites.clear();
+		fx.hitEffect = "hearts";
 		fx.killEffects = true;
 		fx.killEffect = "flames";
 		fx.killSounds = true;
@@ -426,10 +516,46 @@ public final class CoreTest {
 		check(dev.quartz.core.pvp.AspectRatio.width(1920, 1080) == 1920, "unknown values fall back to native");
 		ClientConfig.get().aspectRatio = "native";
 
+		System.out.println("camera projection and hit particles");
+		dev.quartz.core.fx.View.set(perspective(90, 1), 0, 0, 0);
+		float[] pt = new float[4];
+		check(dev.quartz.core.fx.View.project(0, 0, -5, 100, 100, pt) && Math.abs(pt[0] - 50) < 1e-3 && Math.abs(pt[1] - 50) < 1e-3, "a point straight ahead lands mid-screen");
+		check(Math.abs(pt[3] - 10) < 1e-3, "and one block 5 away is 10 px tall at 90 degrees");
+		check(dev.quartz.core.fx.View.project(1, 0, -5, 100, 100, pt) && Math.abs(pt[0] - 60) < 1e-3, "one block right moves it right");
+		check(!dev.quartz.core.fx.View.project(0, 0, 5, 100, 100, pt), "behind the camera isn't drawn");
+		check(dev.quartz.core.fx.View.visible(0, 0, -5, 1) && !dev.quartz.core.fx.View.visible(0, 0, 5, 1) && !dev.quartz.core.fx.View.visible(40, 0, -5, 1), "culling keeps what's in view only");
+		for (int k = 0; k < dev.quartz.core.fx.Sprites.KINDS.length; k++) {
+			dev.quartz.core.fx.Sprites.spawn(k, 0, 0, -5, 10, 0.5);
+		}
+		check(dev.quartz.core.fx.Sprites.alive() == 60, "every custom kind spawns");
+		for (int i = 0; i < 3; i++) {
+			dev.quartz.core.fx.Sprites.render(adapter.backend);
+		}
+		dev.quartz.core.fx.Sprites.clear();
+		check(dev.quartz.core.fx.Sprites.alive() == 0, "and they draw (or skip cleanly) without image support");
+		dev.quartz.core.fx.View.clear();
+
+		System.out.println("rice hat");
+		check(!dev.quartz.core.fx.RiceHat.enabled(), "off by default");
+		int[] vertices = {0};
+		float[] apexY = {0};
+		dev.quartz.core.fx.RiceHat.build((x, y, z, argb) -> { vertices[0]++; apexY[0] = Math.min(apexY[0], y); }, 0);
+		check(vertices[0] % 3 == 0 && vertices[0] >= 90 && apexY[0] < -12, "a cone of triangles above the head");
+
+		System.out.println("performance presets");
+		check(dev.quartz.core.perf.Performance.drawBlockEntity(40 * 40) && !dev.quartz.core.perf.Performance.drawBlockEntity(60 * 60), "signs and chests past 48 blocks aren't drawn");
+		dev.quartz.core.perf.Performance.tick(adapter);
+		check(adapter.maxFpsLog.equals(java.util.Arrays.asList(true)) && ClientConfig.get().performance.maxFpsRestore.containsKey("vsync"), "Max FPS applies once, remembering your settings");
+		dev.quartz.core.perf.Performance.tick(adapter);
+		check(adapter.maxFpsLog.size() == 1, "and doesn't re-apply every tick");
+		ClientConfig.get().performance.maxFps = false;
+		dev.quartz.core.perf.Performance.tick(adapter);
+		check(adapter.maxFpsLog.equals(java.util.Arrays.asList(true, false)) && ClientConfig.get().performance.maxFpsRestore.isEmpty(), "switching it off puts them back");
+
 		System.out.println("menu modules");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 21, "21 HUD modules on 1.8.9 (20 elements + style)");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.SOUND).size() == 3, "3 sound modules");
-		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 12, "12 visual modules on 1.8.9");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 13, "13 visual modules on 1.8.9");
 		dev.quartz.core.ui.ClientMenu smoke = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {
 			public void close() { }
 			public void openHudEditor() { }

@@ -1,8 +1,10 @@
 package dev.quartz.client.cosmetics;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import dev.quartz.core.config.ClientConfig;
+import dev.quartz.core.fx.RiceHat;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.player.PlayerModel;
@@ -38,14 +40,18 @@ public final class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerM
 		boolean headFree = state.headEquipment.isEmpty() && state.headItem.isEmpty() && state.wornHeadType == null;
 		String hat = Cosmetics.selected(Cosmetics.HATS, c.hat);
 		String bandana = Cosmetics.selected(Cosmetics.BANDANAS, c.bandana);
-		if (headFree && (hat != null || bandana != null)) {
+		boolean riceHat = RiceHat.enabled();
+		if (headFree && (hat != null || bandana != null || riceHat)) {
 			poseStack.pushPose();
 			model.root().translateAndRotate(poseStack);
 			model.head.translateAndRotate(poseStack);
 			if (bandana != null) {
 				submit(collector, CosmeticModels.BANDANA, poseStack, RenderTypes.entityCutoutCull(Cosmetics.texture("bandana", bandana)), light, overlay, state);
 			}
-			if (hat != null) {
+			if (riceHat) {
+				// Takes the place of any other hat.
+				collector.submitCustomGeometry(poseStack, RenderTypes.debugQuads(), CosmeticsLayer::riceHat);
+			} else if (hat != null) {
 				switch (hat) {
 					case "tophat" -> submit(collector, CosmeticModels.TOP_HAT, poseStack, RenderTypes.entityCutoutCull(Cosmetics.texture("hat", hat)), light, overlay, state);
 					case "crown" -> submit(collector, CosmeticModels.CROWN, poseStack, RenderTypes.entityCutoutCull(Cosmetics.texture("hat", hat)), light, overlay, state);
@@ -82,6 +88,17 @@ public final class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerM
 			}
 			poseStack.popPose();
 		}
+	}
+
+	/** The cone, as quads (each triangle's last corner doubled), in blocks from the head pivot. */
+	private static void riceHat(PoseStack.Pose pose, VertexConsumer consumer) {
+		int[] corner = {0};
+		RiceHat.build((x, y, z, argb) -> {
+			consumer.addVertex(pose, x / 16f, y / 16f, z / 16f).setColor(argb);
+			if (++corner[0] % 3 == 0) {
+				consumer.addVertex(pose, x / 16f, y / 16f, z / 16f).setColor(argb);
+			}
+		}, (System.currentTimeMillis() % 1_000_000L) / 1000f);
 	}
 
 	private static void submit(SubmitNodeCollector collector, ModelPart part, PoseStack poseStack, RenderType type, int light, int overlay, AvatarRenderState state) {

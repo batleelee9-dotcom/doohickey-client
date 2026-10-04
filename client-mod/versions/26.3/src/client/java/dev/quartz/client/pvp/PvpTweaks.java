@@ -1,10 +1,14 @@
 package dev.quartz.client.pvp;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import dev.quartz.client.adapter.PipelineBackend;
 import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.fx.Effects;
+import dev.quartz.core.fx.Sprites;
+import dev.quartz.core.fx.View;
 import dev.quartz.core.hud.ReachTracker;
+import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -16,6 +20,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4f;
 
 /** Toggle sprint/sneak, reach measurement and the damage tint overlay. */
 public final class PvpTweaks {
@@ -82,10 +87,26 @@ public final class PvpTweaks {
 			: target.getBoundingBox().getCenter();
 		lastReach = eye.distanceTo(point);
 		ReachTracker.record(lastReach);
-		Safe.run("effects.hit", () -> Effects.onHit(target));
+		Safe.run("effects.attack", () -> Effects.onAttack(target));
 	}
 
 	/** A red vignette when hurt or on low health. */
+	private static final Matrix4f VIEW_MATRIX = new Matrix4f();
+	private static final float[] VIEW = new float[16];
+
+	/** The client's own hit particles, placed with this frame's camera. Under the vanilla HUD. */
+	public static void renderHitParticles(GuiGraphicsExtractor g) {
+		if (Sprites.alive() == 0) {
+			return;
+		}
+		Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
+		camera.getViewRotationProjectionMatrix(VIEW_MATRIX).get(VIEW);
+		Vec3 pos = camera.position();
+		View.set(VIEW, pos.x, pos.y, pos.z);
+		PipelineBackend.begin(g);
+		Safe.run("sprites", Sprites::renderHud);
+	}
+
 	public static void renderDamageTint(GuiGraphicsExtractor g) {
 		Minecraft mc = Minecraft.getInstance();
 		Player p = mc.player;

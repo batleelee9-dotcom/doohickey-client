@@ -76,10 +76,10 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Sodium / Iris integration | N/A | N/A | ✅ | ✅ | ✅ | ✅ | ✅ | Sodium exists from 1.16. |
 | Entity render distance | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Entity culling | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| Block entity culling | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| Particle culling | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Block entity culling | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Particle culling | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Chunk update throttling | ✅ | ✅ | ✅ | ⚠ | ⚠ | ⚠ | ⚠ | 1.18+ schedules chunk builds itself; only the budget can be tuned. |
-| FPS cap / vsync | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Max FPS preset (no vsync or cap, fast graphics) | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Dynamic render distance | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Smart animations | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Borderless fullscreen | ⚠ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | LWJGL 2 has no borderless mode; 1.8.9 needs a window-style workaround. |
@@ -94,6 +94,7 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | **COSMETICS** | | | | | | | | |
 | Capes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Client-side: only you see them without a cosmetics server. |
 | Wings, hats, bandanas, halos | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Client-side: only you see them without a cosmetics server. |
+| Rice hat | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Client-side: only you see it. |
 | Emotes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Kill effects | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Block-break particles | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |

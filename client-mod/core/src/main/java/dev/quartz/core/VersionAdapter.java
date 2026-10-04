@@ -118,6 +118,22 @@ public interface VersionAdapter {
 		return 1f;
 	}
 
+	/**
+	 * Whether one of your projectiles (arrow, rod, thrown item) is right next
+	 * to {@code entity}: how a version that can't see who caused damage
+	 * credits you for a projectile hit.
+	 */
+	default boolean ownProjectileNear(Object entity) {
+		return false;
+	}
+
+	/**
+	 * Max FPS on: remember the player's video settings in {@code restore},
+	 * then switch to the fastest ones. Off: put back what's in {@code restore}.
+	 */
+	default void applyMaxFps(boolean on, java.util.Map<String, String> restore) {
+	}
+
 	/** Health as a fraction of the maximum, or -1 outside a world. */
 	float healthFraction();
 

@@ -22,6 +22,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.projectile.AbstractArrowEntity;
+import net.minecraft.entity.projectile.FishingBobberEntity;
+import net.minecraft.entity.thrown.ThrowableEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.LiteralText;
@@ -29,12 +32,17 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import org.lwjgl.input.Keyboard;
+import org.lwjgl.opengl.Display;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 /** {@link VersionAdapter} for Minecraft 1.8.9 on Legacy Fabric. */
 final class LegacyAdapter implements VersionAdapter {
@@ -289,6 +297,91 @@ final class LegacyAdapter implements VersionAdapter {
 		}
 		Entity e = (Entity) entity;
 		return new double[] {e.x, e.y, e.z, e.height, e.width};
+	}
+
+	// Thrown items (snowballs, eggs, pearls) don't tell the client who threw
+	// them: one that first shows up right at your eyes is yours.
+	private final Set<Entity> seenThrown = Collections.newSetFromMap(new WeakHashMap<>());
+	private final Set<Entity> ownThrown = Collections.newSetFromMap(new WeakHashMap<>());
+
+	/** Every tick: notice items you just threw. */
+	void trackThrown() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client.world == null || client.player == null) {
+			return;
+		}
+		PlayerEntity p = client.player;
+		double eyeY = p.y + p.getEyeHeight();
+		for (Entity e : client.world.loadedEntities) {
+			if (e instanceof ThrowableEntity && seenThrown.add(e) && e.squaredDistanceTo(p.x, eyeY, p.z) < 9) {
+				ownThrown.add(e);
+			}
+		}
+	}
+
+	@Override
+	public boolean ownProjectileNear(Object entity) {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (!(entity instanceof Entity) || client.world == null || client.player == null) {
+			return false;
+		}
+		Entity target = (Entity) entity;
+		for (Entity e : client.world.loadedEntities) {
+			boolean mine = e instanceof AbstractArrowEntity && ((AbstractArrowEntity) e).owner == client.player
+				|| e instanceof FishingBobberEntity && ((FishingBobberEntity) e).thrower == client.player
+				|| e instanceof ThrowableEntity && ownThrown.contains(e);
+			// Still moving: an arrow stuck in the ground from earlier doesn't count.
+			boolean flying = e.velocityX * e.velocityX + e.velocityY * e.velocityY + e.velocityZ * e.velocityZ > 0.01;
+			if (mine && flying && near(e, target)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/** Within 3 blocks of the target's box: projectiles cover up to ~3 blocks a tick. */
+	private static boolean near(Entity projectile, Entity target) {
+		double reach = target.width / 2 + 3;
+		double dy = projectile.y - target.y;
+		return Math.abs(projectile.x - target.x) <= reach && Math.abs(projectile.z - target.z) <= reach && dy >= -3 && dy <= target.height + 3;
+	}
+
+	@Override
+	public void applyMaxFps(boolean on, Map<String, String> restore) {
+		MinecraftClient client = MinecraftClient.getInstance();
+		GameOptions o = client.options;
+		if (on) {
+			restore.put("maxFramerate", String.valueOf(o.maxFramerate));
+			restore.put("vsync", String.valueOf(o.vsync));
+			restore.put("vbo", String.valueOf(o.vbo));
+			restore.put("fancyGraphics", String.valueOf(o.fancyGraphics));
+			restore.put("ao", String.valueOf(o.ao));
+			restore.put("cloudMode", String.valueOf(o.cloudMode));
+			restore.put("entityShadows", String.valueOf(o.entityShadows));
+			// 260 is "Unlimited"; VBOs batch chunk geometry on the GPU.
+			o.maxFramerate = 260;
+			o.vsync = false;
+			o.vbo = true;
+			o.fancyGraphics = false;
+			o.ao = 0;
+			o.cloudMode = 0;
+			o.entityShadows = false;
+		} else if (!restore.isEmpty()) {
+			o.maxFramerate = Integer.parseInt(restore.getOrDefault("maxFramerate", "120"));
+			o.vsync = Boolean.parseBoolean(restore.getOrDefault("vsync", "true"));
+			o.vbo = Boolean.parseBoolean(restore.getOrDefault("vbo", "false"));
+			o.fancyGraphics = Boolean.parseBoolean(restore.getOrDefault("fancyGraphics", "true"));
+			o.ao = Integer.parseInt(restore.getOrDefault("ao", "2"));
+			o.cloudMode = Integer.parseInt(restore.getOrDefault("cloudMode", "2"));
+			o.entityShadows = Boolean.parseBoolean(restore.getOrDefault("entityShadows", "true"));
+			restore.clear();
+		}
+		Display.setVSyncEnabled(o.vsync);
+		// VBOs, fancy leaves and smooth lighting only change when chunks are rebuilt.
+		if (client.worldRenderer != null && client.world != null) {
+			client.worldRenderer.reload();
+		}
+		o.save();
 	}
 
 	@Override

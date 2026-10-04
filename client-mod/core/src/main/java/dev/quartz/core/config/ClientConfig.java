@@ -93,6 +93,9 @@ public final class ClientConfig {
 	public String hat = "none";
 	public String bandana = "none";
 	public String wings = "none";
+	public boolean riceHat = false;
+	/** RiceHat.COLOURS; 0 is rainbow. */
+	public int riceHatColor = 0;
 
 	// World: sky, fog, weather, time
 	public EnvironmentSettings environment = new EnvironmentSettings();

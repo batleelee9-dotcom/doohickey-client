@@ -5,6 +5,7 @@ import dev.quartz.core.Quartz;
 import dev.quartz.core.RenderBackend;
 import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
+import dev.quartz.core.fx.Sprites;
 import dev.quartz.core.hud.CpsTracker;
 import dev.quartz.core.hud.Hud;
 import dev.quartz.core.pvp.CrosshairStyle;
@@ -34,9 +35,12 @@ public final class QuartzLegacy implements ClientModInitializer {
 	 */
 	private static boolean menuRequested;
 
+	private static final Runnable TRACK_THROWN = () -> ((LegacyAdapter) Quartz.adapter()).trackThrown();
+
 	/** Every client tick (hooked at the end of MinecraftClient#tick). */
 	public static void tick() {
 		Quartz.tick();
+		Safe.run("projectiles", TRACK_THROWN);
 		MinecraftClient client = MinecraftClient.getInstance();
 		holdToggledKeys(client);
 		if (menuRequested) {
@@ -90,7 +94,12 @@ public final class QuartzLegacy implements ClientModInitializer {
 	public static void renderHud() {
 		MinecraftClient client = MinecraftClient.getInstance();
 		// F1 hides everything; F3's debug text owns the top-left corner.
-		if (client.options.hudHidden || client.options.debugEnabled || client.currentScreen instanceof HudEditorLegacyScreen) {
+		if (client.options.hudHidden || client.currentScreen instanceof HudEditorLegacyScreen) {
+			return;
+		}
+		// Hit particles sit in the world, so they show with F3 open too.
+		Safe.run("sprites", Sprites::renderHud);
+		if (client.options.debugEnabled) {
 			return;
 		}
 		RenderBackend r = Quartz.adapter().render();

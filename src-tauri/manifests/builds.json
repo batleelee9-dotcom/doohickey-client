@@ -11,12 +11,12 @@
         {
           "kind": "fabric",
           "version": "stable",
-          "mods": ["sodium", "lithium", "ferrite-core", "entityculling", "immediatelyfast", "moreculling", "dynamic-fps"]
+          "mods": ["sodium", "lithium", "ferrite-core", "entityculling", "immediatelyfast", "moreculling", "dynamic-fps", "modernfix", "krypton", "badoptimizations", "scalablelux"]
         },
         {
           "kind": "neoforge",
           "version": "stable",
-          "mods": ["sodium", "lithium", "ferrite-core", "entityculling", "immediatelyfast"]
+          "mods": ["sodium", "lithium", "ferrite-core", "entityculling", "immediatelyfast", "modernfix", "badoptimizations", "scalablelux"]
         }
       ]
     },
@@ -78,7 +78,7 @@
         {
           "kind": "legacyfabric",
           "version": "stable",
-          "mods": []
+          "mods": ["phosphor-legacy", "windows-priority-boost"]
         }
       ]
     }

@@ -9,6 +9,7 @@ import dev.quartz.core.accounts.LauncherBridge;
 import dev.quartz.core.hud.HudData;
 import dev.quartz.core.hud.Input;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.CloudStatus;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -353,6 +354,35 @@ public final class ModernAdapter implements VersionAdapter {
 	@Override
 	public float soundVolume() {
 		return Minecraft.getInstance().options.getFinalSoundSourceVolume(SoundSource.PLAYERS);
+	}
+
+	@Override
+	public void applyMaxFps(boolean on, java.util.Map<String, String> restore) {
+		Options o = Minecraft.getInstance().options;
+		if (on) {
+			restore.put("vsync", String.valueOf(o.enableVsync().get()));
+			restore.put("framerate", String.valueOf(o.framerateLimit().get()));
+			restore.put("shadows", String.valueOf(o.entityShadows().get()));
+			restore.put("clouds", o.cloudStatus().get().name());
+			restore.put("ao", String.valueOf(o.ambientOcclusion().get()));
+			restore.put("biomeBlend", String.valueOf(o.biomeBlendRadius().get()));
+			// Each set() runs vanilla's own update (window vsync, chunk rebuild for AO and blending).
+			o.enableVsync().set(false);
+			o.framerateLimit().set(Options.UNLIMITED_FRAMERATE_CUTOFF);
+			o.entityShadows().set(false);
+			o.cloudStatus().set(CloudStatus.OFF);
+			o.ambientOcclusion().set(false);
+			o.biomeBlendRadius().set(0);
+		} else if (!restore.isEmpty()) {
+			o.enableVsync().set(Boolean.parseBoolean(restore.getOrDefault("vsync", "true")));
+			o.framerateLimit().set(Integer.parseInt(restore.getOrDefault("framerate", "120")));
+			o.entityShadows().set(Boolean.parseBoolean(restore.getOrDefault("shadows", "true")));
+			o.cloudStatus().set(CloudStatus.valueOf(restore.getOrDefault("clouds", "FANCY")));
+			o.ambientOcclusion().set(Boolean.parseBoolean(restore.getOrDefault("ao", "true")));
+			o.biomeBlendRadius().set(Integer.parseInt(restore.getOrDefault("biomeBlend", "2")));
+			restore.clear();
+		}
+		o.save();
 	}
 
 	@Override
