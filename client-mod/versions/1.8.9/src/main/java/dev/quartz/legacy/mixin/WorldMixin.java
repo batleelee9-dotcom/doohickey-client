@@ -38,7 +38,7 @@ public abstract class WorldMixin {
 		if (!quartz$client()) {
 			return;
 		}
-		int rgb = Safe.call("sky.color", EnvironmentModule::skyColor, EnvironmentModule.VANILLA);
+		int rgb = Safe.get("sky.color", EnvironmentModule::skyColor, EnvironmentModule.VANILLA);
 		if (rgb != EnvironmentModule.VANILLA) {
 			cir.setReturnValue(new Vec3d(EnvironmentModule.red(rgb), EnvironmentModule.green(rgb), EnvironmentModule.blue(rgb)));
 		}
@@ -50,7 +50,7 @@ public abstract class WorldMixin {
 			return;
 		}
 		long vanilla = this.levelProperties.getTimeOfDay();
-		long locked = Safe.call("time.lock", () -> EnvironmentModule.clock(vanilla), vanilla);
+		long locked = Safe.map("time.lock", EnvironmentModule::clock, vanilla);
 		if (locked != vanilla) {
 			cir.setReturnValue(this.dimension.getSkyAngle(locked, tickDelta));
 		}
@@ -60,7 +60,10 @@ public abstract class WorldMixin {
 	private void quartz$rain(float offset, CallbackInfoReturnable<Float> cir) {
 		if (quartz$client()) {
 			float vanilla = cir.getReturnValueF();
-			cir.setReturnValue(Safe.call("weather.rain", () -> EnvironmentModule.rainLevel(vanilla), vanilla));
+			float level = Safe.map("weather.rain", EnvironmentModule::rainLevel, vanilla);
+			if (level != vanilla) {
+				cir.setReturnValue(level);
+			}
 		}
 	}
 
@@ -68,7 +71,10 @@ public abstract class WorldMixin {
 	private void quartz$thunder(float offset, CallbackInfoReturnable<Float> cir) {
 		if (quartz$client()) {
 			float vanilla = cir.getReturnValueF();
-			cir.setReturnValue(Safe.call("weather.thunder", () -> EnvironmentModule.thunderLevel(vanilla), vanilla));
+			float level = Safe.map("weather.thunder", EnvironmentModule::thunderLevel, vanilla);
+			if (level != vanilla) {
+				cir.setReturnValue(level);
+			}
 		}
 	}
 }

@@ -3,7 +3,8 @@
 	"package": "dev.quartz.client.mixin.extra",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"CameraZoomMixin"
+		"CameraZoomMixin",
+		"HurtCameraMixin"
 	],
 	"injectors": {
 		"defaultRequire": 0

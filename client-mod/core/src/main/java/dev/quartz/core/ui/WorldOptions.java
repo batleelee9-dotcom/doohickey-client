@@ -29,36 +29,60 @@ public final class WorldOptions {
 	private WorldOptions() {
 	}
 
-	public static List<Option> all() {
-		List<Option> options = new ArrayList<>();
-		add(options, Option.choice(Feature.SKY_COLOR, "Sky", SKIES, SKY_NAMES,
+	public static Option sky() {
+		return Option.choice(Feature.SKY_COLOR, "Sky", SKIES, SKY_NAMES,
 			() -> s().customSky ? s().skyColor : -1,
 			v -> {
 				s().customSky = v >= 0;
 				if (v >= 0) {
 					s().skyColor = v;
 				}
-			}));
-		add(options, Option.choice(Feature.TIME_LOCK, "Time", TIMES, TIME_NAMES,
+			});
+	}
+
+	public static Option time() {
+		return Option.choice(Feature.TIME_LOCK, "Time", TIMES, TIME_NAMES,
 			() -> s().lockTime ? s().timeOfDay : -1,
 			v -> {
 				s().lockTime = v >= 0;
 				if (v >= 0) {
 					s().timeOfDay = v;
 				}
-			}));
-		add(options, Option.choice(Feature.FOG, "Fog", FOGS, FOG_NAMES, () -> s().fog, v -> s().fog = v));
-		add(options, Option.choice(Feature.FOG_COLOR, "Fog colour", FOG_COLORS, FOG_COLOR_NAMES,
+			});
+	}
+
+	public static Option fog() {
+		return Option.choice(Feature.FOG, "Fog", FOGS, FOG_NAMES, () -> s().fog, v -> s().fog = v);
+	}
+
+	public static Option fogColour() {
+		return Option.choice(Feature.FOG_COLOR, "Fog colour", FOG_COLORS, FOG_COLOR_NAMES,
 			() -> s().customFogColor ? s().fogColor : -1,
 			v -> {
 				s().customFogColor = v >= 0;
 				if (v >= 0) {
 					s().fogColor = v;
 				}
-			}));
-		add(options, Option.choice(Feature.WEATHER_OVERRIDE, "Weather", WEATHERS, WEATHER_NAMES, () -> s().weather, v -> s().weather = v));
-		add(options, Option.toggle(Feature.FULLBRIGHT, "Fullbright", () -> s().fullbright, v -> s().fullbright = v));
-		add(options, Option.toggle(Feature.VOID_FOG_REMOVAL, "Remove void fog", () -> s().removeVoidFog, v -> s().removeVoidFog = v));
+			});
+	}
+
+	public static Option weather() {
+		return Option.choice(Feature.WEATHER_OVERRIDE, "Weather", WEATHERS, WEATHER_NAMES, () -> s().weather, v -> s().weather = v);
+	}
+
+	public static Option fullbright() {
+		return Option.toggle(Feature.FULLBRIGHT, "Fullbright", () -> s().fullbright, v -> s().fullbright = v);
+	}
+
+	public static Option voidFog() {
+		return Option.toggle(Feature.VOID_FOG_REMOVAL, "Remove void fog", () -> s().removeVoidFog, v -> s().removeVoidFog = v);
+	}
+
+	public static List<Option> all() {
+		List<Option> options = new ArrayList<>();
+		for (Option o : new Option[] {sky(), time(), fog(), fogColour(), weather(), fullbright(), voidFog()}) {
+			add(options, o);
+		}
 		return options;
 	}
 

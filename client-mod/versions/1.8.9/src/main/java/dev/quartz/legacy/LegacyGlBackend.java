@@ -30,14 +30,35 @@ final class LegacyGlBackend implements RenderBackend {
 		return Kind.LEGACY_OPENGL;
 	}
 
+	// The scaled window, recomputed only when the size or GUI scale changes (it was
+	// rebuilt for every query, dozens of times a frame).
+	private int keyW = -1;
+	private int keyH;
+	private int keyScale;
+	private boolean keyUnicode;
+	private Window window;
+
+	private Window window() {
+		MinecraftClient mc = MinecraftClient.getInstance();
+		boolean unicode = mc.forcesUnicodeFont();
+		if (window == null || mc.width != keyW || mc.height != keyH || mc.options.guiScale != keyScale || unicode != keyUnicode) {
+			window = new Window(mc);
+			keyW = mc.width;
+			keyH = mc.height;
+			keyScale = mc.options.guiScale;
+			keyUnicode = unicode;
+		}
+		return window;
+	}
+
 	@Override
 	public int screenWidth() {
-		return new Window(MinecraftClient.getInstance()).getWidth();
+		return window().getWidth();
 	}
 
 	@Override
 	public int screenHeight() {
-		return new Window(MinecraftClient.getInstance()).getHeight();
+		return window().getHeight();
 	}
 
 	@Override
@@ -82,7 +103,7 @@ final class LegacyGlBackend implements RenderBackend {
 
 	@Override
 	public float guiScale() {
-		return new Window(MinecraftClient.getInstance()).getScaleFactor();
+		return window().getScaleFactor();
 	}
 
 	/** Uploaded once and kept for the session; GL frees them with the context. */

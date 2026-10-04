@@ -132,6 +132,8 @@ public final class CompatRegistry {
 		row(Feature.SOUND_PACKS, "YYYYYYY", null);
 		row(Feature.SOUND_POSITIONING, "YYYYYYY", null);
 		row(Feature.SOUND_MUTE, "YYYYYYY", null);
+		row(Feature.HIT_SOUNDS, "YYYYYYY", "Played on your client only.");
+		row(Feature.LOW_HEALTH_ALERT, "YYYYYYY", null);
 
 		row(Feature.CAPES, "YYYYYYY", "Client-side: only you see them without a cosmetics server.");
 		row(Feature.WEARABLES, "YYYYYYY", "Client-side: only you see them without a cosmetics server.");
@@ -139,6 +141,8 @@ public final class CompatRegistry {
 		row(Feature.KILL_EFFECTS, "YYYYYYY", null);
 		row(Feature.BREAK_PARTICLES, "YYYYYYY", null);
 		row(Feature.TOTEM_EFFECT, "-YYYYYY", "Totems arrived in 1.11.");
+		row(Feature.HIT_EFFECTS, "YYYYYYY", "Client-side particles: only you see them.");
+		row(Feature.TRAILS, "YYYYYYY", "Client-side particles: only you see them.");
 
 		row(Feature.MINIMAP_WAYPOINTS, "YYYYYYY", "Honours servers' minimap/fair-play codes; no entity radar.");
 		row(Feature.SCREENSHOTS, "YYYYYYY", null);
@@ -156,6 +160,7 @@ public final class CompatRegistry {
 			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
 			Feature.CUSTOM_CROSSHAIR, Feature.ZOOM, Feature.HITBOXES,
+			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.ACCOUNT_SWITCHER);
 		implemented(McVersion.V26_3,
 			Feature.SKY_COLOR, Feature.TIME_LOCK, Feature.FOG, Feature.FOG_COLOR, Feature.WEATHER_OVERRIDE,
@@ -166,6 +171,7 @@ public final class CompatRegistry {
 			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
 			Feature.ZOOM, Feature.HITBOXES,
+			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.TOGGLE_SPRINT_SNEAK, Feature.HIT_COLOR, Feature.CAPES, Feature.WEARABLES, Feature.MINIMAP_WAYPOINTS,
 			Feature.ACCOUNT_SWITCHER);
 

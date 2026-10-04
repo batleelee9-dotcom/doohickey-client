@@ -33,6 +33,8 @@ final class QuartzLegacyScreen extends Screen implements ClientMenu.Host {
 	protected void mouseClicked(int mouseX, int mouseY, int button) {
 		if (button == 0) {
 			menu.click(mouseX, mouseY);
+		} else if (button == 1) {
+			menu.rightClick(mouseX, mouseY);
 		}
 	}
 

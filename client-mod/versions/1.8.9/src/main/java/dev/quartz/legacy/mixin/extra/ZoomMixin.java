@@ -16,7 +16,10 @@ public abstract class ZoomMixin {
 		// The held item uses the same method with changingFov = false; leave it alone.
 		if (changingFov) {
 			float fov = cir.getReturnValueF();
-			cir.setReturnValue(Safe.call("zoom", () -> Zoom.apply(fov), fov));
+			float zoomed = Safe.map("zoom", Zoom::apply, fov);
+			if (zoomed != fov) {
+				cir.setReturnValue(zoomed);
+			}
 		}
 	}
 }

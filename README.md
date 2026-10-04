@@ -20,7 +20,8 @@ A fast, minimal launcher for Minecraft: Java Edition, with its own in-game clien
 **Doohickey Client (in game).** One codebase, one jar per Minecraft version, added automatically when the build supports it. Press **Right Shift** in game to set it up. Fabric **26.3** has everything below; **1.8.9** (Legacy Fabric) has the whole HUD, zoom, hitboxes, the custom crosshair, the World controls, the performance options, toggle sprint/sneak and the account switcher. Per-version details: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 - **HUD (20 elements on both versions):** FPS, CPS, ping, coordinates, reach, keystrokes, potion effects, armor, clock, session time, memory, server address, direction, speed, day counter, saturation, arrow counter, combo counter, block info and biome, plus toggle status on 26.3. Drag to move, scroll to resize. The newer ones start switched off: turn them on in the HUD tab.
 - **PvP:** zoom (hold C, 2x–8x, smooth or instant), toggle sprint/sneak, hitboxes, a custom crosshair, plus on 26.3 hit colour and damage tint.
-- **Performance:** particle limiter, entity render distance (1.8.9) and dynamic render distance, which steps the view distance down while FPS stays under your target and back up when it recovers.
+- **Effects and sounds:** hit effects (critical, magic, hearts, flames, blood, smoke, notes, sparkle, lava, with an amount setting), particle trails, kill effects, hit and kill sounds (with a preview as you pick), a low-health heartbeat and no hurt camera. All client-side: only you see and hear them, and nothing is sent to servers.
+- **Performance:** particle limiter, entity render distance (1.8.9) and dynamic render distance, which steps the view distance down while FPS stays under your target and back up when it recovers. The client itself is built to stay out of the way: in the headless benchmark the whole 20-element HUD costs about 1 µs and 32 bytes per frame, and the open menu about 4 µs and 280 bytes.
 - **World:** sky colour, locked time of day, fog distance and colour, weather override, fullbright (all client-side), and void-fog removal on 1.8.9.
 - **Map (26.3):** minimap and waypoints (death waypoints, labels in the world). It respects servers that disable minimaps.
 - **Cosmetics (26.3):** capes, hats, bandanas and wings, all original designs. Only you see them.
@@ -123,5 +124,7 @@ Lunar Client hasn't been measured on the same machine. To compare, run `.\script
 - Not built yet: custom sky gradients/cubemaps, 1.7 animations, and the crosshair and hit colour on 1.8.9. Entity culling comes from the EntityCulling mod on the builds where it exists, not from Doohickey Client.
 - Cosmetics are visible only to you: there is no cosmetics server.
 - **OptiFine** isn't offered: its licence forbids launchers from bundling or downloading it, and on 1.8.9 it needs Forge. Sodium + Iris cover the same ground on newer versions.
+
+- **Menu:** Right Shift opens the same smooth menu on 1.8.9 and 26.3: HUD, PvP, Visual, Sound, Performance (and Cosmetics on 26.3) tabs, type-to-search, settings pages behind each module's gear icon, and right-click to step a value back.
 
 Design notes: [ARCHITECTURE.md](ARCHITECTURE.md) (launcher) and [docs/CLIENT.md](docs/CLIENT.md) (in-game client).

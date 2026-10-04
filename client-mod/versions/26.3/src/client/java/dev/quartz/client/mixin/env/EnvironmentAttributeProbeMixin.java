@@ -22,7 +22,7 @@ public abstract class EnvironmentAttributeProbeMixin {
 		if (attribute != EnvironmentAttributes.SKY_COLOR) {
 			return;
 		}
-		int rgb = Safe.call("sky.color", EnvironmentModule::skyColor, EnvironmentModule.VANILLA);
+		int rgb = Safe.get("sky.color", EnvironmentModule::skyColor, EnvironmentModule.VANILLA);
 		if (rgb != EnvironmentModule.VANILLA) {
 			cir.setReturnValue(new Vector3f(EnvironmentModule.red(rgb), EnvironmentModule.green(rgb), EnvironmentModule.blue(rgb)));
 		}

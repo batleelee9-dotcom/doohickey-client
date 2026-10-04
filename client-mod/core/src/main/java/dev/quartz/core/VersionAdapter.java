@@ -96,6 +96,26 @@ public interface VersionAdapter {
 	/** Whether the zoom key is held right now (never while a screen is open). */
 	boolean zoomKeyDown();
 
+	/** {x, y (feet), z, height, width} of an entity a hook handed us, or null if it's gone. */
+	double[] entityBox(Object entity);
+
+	/** Whether that entity has died (or been removed from the world). */
+	boolean entityDead(Object entity);
+
+	/**
+	 * Spawns client-side particles that only this player sees. {@code kind} is
+	 * one of the names in {@code Effects} ("crit", "hearts", ...), mapped to the
+	 * version's own particle types. {@code spread} is the radius in blocks,
+	 * {@code speed} roughly how fast they fly out.
+	 */
+	void particles(String kind, double x, double y, double z, int count, double spread, double speed);
+
+	/** Plays a sound to this player only, by an {@code Effects} name ("ding", "pling", ...). */
+	void playSound(String name, float volume, float pitch);
+
+	/** Health as a fraction of the maximum, or -1 outside a world. */
+	float healthFraction();
+
 	/** Opens the in-game Doohickey menu. */
 	void openMenu();
 

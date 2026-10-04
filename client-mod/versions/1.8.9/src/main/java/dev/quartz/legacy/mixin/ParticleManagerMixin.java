@@ -15,7 +15,7 @@ public abstract class ParticleManagerMixin {
 	// Two overloads exist (by id, and by Particle); hook the one every particle goes through.
 	@Inject(method = "addParticle(Lnet/minecraft/client/particle/Particle;)V", at = @At("HEAD"), cancellable = true)
 	private void quartz$limit(Particle particle, CallbackInfo ci) {
-		if (!Safe.call("particles", Performance::keepParticle, true)) {
+		if (!Safe.test("particles", Performance::keepParticle, true)) {
 			ci.cancel();
 		}
 	}

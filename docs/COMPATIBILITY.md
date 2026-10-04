@@ -24,7 +24,7 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Remove void fog | ✅ ● | ✅ | ⚠ | ❌ | ❌ | ❌ | ❌ | 1.16.5 only darkens the sky near bedrock; 1.18 removed void fog entirely. |
 | Particle control | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | View and hand bobbing | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| Hurt camera shake | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Hurt camera shake | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Damage tint | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Custom crosshair | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Dynamic crosshair | ⚠ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 1.8.9 has no attack cooldown; only bow charge can be shown. |
@@ -88,13 +88,17 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Custom sound packs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Sound positioning | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Mute specific sounds | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Hit and kill sounds | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Played on your client only. |
+| Low health alert | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | **COSMETICS** | | | | | | | | |
 | Capes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Client-side: only you see them without a cosmetics server. |
 | Wings, hats, bandanas, halos | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Client-side: only you see them without a cosmetics server. |
 | Emotes | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| Kill effects | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Kill effects | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Block-break particles | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Totem pop effect | N/A | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Totems arrived in 1.11. |
+| Hit effects | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Client-side particles: only you see them. |
+| Particle trails | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Client-side particles: only you see them. |
 | **UTILITY** | | | | | | | | |
 | Minimap and waypoints | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Honours servers' minimap/fair-play codes; no entity radar. |
 | Screenshot manager | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |

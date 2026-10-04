@@ -19,7 +19,10 @@ public abstract class LevelMixin {
 	private void quartz$rain(float partialTicks, CallbackInfoReturnable<Float> cir) {
 		if ((Object) this instanceof ClientLevel) {
 			float vanilla = cir.getReturnValueF();
-			cir.setReturnValue(Safe.call("weather.rain", () -> EnvironmentModule.rainLevel(vanilla), vanilla));
+			float level = Safe.map("weather.rain", EnvironmentModule::rainLevel, vanilla);
+			if (level != vanilla) {
+				cir.setReturnValue(level);
+			}
 		}
 	}
 
@@ -27,7 +30,10 @@ public abstract class LevelMixin {
 	private void quartz$thunder(float partialTicks, CallbackInfoReturnable<Float> cir) {
 		if ((Object) this instanceof ClientLevel) {
 			float vanilla = cir.getReturnValueF();
-			cir.setReturnValue(Safe.call("weather.thunder", () -> EnvironmentModule.thunderLevel(vanilla), vanilla));
+			float level = Safe.map("weather.thunder", EnvironmentModule::thunderLevel, vanilla);
+			if (level != vanilla) {
+				cir.setReturnValue(level);
+			}
 		}
 	}
 }

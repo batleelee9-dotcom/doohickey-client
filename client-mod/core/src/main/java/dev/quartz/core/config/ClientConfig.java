@@ -98,6 +98,9 @@ public final class ClientConfig {
 	// Performance: dynamic render distance, entity distance
 	public PerformanceSettings performance = new PerformanceSettings();
 
+	// Effects and sounds
+	public dev.quartz.core.fx.EffectSettings effects = new dev.quartz.core.fx.EffectSettings();
+
 	/** Called once at startup with the profile's config folder. */
 	public static void init(Path configDir) {
 		dir = configDir;
@@ -175,6 +178,10 @@ public final class ClientConfig {
 			config.performance = new PerformanceSettings();
 		}
 		config.performance.sanitize();
+		if (config.effects == null) {
+			config.effects = new dev.quartz.core.fx.EffectSettings();
+		}
+		config.effects.sanitize();
 		// A newer Doohickey may have written a higher schema; keep its number so
 		// saving from this version doesn't pretend the file is older.
 		config.schemaVersion = Math.max(config.schemaVersion, SCHEMA);

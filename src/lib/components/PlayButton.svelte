@@ -118,8 +118,7 @@
   }
   .xl.busy,
   .xl.running {
-    background: rgb(255 255 255 / 0.1);
-    backdrop-filter: blur(12px);
+    background: rgb(40 36 60 / 0.85);
     letter-spacing: 0.02em;
     text-transform: none;
     font-weight: 600;

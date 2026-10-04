@@ -10,17 +10,21 @@ import dev.quartz.legacy.mixin.MinecraftClientAccessor;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.particle.ParticleType;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.util.Session;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import org.lwjgl.input.Keyboard;
@@ -29,6 +33,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 /** {@link VersionAdapter} for Minecraft 1.8.9 on Legacy Fabric. */
 final class LegacyAdapter implements VersionAdapter {
@@ -274,6 +279,98 @@ final class LegacyAdapter implements VersionAdapter {
 	@Override
 	public boolean zoomKeyDown() {
 		return MinecraftClient.getInstance().currentScreen == null && Keyboard.isKeyDown(Keyboard.KEY_C);
+	}
+
+	@Override
+	public double[] entityBox(Object entity) {
+		if (!(entity instanceof Entity)) {
+			return null;
+		}
+		Entity e = (Entity) entity;
+		return new double[] {e.x, e.y, e.z, e.height, e.width};
+	}
+
+	@Override
+	public boolean entityDead(Object entity) {
+		return !(entity instanceof Entity) || ((Entity) entity).removed || !((Entity) entity).isAlive();
+	}
+
+	private static ParticleType particle(String kind) {
+		switch (kind) {
+			case "crit": return ParticleType.CRIT;
+			case "magic": return ParticleType.CRIT_MAGIC;
+			case "hearts": return ParticleType.HEART;
+			case "flames": return ParticleType.FIRE;
+			case "blood": return ParticleType.REDSTONE;
+			case "smoke": return ParticleType.SMOKE_LARGE;
+			case "notes": return ParticleType.NOTE;
+			case "sparkle": return ParticleType.HAPPY_VILLAGER;
+			case "lava": return ParticleType.LAVA;
+			case "clouds": return ParticleType.CLOUD;
+			case "portal": return ParticleType.NETHER_PORTAL;
+			case "firework": return ParticleType.FIREWORK_SPARK;
+			default: return ParticleType.CRIT_MAGIC;
+		}
+	}
+
+	@Override
+	public void particles(String kind, double x, double y, double z, int count, double spread, double speed) {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client.world == null) {
+			return;
+		}
+		ParticleType type = particle(kind);
+		Random random = RANDOM;
+		for (int i = 0; i < count; i++) {
+			double ox = (random.nextDouble() * 2 - 1) * spread;
+			double oy = (random.nextDouble() * 2 - 1) * spread * 0.6;
+			double oz = (random.nextDouble() * 2 - 1) * spread;
+			// Redstone and notes read their "velocity" as a colour, so leave it at zero for those.
+			boolean coloured = type == ParticleType.REDSTONE || type == ParticleType.NOTE;
+			double vx = coloured ? 0 : (random.nextDouble() * 2 - 1) * speed;
+			double vy = coloured ? 0 : random.nextDouble() * speed;
+			double vz = coloured ? 0 : (random.nextDouble() * 2 - 1) * speed;
+			if (type == ParticleType.NOTE) {
+				vx = random.nextDouble();
+			}
+			client.world.addParticle(type, x + ox, y + oy, z + oz, vx, vy, vz);
+		}
+	}
+
+	private static final Random RANDOM = new Random();
+
+	private static String sound(String name) {
+		switch (name) {
+			case "ding": return "random.orb";
+			case "pling": return "note.pling";
+			case "bell": return "note.harp";
+			case "click": return "random.click";
+			case "bass": return "note.bass";
+			case "xp": return "random.orb";
+			case "levelup": return "random.levelup";
+			case "firework": return "fireworks.blast";
+			case "anvil": return "random.anvil_land";
+			case "heartbeat": return "note.bd";
+			default: return "random.orb";
+		}
+	}
+
+	@Override
+	public void playSound(String name, float volume, float pitch) {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client.player == null) {
+			return;
+		}
+		// 1.8.9 has no bell; a high harp note stands in for it.
+		float p = "bell".equals(name) ? pitch * 1.6f : "xp".equals(name) ? pitch * 0.8f : pitch;
+		PlayerEntity me = client.player;
+		client.getSoundManager().play(new PositionedSoundInstance(new Identifier(sound(name)), volume, p, (float) me.x, (float) me.y, (float) me.z));
+	}
+
+	@Override
+	public float healthFraction() {
+		PlayerEntity p = MinecraftClient.getInstance().player;
+		return p == null ? -1f : p.getHealth() / Math.max(1f, p.getMaxHealth());
 	}
 
 	@Override

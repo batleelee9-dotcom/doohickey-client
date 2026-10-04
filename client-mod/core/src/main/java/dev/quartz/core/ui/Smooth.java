@@ -51,7 +51,39 @@ public final class Smooth {
 	}
 
 	private static String family;
-	private static final Map<String, Atlas> ATLASES = new HashMap<>();
+	// Handle caches, so drawing never builds a lookup string. They belong to one
+	// backend (there is one per game); a different backend starts them afresh.
+	private static RenderBackend owner;
+	private static int whiteHandle;
+	private static int glowHandle;
+	private static final int[] CIRCLES = new int[513];
+	private static final Atlas[][] ATLASES = new Atlas[2][257];
+	private static final Map<String, int[]> ICONS = new HashMap<>();
+
+	/** Per-size handles for one icon (-2 = not uploaded yet). */
+	private static int[] slot(RenderBackend r, String name) {
+		own(r);
+		int[] slot = ICONS.get(name);
+		if (slot == null) {
+			slot = new int[257];
+			Arrays.fill(slot, -2);
+			ICONS.put(name, slot);
+		}
+		return slot;
+	}
+
+	private static void own(RenderBackend r) {
+		if (r != owner) {
+			owner = r;
+			whiteHandle = -2;
+			glowHandle = -2;
+			Arrays.fill(CIRCLES, -2);
+			for (Atlas[] row : ATLASES) {
+				Arrays.fill(row, null);
+			}
+			ICONS.clear();
+		}
+	}
 	private static final float[] QUADS = new float[8 * 512];
 
 	private Smooth() {
@@ -112,11 +144,15 @@ public final class Smooth {
 
 	/** A soft radial glow: full colour in the middle, fading to nothing at {@code radius}. */
 	public static void glow(RenderBackend r, float cx, float cy, float radius, int argb) {
-		int h = r.image("smooth:glow", 128, 128, () -> raster(128, 128, g -> {
+		own(r);
+		if (glowHandle == -2) {
+			glowHandle = r.image("smooth:glow", 128, 128, () -> raster(128, 128, g -> {
 			g.setPaint(new RadialGradientPaint(new Point2D.Float(64, 64), 64, new float[] {0f, 0.45f, 1f},
 				new Color[] {new Color(255, 255, 255, 255), new Color(255, 255, 255, 90), new Color(255, 255, 255, 0)}));
 			g.fillRect(0, 0, 128, 128);
-		}));
+			}));
+		}
+		int h = glowHandle;
 		if (h < 0) {
 			return;
 		}
@@ -214,13 +250,17 @@ public final class Smooth {
 
 	/** A named vector icon ("hud", "world", "game", "search", "user"), {@code size} GUI pixels square. */
 	public static void icon(RenderBackend r, String name, float x, float y, float size, int argb) {
-		int px = Math.max(4, Math.round(size * r.guiScale()));
-		int h = r.image("smooth:icon:" + name + ":" + px, px, px, () -> raster(px, px, g -> {
-			float k = px / 24f;
-			g.scale(k, k);
-			g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-			drawIcon(g, name);
-		}));
+		int px = Math.min(256, Math.max(4, Math.round(size * r.guiScale())));
+		int[] slot = slot(r, name);
+		if (slot[px] == -2) {
+			slot[px] = r.image("smooth:icon:" + name + ":" + px, px, px, () -> raster(px, px, g -> {
+				float k = px / 24f;
+				g.scale(k, k);
+				g.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+				drawIcon(g, name);
+			}));
+		}
+		int h = slot[px];
 		if (h < 0) {
 			return;
 		}
@@ -259,6 +299,35 @@ public final class Smooth {
 				g.draw(new Line2D.Float(15, 9, 15, 15));
 				g.draw(new Line2D.Float(9, 15, 15, 15));
 				break;
+			case "gear": {
+				// Eight teeth around a ring.
+				for (int i = 0; i < 8; i++) {
+					double a = i * Math.PI / 4;
+					g.draw(new Line2D.Double(12 + Math.cos(a) * 6.5, 12 + Math.sin(a) * 6.5, 12 + Math.cos(a) * 9.5, 12 + Math.sin(a) * 9.5));
+				}
+				g.draw(new Ellipse2D.Float(6, 6, 12, 12));
+				g.draw(new Ellipse2D.Float(9.5f, 9.5f, 5, 5));
+				break;
+			}
+			case "back":
+				g.draw(new Line2D.Float(15, 5, 8, 12));
+				g.draw(new Line2D.Float(8, 12, 15, 19));
+				break;
+			case "sparkle":
+				g.fill(poly(12, 2, 14.2f, 9.8f, 22, 12, 14.2f, 14.2f, 12, 22, 9.8f, 14.2f, 2, 12, 9.8f, 9.8f));
+				g.fill(poly(19, 2, 19.8f, 4.2f, 22, 5, 19.8f, 5.8f, 19, 8, 18.2f, 5.8f, 16, 5, 18.2f, 4.2f));
+				break;
+			case "sound":
+				g.fill(poly(3, 9, 7, 9, 12, 4.5f, 12, 19.5f, 7, 15, 3, 15));
+				g.draw(new java.awt.geom.Arc2D.Float(10, 7, 8, 10, -55, 110, java.awt.geom.Arc2D.OPEN));
+				g.draw(new java.awt.geom.Arc2D.Float(9, 3.5f, 13, 17, -55, 110, java.awt.geom.Arc2D.OPEN));
+				break;
+			case "shirt":
+				g.draw(poly(8, 3.5f, 4, 6, 2.5f, 10.5f, 6, 12, 6, 20.5f, 18, 20.5f, 18, 12, 21.5f, 10.5f, 20, 6, 16, 3.5f, 14, 5.5f, 10, 5.5f));
+				break;
+			case "bolt":
+				g.fill(poly(13.5f, 2, 5, 13.5f, 11, 13.5f, 9.5f, 22, 19, 9.5f, 13, 9.5f));
+				break;
 			default:
 				g.fill(new Ellipse2D.Float(6, 6, 12, 12));
 		}
@@ -266,17 +335,21 @@ public final class Smooth {
 
 	/** The Doohickey cube in its own colours (not tinted). */
 	public static void logo(RenderBackend r, float x, float y, float size) {
-		int px = Math.max(8, Math.round(size * r.guiScale()));
-		int h = r.image("smooth:logo:" + px, px, px, () -> raster(px, px, g -> {
-			float k = px / 32f;
-			g.scale(k, k);
-			g.setColor(new Color(0xC3BAFF));
-			g.fill(poly(16, 3, 27, 9.4f, 16, 15.8f, 5, 9.4f));
-			g.setColor(new Color(0x7263E6));
-			g.fill(poly(5, 9.4f, 16, 15.8f, 16, 29, 5, 22.6f));
-			g.setColor(new Color(0x4F42B8));
-			g.fill(poly(27, 9.4f, 16, 15.8f, 16, 29, 27, 22.6f));
-		}));
+		int px = Math.min(256, Math.max(8, Math.round(size * r.guiScale())));
+		int[] slot = slot(r, "logo");
+		if (slot[px] == -2) {
+			slot[px] = r.image("smooth:logo:" + px, px, px, () -> raster(px, px, g -> {
+				float k = px / 32f;
+				g.scale(k, k);
+				g.setColor(new Color(0xC3BAFF));
+				g.fill(poly(16, 3, 27, 9.4f, 16, 15.8f, 5, 9.4f));
+				g.setColor(new Color(0x7263E6));
+				g.fill(poly(5, 9.4f, 16, 15.8f, 16, 29, 5, 22.6f));
+				g.setColor(new Color(0x4F42B8));
+				g.fill(poly(27, 9.4f, 16, 15.8f, 16, 29, 27, 22.6f));
+			}));
+		}
+		int h = slot[px];
 		if (h < 0) {
 			return;
 		}
@@ -320,17 +393,26 @@ public final class Smooth {
 	}
 
 	private static int white(RenderBackend r) {
-		return r.image("smooth:white", 4, 4, () -> {
-			int[] p = new int[16];
-			Arrays.fill(p, 0xFFFFFFFF);
-			return p;
-		});
+		own(r);
+		if (whiteHandle == -2) {
+			whiteHandle = r.image("smooth:white", 4, 4, () -> {
+				int[] p = new int[16];
+				Arrays.fill(p, 0xFFFFFFFF);
+				return p;
+			});
+		}
+		return whiteHandle;
 	}
 
 	/** A filled circle {@code 2 * radiusPx} wide; its quarters are the rounded corners. */
 	private static int circle(RenderBackend r, int radiusPx) {
-		int d = radiusPx * 2;
-		return r.image("smooth:circle:" + radiusPx, d, d, () -> raster(d, d, g -> g.fill(new Ellipse2D.Float(0, 0, d, d))));
+		own(r);
+		int i = Math.min(radiusPx, CIRCLES.length - 1);
+		if (CIRCLES[i] == -2) {
+			int d = i * 2;
+			CIRCLES[i] = r.image("smooth:circle:" + i, d, d, () -> raster(d, d, g -> g.fill(new Ellipse2D.Float(0, 0, d, d))));
+		}
+		return CIRCLES[i];
 	}
 
 	private interface Painter {
@@ -456,12 +538,11 @@ public final class Smooth {
 		if (!supported(r)) {
 			return null;
 		}
-		int px = Math.max(6, Math.round(size * r.guiScale()));
-		String key = family() + ":" + bold + ":" + px;
-		Atlas a = ATLASES.get(key);
+		int px = Math.min(ATLASES[0].length - 1, Math.max(6, Math.round(size * r.guiScale())));
+		Atlas a = ATLASES[bold ? 1 : 0][px];
 		if (a == null) {
 			a = new Atlas(r, px, bold);
-			ATLASES.put(key, a);
+			ATLASES[bold ? 1 : 0][px] = a;
 		}
 		return a.handle < 0 ? null : a;
 	}

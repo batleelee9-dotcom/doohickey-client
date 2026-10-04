@@ -12,6 +12,8 @@ import dev.quartz.core.config.ClientConfig;
  */
 public abstract class HudElement {
 	public final String id;
+	/** The crash-guard name, built once rather than every frame. */
+	public final String hook;
 	public final String name;
 	public final Feature feature;
 	private final boolean defaultEnabled;
@@ -20,6 +22,7 @@ public abstract class HudElement {
 
 	protected HudElement(String id, String name, Feature feature, boolean defaultEnabled, float defaultX, float defaultY) {
 		this.id = id;
+		this.hook = "hud." + id;
 		this.name = name;
 		this.feature = feature;
 		this.defaultEnabled = defaultEnabled;

@@ -17,6 +17,10 @@ public abstract class Option {
 	public final Feature feature;
 	public final String label;
 
+	/** Ready-made click actions for menus, so a frame doesn't allocate one per option. */
+	public final Runnable clicker = this::click;
+	public final Runnable backer = this::clickBack;
+
 	protected Option(Feature feature, String label) {
 		this.feature = feature;
 		this.label = label;
@@ -36,6 +40,16 @@ public abstract class Option {
 	}
 
 	protected abstract void advance();
+
+	/** Steps back one value (right-click); on/off options just flip. */
+	protected void retreat() {
+		advance();
+	}
+
+	public final void clickBack() {
+		retreat();
+		ClientConfig.get().save();
+	}
 
 	public String text() {
 		return label + ": " + value();
@@ -75,6 +89,11 @@ public abstract class Option {
 			@Override
 			protected void advance() {
 				set.accept(values.get((index() + 1) % values.size()));
+			}
+
+			@Override
+			protected void retreat() {
+				set.accept(values.get((index() + values.size() - 1) % values.size()));
 			}
 		};
 	}

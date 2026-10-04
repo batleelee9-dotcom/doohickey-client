@@ -20,10 +20,10 @@
   const offline = $derived(accounts.active?.kind === "offline");
 
   const FEATURES: { icon: IconName; title: string; text: string }[] = [
-    { icon: "grid", title: "HUD editor", text: "FPS, CPS, keystrokes, armor, potions and more. Drag to place, scroll to resize." },
-    { icon: "globe", title: "World", text: "Sky colour, time, fog, weather and fullbright, all client-side." },
-    { icon: "cpu", title: "Performance", text: "Particle limiter and a render distance that adapts to your FPS." },
-    { icon: "switch", title: "Account switcher", text: "Swap accounts from the pause menu without restarting." },
+    { icon: "grid", title: "20 HUD elements", text: "FPS, CPS, keystrokes, armor, combo, speed and more. Drag to place, scroll to resize." },
+    { icon: "zap", title: "Effects and sounds", text: "Hit effects, particle trails, kill effects and custom hit sounds. Only you see them." },
+    { icon: "globe", title: "PvP and world", text: "Zoom, crosshair, no hurt cam, sky, time, fog, weather and fullbright." },
+    { icon: "cpu", title: "Light on your PC", text: "Next to no work per frame, plus a particle limiter and adaptive render distance." },
   ];
 
   $effect(() => {
@@ -233,8 +233,7 @@
     padding: 0 10px;
     border: 1px solid rgb(255 255 255 / 0.14);
     border-radius: 999px;
-    background: rgb(255 255 255 / 0.08);
-    backdrop-filter: blur(10px);
+    background: rgb(20 18 34 / 0.5);
     color: rgb(255 255 255 / 0.85);
     font-size: 11px;
     font-weight: 650;
@@ -283,8 +282,7 @@
     padding: 4px;
     border: 1px solid rgb(255 255 255 / 0.14);
     border-radius: 12px;
-    background: rgb(255 255 255 / 0.07);
-    backdrop-filter: blur(12px);
+    background: rgb(20 18 34 / 0.55);
   }
   .glass-seg button {
     height: 38px;
@@ -314,8 +312,7 @@
     padding: 0 18px;
     border: 1px solid rgb(255 255 255 / 0.14);
     border-radius: 12px;
-    background: rgb(255 255 255 / 0.07);
-    backdrop-filter: blur(12px);
+    background: rgb(20 18 34 / 0.55);
     color: rgb(255 255 255 / 0.85);
     font-weight: 600;
   }
@@ -326,8 +323,7 @@
     height: 54px;
     border: 1px solid rgb(255 255 255 / 0.14);
     border-radius: 12px;
-    background: rgb(255 255 255 / 0.07);
-    backdrop-filter: blur(12px);
+    background: rgb(20 18 34 / 0.55);
     color: rgb(255 255 255 / 0.8);
     cursor: pointer;
     transition: background-color 0.15s;
@@ -434,8 +430,7 @@
     height: 20px;
     padding: 0 7px;
     border-radius: 999px;
-    background: rgb(0 0 0 / 0.45);
-    backdrop-filter: blur(8px);
+    background: rgb(0 0 0 / 0.55);
     color: #fff;
     font-size: 10.5px;
     font-weight: 650;

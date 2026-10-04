@@ -99,6 +99,15 @@ public final class CoreTest {
 		public void setHitboxes(boolean shown) { hitboxes = shown; }
 		boolean zoomKey;
 		public boolean zoomKeyDown() { return zoomKey; }
+		final java.util.List<String> particleLog = new java.util.ArrayList<>();
+		final java.util.List<String> soundLog = new java.util.ArrayList<>();
+		boolean targetDead;
+		float health = 1f;
+		public double[] entityBox(Object e) { return e == null ? null : new double[] {5, 64, 5, 1.8, 0.6}; }
+		public boolean entityDead(Object e) { return targetDead; }
+		public void particles(String kind, double x, double y, double z, int count, double spread, double speed) { particleLog.add(kind + "x" + count); }
+		public void playSound(String name, float volume, float pitch) { soundLog.add(name); }
+		public float healthFraction() { return health; }
 		public void openMenu() { }
 		public void notifyPlayer(String message) { }
 		public void runOnMainThread(Runnable task) { task.run(); }
@@ -126,12 +135,16 @@ public final class CoreTest {
 		Files.createDirectories(dir);
 		int mx = 200, my = 120;
 		image.shot(menu, mx, my, dir.resolve("menu-hud.png"));
-		// The Game tab is the third sidebar item: panel top + 50 + 2 * 28.
-		int pw = Math.min(470, 480 - 20), ph = Math.min(268, 270 - 20);
+		// Sidebar items start at panel top + 46, 25 apart; Visual is the third.
+		int pw = Math.min(480, 480 - 20), ph = Math.min(268, 270 - 20);
 		int px = (480 - pw) / 2, py = (270 - ph) / 2;
-		menu.click(px + 30, py + 50 + 2 * 28 + 12);
-		ClientConfig.get().zoomEnabled = true;
-		image.shot(menu, px + 150, py + 60, dir.resolve("menu-game.png"));
+		menu.click(px + 30, py + 46 + 2 * 25 + 11);
+		ClientConfig.get().effects.hitEffects = true;
+		image.shot(menu, px + 150, py + 60, dir.resolve("menu-visual.png"));
+		// The first card's gear opens its settings page.
+		menu.click(px + 184, py + 68);
+		image.shot(menu, px + 200, py + 90, dir.resolve("menu-settings.png"));
+		menu.escape();
 		for (char c : "zo".toCharArray()) menu.typed(c);
 		image.shot(menu, mx, my, dir.resolve("menu-search.png"));
 		System.out.println("menu previews written to " + dir);
@@ -219,7 +232,60 @@ public final class CoreTest {
 		}
 	}
 
+	/** `--bench`: time and memory per frame for the HUD and the menu (no Minecraft; drawing is a no-op). */
+	private static void bench() throws Exception {
+		Path game = Files.createTempDirectory("quartz-bench");
+		Files.createDirectories(game.resolve("config"));
+		FakeAdapter adapter = new FakeAdapter(game.resolve("config"));
+		Quartz.init(adapter);
+		for (HudElement e : Hud.ELEMENTS) e.state().enabled = true;
+		RenderBackend nop = new RenderBackend() {
+			final java.util.Map<String, Integer> keys = new java.util.HashMap<>();
+			public Kind kind() { return Kind.LEGACY_OPENGL; }
+			public int screenWidth() { return 480; }
+			public int screenHeight() { return 270; }
+			public void fill(int x0, int y0, int x1, int y1, int argb) { }
+			public int text(String t, int x, int y, int argb, boolean shadow) { return x + t.length() * 6; }
+			public int textWidth(String t) { return t.length() * 6; }
+			public int fontHeight() { return 9; }
+			public void push() { }
+			public void pop() { }
+			public void translate(float x, float y) { }
+			public void scale(float f) { }
+			public void item(Object s, int x, int y) { }
+			public float guiScale() { return 3f; }
+			public int image(String key, int w, int h, java.util.function.Supplier<int[]> px) {
+				return keys.computeIfAbsent(key, k -> { px.get(); return keys.size(); });
+			}
+			public void drawImage(int handle, float[] q, int n, int argb) { }
+		};
+		adapter.renderer = nop;
+		dev.quartz.core.ui.ClientMenu menu = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {
+			public void close() { }
+			public void openHudEditor() { }
+		});
+		com.sun.management.ThreadMXBean mx = (com.sun.management.ThreadMXBean) java.lang.management.ManagementFactory.getThreadMXBean();
+		long tid = Thread.currentThread().getId();
+		for (int round = 0; round < 2; round++) {
+			int frames = 20000;
+			long b0 = mx.getThreadAllocatedBytes(tid), t0 = System.nanoTime();
+			for (int i = 0; i < frames; i++) Hud.renderAll(nop);
+			long t1 = System.nanoTime(), b1 = mx.getThreadAllocatedBytes(tid);
+			int menuFrames = 3000;
+			for (int i = 0; i < menuFrames; i++) menu.render(nop, 200, 120);
+			long t2 = System.nanoTime(), b2 = mx.getThreadAllocatedBytes(tid);
+			if (round == 1) {
+				System.out.printf("HUD  (20 elements): %6.1f us/frame  %7.0f bytes/frame%n", (t1 - t0) / 1e3 / frames, (b1 - b0) / (double) frames);
+				System.out.printf("Menu (open):        %6.1f us/frame  %7.0f bytes/frame%n", (t2 - t1) / 1e3 / menuFrames, (b2 - b1) / (double) menuFrames);
+			}
+		}
+	}
+
 	public static void main(String[] args) throws Exception {
+		if (args.length == 1 && args[0].equals("--bench")) {
+			bench();
+			return;
+		}
 		if (args.length == 2 && args[0].equals("--menu-preview")) {
 			menuPreview(java.nio.file.Paths.get(args[1]));
 			return;
@@ -304,6 +370,48 @@ public final class CoreTest {
 			.filter(o -> o.feature == Feature.HITBOXES).findFirst().get();
 		hitboxes.click();
 		check(adapter.hitboxes, "the Hitboxes option switches vanilla's hitbox view");
+
+		System.out.println("effects");
+		dev.quartz.core.fx.EffectSettings fx = ClientConfig.get().effects;
+		fx.hitEffects = true;
+		fx.hitEffect = "hearts";
+		fx.hitAmount = 3;
+		fx.hitSounds = true;
+		fx.hitSound = "pling";
+		dev.quartz.core.fx.Effects.onHit(new Object());
+		check(adapter.particleLog.contains("heartsx18"), "a hit spawns its effect (6 particles per amount step)");
+		check(adapter.soundLog.contains("pling"), "and plays the hit sound");
+		fx.killEffects = true;
+		fx.killEffect = "flames";
+		fx.killSounds = true;
+		fx.killSound = "levelup";
+		adapter.targetDead = true;
+		dev.quartz.core.fx.Effects.tick(adapter);
+		check(adapter.particleLog.contains("flamesx40") && adapter.soundLog.contains("levelup"), "the target dying plays the kill effect and sound");
+		adapter.particleLog.clear();
+		dev.quartz.core.fx.Effects.tick(adapter);
+		check(adapter.particleLog.isEmpty(), "once per kill");
+		fx.lowHealthAlert = true;
+		adapter.health = 0.1f;
+		adapter.soundLog.clear();
+		for (int i = 0; i < 40; i++) {
+			dev.quartz.core.fx.Effects.tick(adapter);
+		}
+		check(adapter.soundLog.contains("heartbeat"), "low health plays a heartbeat");
+		adapter.health = 1f;
+
+		System.out.println("menu modules");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 21, "21 HUD modules on 1.8.9 (20 elements + style)");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.SOUND).size() == 3, "3 sound modules");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 11, "11 visual modules on 1.8.9");
+		dev.quartz.core.ui.ClientMenu smoke = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {
+			public void close() { }
+			public void openHudEditor() { }
+		});
+		for (int i = 0; i < 3; i++) {
+			smoke.render(adapter.backend, 200, 120);
+		}
+		check(true, "the menu draws on a backend without image support (plain fallback)");
 
 		System.out.println("world controls");
 		EnvironmentSettings env = ClientConfig.get().environment;

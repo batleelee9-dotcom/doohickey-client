@@ -23,15 +23,23 @@ public final class Hud {
 	private Hud() {
 	}
 
-	/** Elements this Minecraft version supports (see CompatRegistry). */
+	private static List<HudElement> available;
+	private static Object availableFor;
+
+	/** Elements this Minecraft version supports (see CompatRegistry); worked out once per version. */
 	public static List<HudElement> available() {
-		List<HudElement> out = new ArrayList<>();
-		for (HudElement e : ELEMENTS) {
-			if (Quartz.available(e.feature)) {
-				out.add(e);
+		Object version = Quartz.adapter().version();
+		if (available == null || availableFor != version) {
+			List<HudElement> out = new ArrayList<>();
+			for (HudElement e : ELEMENTS) {
+				if (Quartz.available(e.feature)) {
+					out.add(e);
+				}
 			}
+			available = Collections.unmodifiableList(out);
+			availableFor = version;
 		}
-		return out;
+		return available;
 	}
 
 	public static final class Placement {
@@ -71,19 +79,41 @@ public final class Hud {
 
 	/** The in-game pass, called by each version's HUD hook. */
 	public static void renderAll(RenderBackend r) {
-		for (HudElement e : available()) {
-			if (e.state().enabled && e.hasContent()) {
-				Safe.run("hud." + e.id, () -> draw(r, e, false));
+		List<HudElement> elements = available();
+		int sw = r.screenWidth();
+		int sh = r.screenHeight();
+		// An indexed loop with an inline guard: no iterator, lambda or string per element per frame.
+		for (int i = 0; i < elements.size(); i++) {
+			HudElement e = elements.get(i);
+			if (!e.state().enabled || !Safe.enabled(e.hook)) {
+				continue;
+			}
+			try {
+				if (e.hasContent()) {
+					draw(r, e, false, sw, sh);
+				}
+			} catch (Throwable t) {
+				Safe.report(e.hook, t);
 			}
 		}
 	}
 
 	public static void draw(RenderBackend r, HudElement e, boolean preview) {
-		Placement p = place(e, r);
+		draw(r, e, preview, r.screenWidth(), r.screenHeight());
+	}
+
+	/** Same maths as {@link #place}, without allocating a Placement every frame. */
+	private static void draw(RenderBackend r, HudElement e, boolean preview, int sw, int sh) {
+		ClientConfig.ModuleState s = e.state();
+		float scale = clamp(s.scale, 0.5f, 2.5f);
+		int w = Math.round(e.width(r) * scale);
+		int h = Math.round(e.height(r) * scale);
+		int x = Math.round(clamp(s.x, 0f, 1f) * Math.max(0, sw - w));
+		int y = Math.round(clamp(s.y, 0f, 1f) * Math.max(0, sh - h));
 		r.push();
 		try {
-			r.translate(p.x, p.y);
-			r.scale(p.scale);
+			r.translate(x, y);
+			r.scale(scale);
 			e.render(r, preview);
 		} finally {
 			r.pop();

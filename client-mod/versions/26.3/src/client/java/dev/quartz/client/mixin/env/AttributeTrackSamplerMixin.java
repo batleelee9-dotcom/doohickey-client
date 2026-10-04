@@ -37,6 +37,6 @@ public abstract class AttributeTrackSamplerMixin {
 		if (!(clockManager instanceof ClientClockManager) || !clock.is(WorldClocks.OVERWORLD)) {
 			return ticks;
 		}
-		return Safe.call("time.lock", () -> EnvironmentModule.clock(ticks), ticks);
+		return Safe.map("time.lock", EnvironmentModule::clock, ticks);
 	}
 }

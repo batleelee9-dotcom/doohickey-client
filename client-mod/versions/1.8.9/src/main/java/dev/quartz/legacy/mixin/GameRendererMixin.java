@@ -84,7 +84,7 @@ public abstract class GameRendererMixin {
 	/** Fullbright: 1.8.9 doesn't clamp gamma, so the lightmap simply reads a high value. */
 	@Redirect(method = "updateLightmap", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/GameOptions;gamma:F"))
 	private float quartz$fullbright(GameOptions options) {
-		return Safe.call("fullbright", EnvironmentModule::fullbright, false) ? 12.0F : options.gamma;
+		return Safe.test("fullbright", EnvironmentModule::fullbright, false) ? 12.0F : options.gamma;
 	}
 
 	/**
@@ -95,6 +95,6 @@ public abstract class GameRendererMixin {
 	@Redirect(method = "updateFog", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/dimension/Dimension;method_3994()D"))
 	private double quartz$voidFog(Dimension dimension) {
 		double vanilla = dimension.method_3994();
-		return Safe.call("fog.void", () -> EnvironmentModule.removeVoidFog() ? Math.max(vanilla, 1.0) : vanilla, vanilla);
+		return Safe.map("fog.void", v -> EnvironmentModule.removeVoidFog() ? Math.max(v, 1.0) : v, vanilla);
 	}
 }

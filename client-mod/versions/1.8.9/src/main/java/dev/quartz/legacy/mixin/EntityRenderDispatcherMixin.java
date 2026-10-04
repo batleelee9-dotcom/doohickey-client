@@ -25,7 +25,7 @@ public abstract class EntityRenderDispatcherMixin {
 		double dx = entity.x - x;
 		double dy = entity.y - y;
 		double dz = entity.z - z;
-		if (!Safe.call("entity.distance", () -> Performance.drawEntity(dx * dx + dy * dy + dz * dz), true)) {
+		if (!Safe.test("entity.distance", Performance::drawEntity, dx * dx + dy * dy + dz * dz, true)) {
 			cir.setReturnValue(false);
 		}
 	}

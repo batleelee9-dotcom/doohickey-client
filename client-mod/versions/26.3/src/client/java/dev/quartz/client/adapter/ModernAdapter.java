@@ -1,7 +1,7 @@
 package dev.quartz.client.adapter;
 
 import dev.quartz.client.QuartzClient;
-import dev.quartz.client.screen.QuartzScreen;
+import dev.quartz.client.screen.MenuScreen;
 import dev.quartz.core.McVersion;
 import dev.quartz.core.RenderBackend;
 import dev.quartz.core.VersionAdapter;
@@ -17,9 +17,16 @@ import net.minecraft.client.gui.components.debug.DebugScreenEntryStatus;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.client.multiplayer.ServerData;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -279,8 +286,88 @@ public final class ModernAdapter implements VersionAdapter {
 	}
 
 	@Override
+	public double @Nullable [] entityBox(Object entity) {
+		if (!(entity instanceof Entity e)) {
+			return null;
+		}
+		return new double[] {e.getX(), e.getY(), e.getZ(), e.getBbHeight(), e.getBbWidth()};
+	}
+
+	@Override
+	public boolean entityDead(Object entity) {
+		return !(entity instanceof Entity e) || e.isRemoved() || !e.isAlive();
+	}
+
+	private static ParticleOptions particle(String kind) {
+		return switch (kind) {
+			case "crit" -> ParticleTypes.CRIT;
+			case "hearts" -> ParticleTypes.HEART;
+			case "flames" -> ParticleTypes.FLAME;
+			case "blood" -> ParticleTypes.DAMAGE_INDICATOR;
+			case "smoke" -> ParticleTypes.LARGE_SMOKE;
+			case "notes" -> ParticleTypes.NOTE;
+			case "sparkle" -> ParticleTypes.HAPPY_VILLAGER;
+			case "lava" -> ParticleTypes.LAVA;
+			case "clouds" -> ParticleTypes.CLOUD;
+			case "portal" -> ParticleTypes.PORTAL;
+			case "firework" -> ParticleTypes.FIREWORK;
+			default -> ParticleTypes.ENCHANTED_HIT;
+		};
+	}
+
+	@Override
+	public void particles(String kind, double x, double y, double z, int count, double spread, double speed) {
+		ClientLevel level = Minecraft.getInstance().level;
+		if (level == null) {
+			return;
+		}
+		ParticleOptions type = particle(kind);
+		RandomSource random = level.getRandom();
+		for (int i = 0; i < count; i++) {
+			double ox = (random.nextDouble() * 2 - 1) * spread;
+			double oy = (random.nextDouble() * 2 - 1) * spread * 0.6;
+			double oz = (random.nextDouble() * 2 - 1) * spread;
+			// Notes read their x "velocity" as a colour.
+			double vx = type == ParticleTypes.NOTE ? random.nextDouble() : (random.nextDouble() * 2 - 1) * speed;
+			double vy = type == ParticleTypes.NOTE ? 0 : random.nextDouble() * speed;
+			double vz = type == ParticleTypes.NOTE ? 0 : (random.nextDouble() * 2 - 1) * speed;
+			level.addParticle(type, x + ox, y + oy, z + oz, vx, vy, vz);
+		}
+	}
+
+	private static SoundEvent sound(String name) {
+		return switch (name) {
+			case "pling" -> SoundEvents.NOTE_BLOCK_PLING.value();
+			case "bell" -> SoundEvents.NOTE_BLOCK_BELL.value();
+			case "click" -> SoundEvents.UI_BUTTON_CLICK.value();
+			case "bass" -> SoundEvents.NOTE_BLOCK_BASS.value();
+			case "levelup" -> SoundEvents.PLAYER_LEVELUP;
+			case "firework" -> SoundEvents.FIREWORK_ROCKET_BLAST;
+			case "anvil" -> SoundEvents.ANVIL_LAND;
+			case "heartbeat" -> SoundEvents.NOTE_BLOCK_BASEDRUM.value();
+			default -> SoundEvents.EXPERIENCE_ORB_PICKUP;
+		};
+	}
+
+	@Override
+	public void playSound(String name, float volume, float pitch) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.player == null) {
+			return;
+		}
+		float p = "xp".equals(name) ? pitch * 0.8f : pitch;
+		mc.getSoundManager().play(SimpleSoundInstance.forUI(sound(name), p, volume));
+	}
+
+	@Override
+	public float healthFraction() {
+		Player p = Minecraft.getInstance().player;
+		return p == null ? -1f : p.getHealth() / Math.max(1f, p.getMaxHealth());
+	}
+
+	@Override
 	public void openMenu() {
-		Minecraft.getInstance().gui.setScreen(new QuartzScreen());
+		Minecraft.getInstance().gui.setScreen(new MenuScreen());
 	}
 
 	@Override

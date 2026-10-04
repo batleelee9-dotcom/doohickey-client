@@ -48,6 +48,92 @@ public final class Safe {
 		}
 	}
 
+	// Allocation-free variants for hooks that run per frame, per entity or per
+	// particle. Pass a static method reference (Class::method): those take no
+	// captured state, so the JVM reuses one instance and nothing is boxed.
+
+	/** float → float, e.g. a weather level or the zoomed FOV. */
+	public interface FloatOp {
+		float apply(float value);
+	}
+
+	public static float map(String hook, FloatOp op, float vanilla) {
+		if (!enabled(hook)) {
+			return vanilla;
+		}
+		try {
+			return op.apply(vanilla);
+		} catch (Throwable t) {
+			fail(hook, t);
+			return vanilla;
+		}
+	}
+
+	public static long map(String hook, java.util.function.LongUnaryOperator op, long vanilla) {
+		if (!enabled(hook)) {
+			return vanilla;
+		}
+		try {
+			return op.applyAsLong(vanilla);
+		} catch (Throwable t) {
+			fail(hook, t);
+			return vanilla;
+		}
+	}
+
+	public static double map(String hook, java.util.function.DoubleUnaryOperator op, double vanilla) {
+		if (!enabled(hook)) {
+			return vanilla;
+		}
+		try {
+			return op.applyAsDouble(vanilla);
+		} catch (Throwable t) {
+			fail(hook, t);
+			return vanilla;
+		}
+	}
+
+	public static boolean test(String hook, java.util.function.BooleanSupplier op, boolean fallback) {
+		if (!enabled(hook)) {
+			return fallback;
+		}
+		try {
+			return op.getAsBoolean();
+		} catch (Throwable t) {
+			fail(hook, t);
+			return fallback;
+		}
+	}
+
+	public static boolean test(String hook, java.util.function.DoublePredicate op, double value, boolean fallback) {
+		if (!enabled(hook)) {
+			return fallback;
+		}
+		try {
+			return op.test(value);
+		} catch (Throwable t) {
+			fail(hook, t);
+			return fallback;
+		}
+	}
+
+	public static int get(String hook, java.util.function.IntSupplier op, int fallback) {
+		if (!enabled(hook)) {
+			return fallback;
+		}
+		try {
+			return op.getAsInt();
+		} catch (Throwable t) {
+			fail(hook, t);
+			return fallback;
+		}
+	}
+
+	/** For hot loops that inline their own try/catch around {@link #enabled}. */
+	public static void report(String hook, Throwable t) {
+		fail(hook, t);
+	}
+
 	private static void fail(String hook, Throwable t) {
 		int n = FAILURES.merge(hook, 1, Integer::sum);
 		if (n == 1) {

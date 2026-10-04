@@ -10,7 +10,7 @@ import dev.quartz.client.map.Waypoints;
 import dev.quartz.client.pvp.Crosshair;
 import dev.quartz.client.pvp.PvpTweaks;
 import dev.quartz.client.screen.AccountsScreen;
-import dev.quartz.client.screen.QuartzScreen;
+import dev.quartz.client.screen.MenuScreen;
 import dev.quartz.core.Quartz;
 import dev.quartz.core.Safe;
 import dev.quartz.core.accounts.OfflineGuard;
@@ -52,6 +52,7 @@ public final class QuartzClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		Quartz.init(new ModernAdapter());
+		VersionModules.register();
 
 		KeyMapping.Category category = KeyMapping.Category.register(id("quartz"));
 		menuKey = key("key.quartz.menu", InputConstants.KEY_RSHIFT, category);
@@ -116,7 +117,7 @@ public final class QuartzClient implements ClientModInitializer {
 	private static void tick(Minecraft mc) {
 		Quartz.tick();
 		while (menuKey.consumeClick()) {
-			mc.gui.setScreen(new QuartzScreen());
+			mc.gui.setScreen(new MenuScreen());
 		}
 		while (waypointKey.consumeClick()) {
 			Waypoints.addHere(mc, null);

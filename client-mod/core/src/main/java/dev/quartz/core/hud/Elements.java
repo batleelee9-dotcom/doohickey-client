@@ -18,8 +18,19 @@ final class Elements {
 	private Elements() {
 	}
 
+	/**
+	 * How often HUD values are re-read: 20 times a second. Plenty for numbers
+	 * people read, and it spares rebuilding every string (and measuring it)
+	 * on every frame at 200+ FPS.
+	 */
+	static final long REFRESH_NS = 50_000_000L;
+
 	/** A single-line text element. */
 	abstract static class TextElement extends HudElement {
+		private String cachedText;
+		private int cachedWidth;
+		private long cachedAt;
+
 		TextElement(String id, String name, Feature feature, float defaultX, float defaultY) {
 			this(id, name, feature, true, defaultX, defaultY);
 		}
@@ -30,9 +41,23 @@ final class Elements {
 
 		abstract String text();
 
+		private String current(RenderBackend r) {
+			long now = System.nanoTime();
+			if (cachedText == null || now - cachedAt > REFRESH_NS) {
+				String text = text();
+				if (!text.equals(cachedText)) {
+					cachedText = text;
+					cachedWidth = boxWidth(r, text);
+				}
+				cachedAt = now;
+			}
+			return cachedText;
+		}
+
 		@Override
 		public int width(RenderBackend r) {
-			return boxWidth(r, text());
+			current(r);
+			return cachedWidth;
 		}
 
 		@Override
@@ -42,8 +67,32 @@ final class Elements {
 
 		@Override
 		public void render(RenderBackend r, boolean preview) {
-			textBox(r, text(), width(r));
+			textBox(r, current(r), cachedWidth);
 		}
+	}
+
+	private static List<HudData.Effect> effects;
+	private static long effectsAt;
+	private static List<HudData.Item> armor;
+	private static long armorAt;
+
+	/** The adapter's effect list, re-read at most every {@link #REFRESH_NS}. */
+	static List<HudData.Effect> effects() {
+		long now = System.nanoTime();
+		if (effects == null || now - effectsAt > REFRESH_NS) {
+			effects = Quartz.adapter().effects();
+			effectsAt = now;
+		}
+		return effects;
+	}
+
+	static List<HudData.Item> armor() {
+		long now = System.nanoTime();
+		if (armor == null || now - armorAt > REFRESH_NS) {
+			armor = Quartz.adapter().armor();
+			armorAt = now;
+		}
+		return armor;
 	}
 
 	static final class Fps extends TextElement {
@@ -288,7 +337,7 @@ final class Elements {
 		}
 
 		private static List<HudData.Effect> shown(boolean preview) {
-			List<HudData.Effect> effects = Quartz.adapter().effects();
+			List<HudData.Effect> effects = Elements.effects();
 			if (effects.isEmpty() && preview) {
 				return Arrays.asList(new HudData.Effect("Speed II", "1:30", false), new HudData.Effect("Poison", "0:12", true));
 			}
@@ -301,16 +350,25 @@ final class Elements {
 
 		@Override
 		public boolean hasContent() {
-			return !Quartz.adapter().effects().isEmpty();
+			return !Elements.effects().isEmpty();
 		}
+
+		private List<HudData.Effect> measured;
+		private int measuredWidth;
 
 		@Override
 		public int width(RenderBackend r) {
-			int w = 60;
-			for (HudData.Effect e : shown(true)) {
-				w = Math.max(w, r.textWidth(line(e)) + 8);
+			// Re-measured only when the (cached) effect list changes.
+			List<HudData.Effect> shown = shown(true);
+			if (shown != measured) {
+				int w = 60;
+				for (HudData.Effect e : shown) {
+					w = Math.max(w, r.textWidth(line(e)) + 8);
+				}
+				measured = shown;
+				measuredWidth = w;
 			}
-			return w;
+			return measuredWidth;
 		}
 
 		@Override
@@ -343,7 +401,7 @@ final class Elements {
 
 		@Override
 		public boolean hasContent() {
-			return !Quartz.adapter().armor().isEmpty();
+			return !Elements.armor().isEmpty();
 		}
 
 		@Override
@@ -353,13 +411,13 @@ final class Elements {
 
 		@Override
 		public int height(RenderBackend r) {
-			return Math.max(1, Quartz.adapter().armor().size()) * ROW;
+			return Math.max(1, Elements.armor().size()) * ROW;
 		}
 
 		@Override
 		public void render(RenderBackend r, boolean preview) {
 			ClientConfig c = ClientConfig.get();
-			List<HudData.Item> items = Quartz.adapter().armor();
+			List<HudData.Item> items = Elements.armor();
 			if (items.isEmpty()) {
 				if (preview) {
 					r.fill(0, 0, width(r), ROW, 0x70000000);
@@ -399,31 +457,51 @@ final class Elements {
 			return KEY * 2 + GAP * 2 + 18 + GAP + 10;
 		}
 
+		/** Key labels and their widths, rebuilt every {@link #REFRESH_NS} instead of every frame. */
+		private final String[] labels = new String[Input.values().length];
+		private final int[] labelWidths = new int[Input.values().length];
+		private long labelsAt;
+
 		@Override
 		public void render(RenderBackend r, boolean preview) {
+			long now = System.nanoTime();
+			if (labels[0] == null || now - labelsAt > REFRESH_NS) {
+				VersionAdapter a = Quartz.adapter();
+				for (Input input : Input.values()) {
+					String text;
+					switch (input) {
+						case ATTACK: text = "LMB " + CpsTracker.left(); break;
+						case USE: text = "RMB " + CpsTracker.right(); break;
+						case JUMP: text = "—"; break;
+						default: text = a.inputLabel(input).toUpperCase(Locale.ROOT);
+					}
+					if (text.length() > 5) {
+						text = text.substring(0, 5);
+					}
+					labels[input.ordinal()] = text;
+					labelWidths[input.ordinal()] = r.textWidth(text);
+				}
+				labelsAt = now;
+			}
 			int width = width(r);
-			key(r, Input.FORWARD, KEY + GAP, 0, KEY, KEY, null);
-			key(r, Input.LEFT, 0, KEY + GAP, KEY, KEY, null);
-			key(r, Input.BACK, KEY + GAP, KEY + GAP, KEY, KEY, null);
-			key(r, Input.RIGHT, (KEY + GAP) * 2, KEY + GAP, KEY, KEY, null);
+			key(r, Input.FORWARD, KEY + GAP, 0, KEY, KEY);
+			key(r, Input.LEFT, 0, KEY + GAP, KEY, KEY);
+			key(r, Input.BACK, KEY + GAP, KEY + GAP, KEY, KEY);
+			key(r, Input.RIGHT, (KEY + GAP) * 2, KEY + GAP, KEY, KEY);
 			int mouseY = (KEY + GAP) * 2;
 			int half = (width - GAP) / 2;
-			key(r, Input.ATTACK, 0, mouseY, half, 18, "LMB " + CpsTracker.left());
-			key(r, Input.USE, half + GAP, mouseY, half, 18, "RMB " + CpsTracker.right());
-			key(r, Input.JUMP, 0, mouseY + 18 + GAP, width, 10, "—");
+			key(r, Input.ATTACK, 0, mouseY, half, 18);
+			key(r, Input.USE, half + GAP, mouseY, half, 18);
+			key(r, Input.JUMP, 0, mouseY + 18 + GAP, width, 10);
 		}
 
-		private static void key(RenderBackend r, Input input, int x, int y, int w, int h, String label) {
+		private void key(RenderBackend r, Input input, int x, int y, int w, int h) {
 			ClientConfig c = ClientConfig.get();
-			VersionAdapter a = Quartz.adapter();
-			boolean down = a.inputDown(input);
+			// Pressed state is read live every frame, so taps never lag.
+			boolean down = Quartz.adapter().inputDown(input);
 			r.fill(x, y, x + w, y + h, down ? 0xD0FFFFFF : 0x70000000);
-			String text = label != null ? label : a.inputLabel(input).toUpperCase();
-			if (text.length() > 5) {
-				text = text.substring(0, 5);
-			}
 			int color = down ? 0xFF111111 : (c.textColor | 0xFF000000);
-			r.text(text, x + (w - r.textWidth(text)) / 2, y + (h - 8) / 2 + 1, color, !down && c.textShadow);
+			r.text(labels[input.ordinal()], x + (w - labelWidths[input.ordinal()]) / 2, y + (h - 8) / 2 + 1, color, !down && c.textShadow);
 		}
 	}
 }

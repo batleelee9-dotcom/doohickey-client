@@ -1,7 +1,9 @@
 package dev.quartz.client.pvp;
 
 import com.mojang.blaze3d.platform.NativeImage;
+import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
+import dev.quartz.core.fx.Effects;
 import dev.quartz.core.hud.ReachTracker;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -80,6 +82,7 @@ public final class PvpTweaks {
 			: target.getBoundingBox().getCenter();
 		lastReach = eye.distanceTo(point);
 		ReachTracker.record(lastReach);
+		Safe.run("effects.hit", () -> Effects.onHit(target));
 	}
 
 	/** A red vignette when hurt or on low health. */

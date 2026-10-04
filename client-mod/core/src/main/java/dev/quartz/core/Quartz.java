@@ -46,6 +46,7 @@ public final class Quartz {
 	public static void tick() {
 		Safe.run("perf.tick", () -> Performance.tick(adapter));
 		Safe.run("stats.tick", () -> PlayerStats.tick(adapter));
+		Safe.run("effects.tick", () -> dev.quartz.core.fx.Effects.tick(adapter));
 		if (++ticks % 20 == 0) {
 			Safe.run("config.reload", () -> ClientConfig.get().pollReload());
 		}

@@ -14,6 +14,9 @@ public abstract class CameraZoomMixin {
 	@Inject(method = "calculateFov(F)F", at = @At("RETURN"), cancellable = true)
 	private void quartz$zoom(float partialTick, CallbackInfoReturnable<Float> cir) {
 		float fov = cir.getReturnValueF();
-		cir.setReturnValue(Safe.call("zoom", () -> Zoom.apply(fov), fov));
+		float zoomed = Safe.map("zoom", Zoom::apply, fov);
+		if (zoomed != fov) {
+			cir.setReturnValue(zoomed);
+		}
 	}
 }

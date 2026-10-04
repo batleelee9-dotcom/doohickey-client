@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class LightmapMixin {
 	@Inject(method = "extract", at = @At("TAIL"))
 	private void quartz$fullbright(LightmapRenderState state, float partialTicks, CallbackInfo ci) {
-		if (state.needsUpdate && Safe.call("fullbright", EnvironmentModule::fullbright, false)) {
+		if (state.needsUpdate && Safe.test("fullbright", EnvironmentModule::fullbright, false)) {
 			state.nightVisionEffectIntensity = 1.0f;
 		}
 	}

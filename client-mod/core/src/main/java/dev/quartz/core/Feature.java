@@ -90,6 +90,8 @@ public enum Feature {
 	SOUND_PACKS(Category.AUDIO, "Custom sound packs"),
 	SOUND_POSITIONING(Category.AUDIO, "Sound positioning"),
 	SOUND_MUTE(Category.AUDIO, "Mute specific sounds"),
+	HIT_SOUNDS(Category.AUDIO, "Hit and kill sounds"),
+	LOW_HEALTH_ALERT(Category.AUDIO, "Low health alert"),
 
 	// Cosmetics
 	CAPES(Category.COSMETICS, "Capes"),
@@ -98,6 +100,8 @@ public enum Feature {
 	KILL_EFFECTS(Category.COSMETICS, "Kill effects"),
 	BREAK_PARTICLES(Category.COSMETICS, "Block-break particles"),
 	TOTEM_EFFECT(Category.COSMETICS, "Totem pop effect"),
+	HIT_EFFECTS(Category.COSMETICS, "Hit effects"),
+	TRAILS(Category.COSMETICS, "Particle trails"),
 
 	// Utility
 	MINIMAP_WAYPOINTS(Category.UTILITY, "Minimap and waypoints"),
