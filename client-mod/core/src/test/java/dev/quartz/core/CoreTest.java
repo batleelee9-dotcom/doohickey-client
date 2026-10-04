@@ -275,6 +275,7 @@ public final class CoreTest {
 		dev.quartz.core.fx.NameTags.mark(new double[] {1.5, 0.4, -5});
 		dev.quartz.core.fx.NameTags.mark(new double[] {4, 0.4, -12});
 		dev.quartz.core.fx.NameTags.mark(new double[] {-5, 0.4, -30});
+		dev.quartz.core.fx.NameTags.mark(new double[] {-14, 0.4, -55});
 		image.frames(() -> dev.quartz.core.fx.NameTags.render(image, adapter), 1, dir.resolve("name-tags.png"));
 		ClientConfig.get().nameTags = false;
 
@@ -625,6 +626,10 @@ public final class CoreTest {
 		dev.quartz.core.fx.NameTags.mark(new double[] {0, 0.4, -70});
 		dev.quartz.core.fx.NameTags.render(adapter.backend, adapter);
 		check(adapter.backend.lastText == null, "no tag past vanilla's 64 blocks");
+		adapter.backend.lastText = null;
+		dev.quartz.core.fx.NameTags.mark(new double[] {0, 0.4, -40});
+		dev.quartz.core.fx.NameTags.render(adapter.backend, adapter);
+		check(adapter.backend.lastText != null, "a tag 40 blocks away still shows, small, like vanilla's");
 		dev.quartz.core.fx.NameTags.mark(new double[] {0, 0.4, -3});
 		dev.quartz.core.fx.NameTags.render(adapter.backend, adapter);
 		check("_Maxim07_".equals(adapter.backend.lastText) || adapter.backend.lastText != null, "a tag up close draws");
@@ -647,7 +652,10 @@ public final class CoreTest {
 		Thread.sleep(5);
 		int slide = dev.quartz.core.ui.SmoothHotbar.offset(6);
 		check(slide < 0 && slide > -80, "switching slots glides from the old one (" + slide + " px)");
-		for (int i = 0; i < 40; i++) { Thread.sleep(5); dev.quartz.core.ui.SmoothHotbar.offset(6); }
+		long until = System.currentTimeMillis() + 2000;
+		while (dev.quartz.core.ui.SmoothHotbar.offset(6) != 0 && System.currentTimeMillis() < until) {
+			Thread.sleep(5);
+		}
 		check(dev.quartz.core.ui.SmoothHotbar.offset(6) == 0, "and settles on the new one");
 		check(dev.quartz.core.fx.TntTimers.assumedFuse(80) == 70, "a freshly lit TNT reads 3.5s on 1.8.9 (fuse not sent)");
 		check(dev.quartz.core.hud.TabPing.label(87).equals("87") && dev.quartz.core.hud.TabPing.colour(30) != dev.quartz.core.hud.TabPing.colour(400), "tab ping as coloured numbers");

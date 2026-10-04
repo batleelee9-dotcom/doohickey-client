@@ -131,15 +131,19 @@ public final class NameTags {
 			return;
 		}
 		// Sized in the world like vanilla's tag (about a quarter of a block tall), so it
-		// shrinks with distance; snapped to steps so text atlases get reused.
-		float s = Math.min(2f, 0.27f * P[3] / 12f * c.nameTagScale / 100f);
-		s = Math.round(s * 16) / 16f;
-		// Fade out as the name nears the smallest text that can be drawn crisply.
-		float textPx = 7.5f * s * r.guiScale();
-		if (textPx < 6) {
-			return;
+		// shrinks with distance all the way out. Text can't be rasterised below a few
+		// pixels, so a far tag is drawn at a readable size and scaled down as a whole,
+		// the way vanilla scales its own.
+		float size = Math.min(2f, 0.27f * P[3] / 12f * c.nameTagScale / 100f);
+		float smallest = 9f / (7.5f * Math.max(1f, r.guiScale()));
+		float s = (float) Math.ceil(Math.max(size, smallest) * 16) / 16f;
+		float shrink = size / s;
+		if (shrink < 0.999f) {
+			r.push();
+			r.translate(P[0], P[1]);
+			r.scale(shrink);
+			r.translate(-P[0], -P[1]);
 		}
-		float fade = Math.min(1f, (textPx - 6) / 3f);
 		float height = Math.round(12 * s);
 		float pad = 6 * s;
 		float gap = 4 * s;
@@ -151,7 +155,7 @@ public final class NameTags {
 		float nameW = Smooth.width(r, t.name, nameSize, true);
 		float hpW = hp == null ? 0 : heart + 2 * s + Smooth.width(r, hp, hpSize, true);
 		int items = 0;
-		if (c.nameTagItems && fade >= 1f) {
+		if (c.nameTagItems) {
 			for (Object item : t.items) {
 				if (item != null) {
 					items++;
@@ -166,25 +170,24 @@ public final class NameTags {
 		float x = Math.round(P[0] - total / 2);
 		float y = Math.round(P[1] - height);
 		float mid = y + height / 2;
-		int alpha = Math.round(c.nameTagOpacity * 2.55f * fade);
+		int alpha = Math.round(c.nameTagOpacity * 2.55f);
 		// A slim pill: rounded fully at the ends.
 		Smooth.roundRect(r, x, y, x + total, y + height, height * 0.45f, alpha << 24 | 0x0E0F14);
-		int colour = faded(c.nameTagTeamColours ? t.nameColour : 0xFFFFFFFF, fade);
+		int colour = c.nameTagTeamColours ? t.nameColour : 0xFFFFFFFF;
 		float cx = Smooth.text(r, t.name, x + pad, mid - Smooth.lineHeight(r, nameSize, true) / 2, nameSize, colour, true);
 		if (hp != null || items > 0) {
 			cx += gap;
-			Smooth.rect(r, cx, mid - 3.5f * s, cx + 1, mid + 3.5f * s, faded(0x38FFFFFF, fade));
+			Smooth.rect(r, cx, mid - 3.5f * s, cx + 1, mid + 3.5f * s, 0x38FFFFFF);
 			cx += 1 + gap;
 		}
 		if (hp != null) {
-			Smooth.icon(r, "heart", cx, mid - heart / 2, heart, faded(healthColour(t), fade));
-			Smooth.text(r, hp, cx + heart + 2 * s, mid - Smooth.lineHeight(r, hpSize, true) / 2, hpSize, faded(0xFFF4F4F6, fade), true);
+			Smooth.icon(r, "heart", cx, mid - heart / 2, heart, healthColour(t));
+			Smooth.text(r, hp, cx + heart + 2 * s, mid - Smooth.lineHeight(r, hpSize, true) / 2, hpSize, 0xFFF4F4F6, true);
 			cx += hpW;
 			if (items > 0) {
 				cx += gap * 1.5f;
 			}
 		}
-		// Item icons can't fade, so they only join once the tag is fully in.
 		if (items > 0) {
 			float scale = 9 * s / 16f;
 			for (Object item : t.items) {
@@ -199,10 +202,9 @@ public final class NameTags {
 				cx += 10 * s;
 			}
 		}
-	}
-
-	private static int faded(int argb, float fade) {
-		return Math.round((argb >>> 24) * fade) << 24 | (argb & 0xFFFFFF);
+		if (shrink < 0.999f) {
+			r.pop();
+		}
 	}
 
 	private static String health(Tag t, int style) {
