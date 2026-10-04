@@ -32,6 +32,8 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Item physics / 2D items | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Chunk borders | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Light level overlay | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| TNT countdown | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | A timer over lit TNT within 24 blocks, from its own fuse. |
+| Low fire and no pumpkin blur | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | **HUD** | | | | | | | | |
 | Draggable HUD editor | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | FPS | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
@@ -57,6 +59,8 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Day counter | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Saturation | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Block info | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Ping numbers in the tab list | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Smooth hotbar | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | **PVP** | | | | | | | | |
 | Toggle sprint and sneak | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Sprint reset on hit [OPT-IN / RISK] | ✅ | N/A | N/A | N/A | N/A | N/A | N/A | Automates a combat technique; many servers treat that as a macro. |
@@ -72,6 +76,8 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Aspect ratio (stretched) | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Stretches the 3D view only; the HUD and menus keep their shape. |
 | Freelook [OPT-IN / RISK] | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Some servers (e.g. Hypixel) ask clients to disable it. |
 | Ping-based reach display | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Display only; never changes reach. |
+| No speed FOV | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | 26.3 has this built in (FOV Effects slider). |
+| Mouse delay fix | ✅ ● | N/A | N/A | N/A | N/A | N/A | N/A | A 1.8 bug (aim lagging a tick behind the crosshair); fixed in later versions. |
 | **PERFORMANCE** | | | | | | | | |
 | Sodium / Iris integration | N/A | N/A | ✅ | ✅ | ✅ | ✅ | ✅ | Sodium exists from 1.16. |
 | Entity render distance | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |

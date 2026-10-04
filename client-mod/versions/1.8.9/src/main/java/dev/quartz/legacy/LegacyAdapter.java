@@ -5,6 +5,7 @@ import dev.quartz.core.RenderBackend;
 import dev.quartz.core.VersionAdapter;
 import dev.quartz.core.accounts.LauncherBridge;
 import dev.quartz.core.fx.NameTags;
+import dev.quartz.core.fx.TntTimers;
 import dev.quartz.core.fx.View;
 import dev.quartz.core.hud.HudData;
 import dev.quartz.core.hud.Input;
@@ -21,6 +22,7 @@ import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundCategory;
 import net.minecraft.client.util.Session;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.TntEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
@@ -377,6 +379,30 @@ final class LegacyAdapter implements VersionAdapter {
 			}
 		}
 		return -1;
+	}
+
+	@Override
+	public void primedTnt(double range, TntTimers.Sink sink) {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client.world == null) {
+			return;
+		}
+		float pt = View.partialTicks();
+		double r2 = range * range;
+		for (Entity e : client.world.loadedEntities) {
+			if (!(e instanceof TntEntity)) {
+				continue;
+			}
+			double x = e.prevTickX + (e.x - e.prevTickX) * pt;
+			double y = e.prevTickY + (e.y - e.prevTickY) * pt;
+			double z = e.prevTickZ + (e.z - e.prevTickZ) * pt;
+			double dx = x - View.camX();
+			double dy = y - View.camY();
+			double dz = z - View.camZ();
+			if (dx * dx + dy * dy + dz * dz <= r2) {
+				sink.tnt(x, y + 1.3, z, ((TntEntity) e).fuseTimer - pt);
+			}
+		}
 	}
 
 	@Override

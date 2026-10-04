@@ -124,6 +124,15 @@ public final class ClientConfig {
 	public String atmosphereWeather = "off";
 	public boolean atmosphereMotion = true;
 
+	// Quality of life
+	public boolean tntCountdown = true;
+	public boolean tabPing = true;
+	public boolean smoothHotbar = true;
+	public boolean lowFire = false;
+	public boolean noPumpkinBlur = false;
+	public boolean staticFov = false;
+	public boolean mouseDelayFix = true;
+
 	// World: sky, fog, weather, time
 	public EnvironmentSettings environment = new EnvironmentSettings();
 

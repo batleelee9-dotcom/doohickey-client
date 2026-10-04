@@ -7,6 +7,7 @@ import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.fx.Effects;
 import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.Sprites;
+import dev.quartz.core.fx.TntTimers;
 import dev.quartz.core.fx.View;
 import dev.quartz.core.fx.Weather;
 import dev.quartz.core.hud.ReachTracker;
@@ -99,7 +100,7 @@ public final class PvpTweaks {
 
 	/** Name tags and the client's own hit particles, placed with this frame's camera. Under the vanilla HUD. */
 	public static void renderWorldOverlays(GuiGraphicsExtractor g, DeltaTracker delta) {
-		if (Sprites.alive() == 0 && !NameTags.pending() && Weather.active() == 0) {
+		if (Sprites.alive() == 0 && !NameTags.pending() && Weather.active() == 0 && !TntTimers.enabled()) {
 			return;
 		}
 		View.setPartialTicks(delta.getGameTimeDeltaPartialTick(false));
@@ -110,6 +111,7 @@ public final class PvpTweaks {
 		PipelineBackend.begin(g);
 		Safe.run("weather", Weather::renderHud);
 		Safe.run("nametags", NameTags::renderHud);
+		Safe.run("tnt", TntTimers::renderHud);
 		Safe.run("sprites", Sprites::renderHud);
 	}
 

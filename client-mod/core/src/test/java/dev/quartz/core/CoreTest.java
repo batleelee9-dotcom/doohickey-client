@@ -109,6 +109,7 @@ public final class CoreTest {
 		public void playSound(String name, float volume, float pitch) { soundLog.add(name); }
 		public float healthFraction() { return health; }
 		boolean projectileNear;
+		public void primedTnt(double range, dev.quartz.core.fx.TntTimers.Sink sink) { sink.tnt(0.8, 0.6, -3, 47); sink.tnt(-1.4, 0.4, -5, 12); }
 		public boolean nameTag(Object p, dev.quartz.core.fx.NameTags.Tag t) {
 			if (!(p instanceof double[])) return false;
 			double[] at = (double[]) p;
@@ -261,6 +262,11 @@ public final class CoreTest {
 			javax.imageio.ImageIO.write(pano, "png", dir.resolve("sky-" + sky + ".png").toFile());
 		}
 		ClientConfig.get().atmosphereSky = "off";
+
+		// TNT countdowns.
+		dev.quartz.core.fx.View.set(perspective(70, 480 / 270f), 0, 0, 0);
+		image.frames(() -> dev.quartz.core.fx.TntTimers.render(image, adapter), 1, dir.resolve("tnt.png"));
+		dev.quartz.core.fx.View.clear();
 
 		// Name tags at a few distances.
 		ClientConfig.get().nameTags = true;
@@ -623,6 +629,19 @@ public final class CoreTest {
 		ClientConfig.get().atmosphereFog = 0;
 		ClientConfig.get().atmosphereFogColor = 0;
 
+		System.out.println("quality of life");
+		check(dev.quartz.core.ui.SmoothHotbar.offset(2) == 0, "the hotbar starts where vanilla puts it");
+		Thread.sleep(5);
+		int slide = dev.quartz.core.ui.SmoothHotbar.offset(6);
+		check(slide < 0 && slide > -80, "switching slots glides from the old one (" + slide + " px)");
+		for (int i = 0; i < 40; i++) { Thread.sleep(5); dev.quartz.core.ui.SmoothHotbar.offset(6); }
+		check(dev.quartz.core.ui.SmoothHotbar.offset(6) == 0, "and settles on the new one");
+		check(dev.quartz.core.hud.TabPing.label(87).equals("87") && dev.quartz.core.hud.TabPing.colour(30) != dev.quartz.core.hud.TabPing.colour(400), "tab ping as coloured numbers");
+		dev.quartz.core.fx.View.set(perspective(70, 400 / 240f), 0, 0, 0);
+		dev.quartz.core.fx.TntTimers.render(adapter.backend, adapter);
+		check(true, "TNT timers draw without image support");
+		dev.quartz.core.fx.View.clear();
+
 		System.out.println("rice hat");
 		check(!dev.quartz.core.fx.RiceHat.enabled(), "off by default");
 		int[] vertices = {0};
@@ -641,9 +660,9 @@ public final class CoreTest {
 		check(adapter.maxFpsLog.equals(java.util.Arrays.asList(true, false)) && ClientConfig.get().performance.maxFpsRestore.isEmpty(), "switching it off puts them back");
 
 		System.out.println("menu modules");
-		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 21, "21 HUD modules on 1.8.9 (20 elements + style)");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 23, "23 HUD modules on 1.8.9 (20 elements, smooth hotbar, tab ping, style)");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.SOUND).size() == 3, "3 sound modules");
-		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 15, "15 visual modules on 1.8.9");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 17, "17 visual modules on 1.8.9");
 		dev.quartz.core.ui.ClientMenu smoke = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {
 			public void close() { }
 			public void openHudEditor() { }

@@ -100,6 +100,10 @@ public final class Modules {
 					add(out, new Module(e.name, desc, e.feature,
 						Option.toggle(e.feature, e.name, () -> e.state().enabled, v -> e.state().enabled = v)));
 				}
+				add(out, new Module("Smooth hotbar", "The selection box glides between slots", Feature.SMOOTH_HOTBAR,
+					Option.toggle(Feature.SMOOTH_HOTBAR, "Smooth hotbar", () -> c().smoothHotbar, v -> c().smoothHotbar = v)));
+				add(out, new Module("Tab ping", "Ping numbers in the player list, not bars", Feature.TAB_PING,
+					Option.toggle(Feature.TAB_PING, "Tab ping", () -> c().tabPing, v -> c().tabPing = v)));
 				add(out, new Module("HUD style", "Backgrounds, shadows and text colour", Feature.HUD_EDITOR, null,
 					Option.toggle(Feature.HUD_EDITOR, "Backgrounds", () -> c().moduleBackground, v -> c().moduleBackground = v),
 					Option.toggle(Feature.HUD_EDITOR, "Text shadow", () -> c().textShadow, v -> c().textShadow = v),
@@ -112,6 +116,12 @@ public final class Modules {
 				add(out, new Module("Toggle sprint", "Sprint without holding the key", Feature.TOGGLE_SPRINT_SNEAK, GameOptions.toggleSprint()));
 				add(out, new Module("Toggle sneak", "Sneak without holding the key", Feature.TOGGLE_SPRINT_SNEAK, GameOptions.toggleSneak()));
 				add(out, new Module("Hitboxes", "Show entity hitboxes", Feature.HITBOXES, GameOptions.hitboxes()));
+				add(out, new Module("TNT countdown", "A timer over lit TNT so you know when it blows", Feature.TNT_COUNTDOWN,
+					Option.toggle(Feature.TNT_COUNTDOWN, "TNT countdown", () -> c().tntCountdown, v -> c().tntCountdown = v)));
+				add(out, new Module("No speed FOV", "Sprinting and speed effects don't zoom your view", Feature.STATIC_FOV,
+					Option.toggle(Feature.STATIC_FOV, "No speed FOV", () -> c().staticFov, v -> c().staticFov = v)));
+				add(out, new Module("Mouse delay fix", "Your aim follows the crosshair the same tick (1.8 bug)", Feature.MOUSE_DELAY_FIX,
+					Option.toggle(Feature.MOUSE_DELAY_FIX, "Mouse delay fix", () -> c().mouseDelayFix, v -> c().mouseDelayFix = v)));
 				break;
 			case VISUAL:
 				add(out, Module.of(Option.choice(Feature.ASPECT_RATIO, "Aspect ratio", list(AspectRatio.IDS), list(AspectRatio.NAMES),
@@ -152,6 +162,10 @@ public final class Modules {
 				add(out, new Module("Kill effects", "A burst when your target dies", Feature.KILL_EFFECTS,
 					Option.toggle(Feature.KILL_EFFECTS, "Kill effects", () -> fx().killEffects, v -> fx().killEffects = v),
 					Option.choice(Feature.KILL_EFFECTS, "Effect", list(Effects.KILL_EFFECTS), list(Effects.KILL_EFFECT_NAMES), () -> fx().killEffect, v -> fx().killEffect = v)));
+				add(out, new Module("Low fire", "A smaller fire overlay when you're burning", Feature.CLEAN_VIEW,
+					Option.toggle(Feature.CLEAN_VIEW, "Low fire", () -> c().lowFire, v -> c().lowFire = v)));
+				add(out, new Module("No pumpkin blur", "See normally with a pumpkin on your head", Feature.CLEAN_VIEW,
+					Option.toggle(Feature.CLEAN_VIEW, "No pumpkin blur", () -> c().noPumpkinBlur, v -> c().noPumpkinBlur = v)));
 				add(out, new Module("No hurt cam", "No screen tilt when you're hit", Feature.HURT_CAMERA,
 					Option.toggle(Feature.HURT_CAMERA, "No hurt camera", () -> fx().noHurtCamera, v -> fx().noHurtCamera = v)));
 				add(out, new Module("Fullbright", "See clearly in the dark", Feature.FULLBRIGHT, WorldOptions.fullbright()));

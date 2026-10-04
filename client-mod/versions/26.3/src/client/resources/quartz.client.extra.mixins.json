@@ -7,9 +7,12 @@
 		"AspectRatioHandMixin",
 		"CameraZoomMixin",
 		"DamageEventMixin",
+		"FireOverlayMixin",
+		"HudExtrasMixin",
 		"HurtCameraMixin",
 		"NameTagMixin",
-		"SkyRendererMixin"
+		"SkyRendererMixin",
+		"TabPingMixin"
 	],
 	"injectors": {
 		"defaultRequire": 0

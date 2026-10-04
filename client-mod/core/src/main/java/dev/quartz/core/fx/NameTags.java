@@ -126,7 +126,7 @@ public final class NameTags {
 		// Vanilla's size up close, still readable far away; snapped to steps so text atlases get reused.
 		float s = Math.max(0.5f, Math.min(1.2f, 0.3f * P[3] / 12f)) * c.nameTagScale / 100f;
 		s = Math.max(0.375f, Math.round(s * 8) / 8f);
-		float height = 12 * s;
+		float height = Math.round(12 * s);
 		float pad = 6 * s;
 		float gap = 4 * s;
 		float nameSize = 7.5f * s;
@@ -148,6 +148,7 @@ public final class NameTags {
 		float divider = 1 + 2 * gap;
 		float total = pad * 2 + nameW + (hp == null ? 0 : divider + hpW) + (items == 0 ? 0 : (hp == null ? divider : gap * 1.5f) + itemsW);
 
+		total = Math.round(total);
 		float x = Math.round(P[0] - total / 2);
 		float y = Math.round(P[1] - height);
 		float mid = y + height / 2;

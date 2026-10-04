@@ -30,6 +30,8 @@ public enum Feature {
 	ITEM_PHYSICS(Category.WORLD, "Item physics / 2D items"),
 	CHUNK_BORDERS(Category.WORLD, "Chunk borders"),
 	LIGHT_OVERLAY(Category.WORLD, "Light level overlay"),
+	TNT_COUNTDOWN(Category.WORLD, "TNT countdown"),
+	CLEAN_VIEW(Category.WORLD, "Low fire and no pumpkin blur"),
 
 	// HUD
 	HUD_EDITOR(Category.HUD, "Draggable HUD editor"),
@@ -56,6 +58,8 @@ public enum Feature {
 	HUD_DAY(Category.HUD, "Day counter"),
 	HUD_SATURATION(Category.HUD, "Saturation"),
 	HUD_BLOCK_INFO(Category.HUD, "Block info"),
+	TAB_PING(Category.HUD, "Ping numbers in the tab list"),
+	SMOOTH_HOTBAR(Category.HUD, "Smooth hotbar"),
 
 	// PvP / gameplay
 	TOGGLE_SPRINT_SNEAK(Category.PVP, "Toggle sprint and sneak"),
@@ -72,6 +76,8 @@ public enum Feature {
 	ASPECT_RATIO(Category.PVP, "Aspect ratio (stretched)"),
 	FREELOOK(Category.PVP, "Freelook", true),
 	PING_REACH_DISPLAY(Category.PVP, "Ping-based reach display"),
+	STATIC_FOV(Category.PVP, "No speed FOV"),
+	MOUSE_DELAY_FIX(Category.PVP, "Mouse delay fix"),
 
 	// Performance
 	SODIUM_INTEGRATION(Category.PERFORMANCE, "Sodium / Iris integration"),

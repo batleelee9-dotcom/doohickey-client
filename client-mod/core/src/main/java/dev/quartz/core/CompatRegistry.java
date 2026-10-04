@@ -113,6 +113,12 @@ public final class CompatRegistry {
 		row(Feature.AUTO_TOOL, "YYYYYYY", "Switches hotbar slots for you; forbidden on many PvP servers.");
 		row(Feature.RAW_INPUT, "PYYYYYY", "1.8.9 (LWJGL 2) needs a separate raw-input library.");
 		row(Feature.ZOOM, "YYYYYYY", null);
+		row(Feature.TNT_COUNTDOWN, "YYYYYYY", "A timer over lit TNT within 24 blocks, from its own fuse.");
+		row(Feature.CLEAN_VIEW, "YYYYYYY", null);
+		row(Feature.TAB_PING, "YYYYYYY", null);
+		row(Feature.SMOOTH_HOTBAR, "YYYYYYY", null);
+		row(Feature.STATIC_FOV, "YYYYYY-", "26.3 has this built in (FOV Effects slider).");
+		row(Feature.MOUSE_DELAY_FIX, "Y------", "A 1.8 bug (aim lagging a tick behind the crosshair); fixed in later versions.");
 		row(Feature.ASPECT_RATIO, "YYYYYYY", "Stretches the 3D view only; the HUD and menus keep their shape.");
 		row(Feature.FREELOOK, "YYYYYYY", "Some servers (e.g. Hypixel) ask clients to disable it.");
 		row(Feature.PING_REACH_DISPLAY, "YYYYYYY", "Display only; never changes reach.");
@@ -163,6 +169,7 @@ public final class CompatRegistry {
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
 			Feature.CUSTOM_CROSSHAIR, Feature.ZOOM, Feature.ASPECT_RATIO, Feature.HITBOXES,
 			Feature.RICE_HAT, Feature.NAMETAGS, Feature.SKY_TEXTURE, Feature.FPS_CAP, Feature.TILE_ENTITY_CULLING, Feature.PARTICLE_CULLING,
+			Feature.TNT_COUNTDOWN, Feature.CLEAN_VIEW, Feature.TAB_PING, Feature.SMOOTH_HOTBAR, Feature.STATIC_FOV, Feature.MOUSE_DELAY_FIX,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.ACCOUNT_SWITCHER);
 		implemented(McVersion.V26_3,
@@ -175,6 +182,7 @@ public final class CompatRegistry {
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
 			Feature.ZOOM, Feature.ASPECT_RATIO, Feature.HITBOXES,
 			Feature.RICE_HAT, Feature.NAMETAGS, Feature.SKY_TEXTURE, Feature.FPS_CAP,
+			Feature.TNT_COUNTDOWN, Feature.CLEAN_VIEW, Feature.TAB_PING, Feature.SMOOTH_HOTBAR,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.TOGGLE_SPRINT_SNEAK, Feature.HIT_COLOR, Feature.CAPES, Feature.WEARABLES, Feature.MINIMAP_WAYPOINTS,
 			Feature.ACCOUNT_SWITCHER);

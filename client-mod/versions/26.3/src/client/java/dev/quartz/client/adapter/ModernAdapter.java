@@ -398,6 +398,27 @@ public final class ModernAdapter implements VersionAdapter {
 	}
 
 	@Override
+	public void primedTnt(double range, dev.quartz.core.fx.TntTimers.Sink sink) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null) {
+			return;
+		}
+		float pt = dev.quartz.core.fx.View.partialTicks();
+		double r2 = range * range;
+		for (net.minecraft.world.entity.Entity e : mc.level.entitiesForRendering()) {
+			if (e instanceof net.minecraft.world.entity.item.PrimedTnt tnt) {
+				net.minecraft.world.phys.Vec3 p = tnt.getPosition(pt);
+				double dx = p.x - dev.quartz.core.fx.View.camX();
+				double dy = p.y - dev.quartz.core.fx.View.camY();
+				double dz = p.z - dev.quartz.core.fx.View.camZ();
+				if (dx * dx + dy * dy + dz * dz <= r2) {
+					sink.tnt(p.x, p.y + 1.3, p.z, tnt.getFuse() - pt);
+				}
+			}
+		}
+	}
+
+	@Override
 	public boolean skyVisible() {
 		Minecraft mc = Minecraft.getInstance();
 		return mc.level != null && mc.level.canSeeSky(net.minecraft.core.BlockPos.containing(

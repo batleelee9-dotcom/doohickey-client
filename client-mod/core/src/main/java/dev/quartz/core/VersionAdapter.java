@@ -132,6 +132,10 @@ public interface VersionAdapter {
 		return false;
 	}
 
+	/** Calls {@code sink} for each lit TNT within {@code range} blocks of the camera. */
+	default void primedTnt(double range, dev.quartz.core.fx.TntTimers.Sink sink) {
+	}
+
 	/** Whether open sky is above the camera (ambient weather fades out under a roof). */
 	default boolean skyVisible() {
 		return true;

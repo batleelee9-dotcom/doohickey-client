@@ -7,12 +7,17 @@
 		"BlockEntityDistanceMixin",
 		"CameraCaptureMixin",
 		"CrosshairMixin",
+		"FireOverlayMixin",
 		"HurtCameraMixin",
+		"InGameHudExtrasMixin",
 		"LivingEntityHurtMixin",
+		"MouseDelayFixMixin",
 		"NameTagMixin",
 		"ParticleCullMixin",
 		"PlayerRendererMixin",
 		"SkyMixin",
+		"StaticFovMixin",
+		"TabPingMixin",
 		"ZoomMixin"
 	],
 	"injectors": {
