@@ -50,7 +50,7 @@ public final class ClientMenu {
 
 	/** Remembered while the game runs, so reopening lands where you left off. */
 	private static Category category = Category.HUD;
-	private static final Map<Category, Integer> SCROLL = new EnumMap<>(Category.class);
+	private static final Map<Category, Scroll> SCROLL = new EnumMap<>(Category.class);
 
 	private final Host host;
 	private final long openedAt = System.currentTimeMillis();
@@ -62,12 +62,23 @@ public final class ClientMenu {
 	private boolean searchFocused;
 	/** The module whose settings page is open, or null for the grid. */
 	private Module open;
-	private int settingsScroll;
+	private final Scroll settingsScroll = new Scroll();
+	private final Scroll searchScroll = new Scroll();
 	private Module hovered;
 	private long hoveredSince;
 	private long lastFrame = System.nanoTime();
 	private float dt;
-	private int maxScroll;
+	/** The list being drawn this frame (wheel target) and its scrollbar, for dragging. */
+	private Scroll active;
+	private float wheelStep = CARD_H + GAP;
+	private Scroll dragging;
+	private float dragGrab;
+	private float barTop;
+	private float barTrack;
+	private float barThumb;
+	private float pressY;
+	private float clipY0 = -1e9f;
+	private float clipY1 = 1e9f;
 	private String playerName;
 	private boolean playerOffline;
 
@@ -85,6 +96,7 @@ public final class ClientMenu {
 	private final Runnable focusSearch;
 	private final Runnable back;
 	private final Runnable openEditor;
+	private final Runnable grabBar = this::grabBar;
 
 	public ClientMenu(Host host) {
 		this.host = host;
@@ -105,7 +117,10 @@ public final class ClientMenu {
 	}
 
 	private void hit(float x0, float y0, float x1, float y1, Runnable left, Runnable right) {
-		if (hits < HIT_LIMIT) {
+		// Inside a scrolling list, only the visible part of a row is clickable.
+		y0 = Math.max(y0, clipY0);
+		y1 = Math.min(y1, clipY1);
+		if (hits < HIT_LIMIT && y1 > y0) {
 			hx0[hits] = x0;
 			hy0[hits] = y0;
 			hx1[hits] = x1;
@@ -129,6 +144,7 @@ public final class ClientMenu {
 	}
 
 	private boolean press(int x, int y, boolean right) {
+		pressY = y;
 		for (int i = hits - 1; i >= 0; i--) {
 			if (x >= hx0[i] && x < hx1[i] && y >= hy0[i] && y < hy1[i]) {
 				Runnable action = right && hRight[i] != null ? hRight[i] : hLeft[i];
@@ -141,14 +157,26 @@ public final class ClientMenu {
 		return false;
 	}
 
-	/** Mouse wheel: positive scrolls down a row. */
-	public void scroll(int rows) {
-		if (open != null) {
-			settingsScroll = Math.max(0, settingsScroll + rows);
-			return;
+	/** Mouse wheel, in notches (fractions from trackpads are fine): positive scrolls down. */
+	public void scroll(double notches) {
+		if (active != null) {
+			active.by((float) notches * wheelStep);
 		}
-		int s = SCROLL.getOrDefault(category, 0) + rows;
-		SCROLL.put(category, Math.max(0, Math.min(maxScroll, s)));
+	}
+
+	/** Mouse moved with the left button held: drags the scrollbar if it was grabbed. */
+	public boolean drag(int x, int y) {
+		if (dragging == null) {
+			return false;
+		}
+		float free = Math.max(1, barTrack - barThumb);
+		dragging.target = Math.max(0, Math.min(dragging.max, (y - dragGrab - barTop) / free * dragging.max));
+		dragging.pos = dragging.target;
+		return true;
+	}
+
+	public void release() {
+		dragging = null;
 	}
 
 	/** A printable character: goes to the search box (and focuses it). */
@@ -194,12 +222,14 @@ public final class ClientMenu {
 			}
 		}
 		results = out;
+		searchScroll.reset();
 	}
 
 	// ---- Drawing -----------------------------------------------------------
 
 	public void render(RenderBackend r, int mouseX, int mouseY) {
 		hits = 0;
+		active = null;
 		if (open != null) {
 			hovered = null;
 		}
@@ -336,34 +366,29 @@ public final class ClientMenu {
 		int cols = w >= 300 && list.size() > 6 ? 3 : 2;
 		float cardW = (w - GAP * (cols - 1)) / cols;
 		int rows = (list.size() + cols - 1) / cols;
-		int visible = Math.max(1, (int) ((bottom - top + GAP) / (CARD_H + GAP)));
-		maxScroll = Math.max(0, rows - visible);
-		int scroll = Math.min(SCROLL.getOrDefault(category, 0), maxScroll);
-		SCROLL.put(category, scroll);
+		float rowH = CARD_H + GAP;
+		Scroll sc = searching ? searchScroll : SCROLL.computeIfAbsent(category, c -> new Scroll());
+		float off = begin(r, sc, rowH, rows * rowH - GAP, x, top, w, bottom);
 
 		hovered = null;
 		if (list.isEmpty()) {
 			String empty = searching ? "Nothing matches that." : "Nothing here on this version.";
 			Smooth.text(r, empty, x + (w - Smooth.width(r, empty, 8, false)) / 2, top + 40, 8, FAINT, false);
 		}
-		for (int i = scroll * cols; i < list.size() && i < (scroll + visible) * cols; i++) {
-			int col = i % cols;
-			int row = i / cols - scroll;
-			card(r, list.get(i), x + col * (cardW + GAP), top + row * (CARD_H + GAP), cardW, mouseX, mouseY);
+		// Only the rows that show, at pixel offsets so the list glides.
+		int last = Math.min(rows - 1, (int) ((off + bottom - top) / rowH));
+		for (int row = (int) (off / rowH); row <= last; row++) {
+			for (int col = 0; col < cols && row * cols + col < list.size(); col++) {
+				card(r, list.get(row * cols + col), x + col * (cardW + GAP), top + row * rowH - off, cardW, mouseX, mouseY);
+			}
 		}
-		if (maxScroll > 0) {
-			float track = bottom - top - GAP;
-			float thumb = Math.max(16, track * visible / rows);
-			float ty = top + (track - thumb) * scroll / maxScroll;
-			Smooth.roundRect(r, x + w + 6, top, x + w + 9, top + track, 1.5f, 0x14FFFFFF);
-			Smooth.roundRect(r, x + w + 6, ty, x + w + 9, ty + thumb, 1.5f, ACCENT);
-		}
+		end(r, sc, rows * rowH - GAP, x, top, w, bottom, mouseX, mouseY);
 
 		float fy = py + ph - 26;
 		if (!searching && category == Category.HUD) {
 			button(r, "Edit HUD layout", "edit", x, fy, mouseX, mouseY, 0, openEditor);
 		}
-		String hint = maxScroll > 0 ? "Scroll for more  ·  Right Shift to close" : "Right Shift to close";
+		String hint = sc.max > 0 ? "Scroll for more  ·  Right Shift to close" : "Right Shift to close";
 		Smooth.text(r, hint, x + w - Smooth.width(r, hint, 7, false), fy + 5, 7, FAINT, false);
 	}
 
@@ -441,7 +466,7 @@ public final class ClientMenu {
 		if (action == null) {
 			action = () -> {
 				open = m;
-				settingsScroll = 0;
+				settingsScroll.reset();
 			};
 			openers.put(m, action);
 		}
@@ -462,11 +487,13 @@ public final class ClientMenu {
 		rows.addAll(m.settings);
 		float top = py + 52;
 		float bottom = py + ph - 30;
-		int visible = Math.max(1, (int) ((bottom - top + 5) / (ROW_H + 5)));
-		settingsScroll = Math.min(settingsScroll, Math.max(0, rows.size() - visible));
-		for (int i = settingsScroll; i < rows.size() && i < settingsScroll + visible; i++) {
-			row(r, rows.get(i), m.toggle != null && i == 0, x, top + (i - settingsScroll) * (ROW_H + 5), w, mouseX, mouseY);
+		float rowH = ROW_H + 5;
+		float off = begin(r, settingsScroll, rowH, rows.size() * rowH - 5, x, top, w, bottom);
+		int last = Math.min(rows.size() - 1, (int) ((off + bottom - top) / rowH));
+		for (int i = (int) (off / rowH); i <= last; i++) {
+			row(r, rows.get(i), m.toggle != null && i == 0, x, top + i * rowH - off, w, mouseX, mouseY);
 		}
+		end(r, settingsScroll, rows.size() * rowH - 5, x, top, w, bottom, mouseX, mouseY);
 		String hint = "Right-click a value to go back one  ·  Esc to return";
 		Smooth.text(r, hint, x + w - Smooth.width(r, hint, 7, false), py + ph - 21, 7, FAINT, false);
 	}
@@ -548,13 +575,106 @@ public final class ClientMenu {
 		Smooth.text(r, m.description, x + 7, y + 8 - Smooth.lineHeight(r, 7, false) / 2, 7, TEXT, false);
 	}
 
+	/** Smooth pixel scrolling: input moves the target, the view eases towards it. */
+	private static final class Scroll {
+		float target;
+		float pos;
+		float max;
+
+		void by(float px) {
+			target = Math.max(0, Math.min(max, target + px));
+		}
+
+		void limit(float m) {
+			max = m;
+			target = Math.min(target, m);
+			pos = Math.min(pos, m);
+		}
+
+		void reset() {
+			target = 0;
+			pos = 0;
+		}
+	}
+
+	/**
+	 * Starts a scrolling list: eases the offset, snaps it to whole device
+	 * pixels (so text stays sharp mid-glide) and clips drawing to the list.
+	 */
+	private float begin(RenderBackend r, Scroll sc, float step, float content, float x, float top, float w, float bottom) {
+		sc.limit(Math.max(0, content - (bottom - top)));
+		if (sc != dragging) {
+			sc.pos = approach(sc.pos, sc.target, 18);
+		}
+		active = sc;
+		wheelStep = step;
+		float s = Math.max(1, r.guiScale());
+		// A little room above the first row, so its glow isn't cut while at the top.
+		clipY0 = top - 5;
+		clipY1 = bottom;
+		r.clip((int) (x - 15), (int) clipY0, (int) Math.ceil(x + w + 4), (int) Math.ceil(bottom));
+		return Math.round(sc.pos * s) / s;
+	}
+
+	/** Ends a scrolling list: soft edges where more is hidden, and a scrollbar you can drag. */
+	private void end(RenderBackend r, Scroll sc, float content, float x, float top, float w, float bottom, int mouseX, int mouseY) {
+		r.unclip();
+		clipY0 = -1e9f;
+		clipY1 = 1e9f;
+		if (sc.max <= 0) {
+			return;
+		}
+		if (sc.pos > 0.5f) {
+			fade(r, x - 15, top - 5, x + w + 4, top + 8, true);
+		}
+		if (sc.pos < sc.max - 0.5f) {
+			fade(r, x - 15, bottom - 12, x + w + 4, bottom, false);
+		}
+		float track = bottom - top;
+		float thumb = Math.max(18, track * track / content);
+		float ty = top + (track - thumb) * sc.pos / sc.max;
+		float bx = x + w + 6;
+		boolean hot = dragging == sc || inside(mouseX, mouseY, bx - 4, top, bx + 8, bottom);
+		float h = misc[3] = approach(misc[3], hot ? 1f : 0f, 14);
+		float bw = 3 + h;
+		Smooth.roundRect(r, bx, top, bx + bw, bottom, bw / 2, 0x14FFFFFF);
+		Smooth.roundRect(r, bx, ty, bx + bw, ty + thumb, bw / 2, Smooth.mix(ACCENT, ACCENT_LIGHT, h));
+		barTop = top;
+		barTrack = track;
+		barThumb = thumb;
+		hit(bx - 4, top, bx + 8, bottom, grabBar, null);
+	}
+
+	/** Clicked the scrollbar: grab the thumb where it was clicked, or jump it under the cursor. */
+	private void grabBar() {
+		Scroll sc = active;
+		if (sc == null || sc.max <= 0) {
+			return;
+		}
+		float ty = barTop + (barTrack - barThumb) * sc.pos / sc.max;
+		dragGrab = pressY >= ty && pressY < ty + barThumb ? pressY - ty : barThumb / 2;
+		dragging = sc;
+		drag(0, (int) pressY);
+	}
+
+	/** A soft edge in the panel colour over a scrolling list; {@code down} fades out downwards. */
+	private static void fade(RenderBackend r, float x0, float y0, float x1, float y1, boolean down) {
+		int steps = 8;
+		float h = (y1 - y0) / steps;
+		for (int i = 0; i < steps; i++) {
+			float a = down ? 1f - i / (float) steps : (i + 1) / (float) steps;
+			Smooth.rect(r, x0, y0 + i * h, x1, y0 + (i + 1) * h, ((int) (0xF0 * a * a) << 24) | (PANEL & 0xFFFFFF));
+		}
+	}
+
 	/** Moves {@code v} towards {@code target}, frame-rate independent. */
 	private float approach(float v, float target, float speed) {
 		v += (target - v) * Math.min(1f, dt * speed);
 		return Math.abs(target - v) < 0.002f ? target : v;
 	}
 
-	private static boolean inside(int mx, int my, float x0, float y0, float x1, float y1) {
-		return mx >= x0 && mx < x1 && my >= y0 && my < y1;
+	/** Hover test; inside a scrolling list, the clipped-off part of a row doesn't count. */
+	private boolean inside(int mx, int my, float x0, float y0, float x1, float y1) {
+		return mx >= x0 && mx < x1 && my >= Math.max(y0, clipY0) && my < Math.min(y1, clipY1);
 	}
 }

@@ -16,6 +16,7 @@ import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.sound.PositionedSoundInstance;
+import net.minecraft.client.sound.SoundCategory;
 import net.minecraft.client.util.Session;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.effect.StatusEffect;
@@ -353,6 +354,12 @@ final class LegacyAdapter implements VersionAdapter {
 			case "heartbeat": return "note.bd";
 			default: return "random.orb";
 		}
+	}
+
+	@Override
+	public float soundVolume() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		return client.options.getSoundVolume(SoundCategory.MASTER) * client.options.getSoundVolume(SoundCategory.PLAYERS);
 	}
 
 	@Override

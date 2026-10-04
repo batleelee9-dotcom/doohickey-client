@@ -39,11 +39,24 @@ final class QuartzLegacyScreen extends Screen implements ClientMenu.Host {
 	}
 
 	@Override
+	protected void mouseDragged(int mouseX, int mouseY, int button, long held) {
+		if (button == 0) {
+			menu.drag(mouseX, mouseY);
+		}
+	}
+
+	@Override
+	protected void mouseReleased(int mouseX, int mouseY, int button) {
+		menu.release();
+	}
+
+	@Override
 	public void handleMouse() {
 		super.handleMouse();
 		int wheel = Mouse.getEventDWheel();
 		if (wheel != 0) {
-			menu.scroll(wheel < 0 ? 1 : -1);
+			// 120 per notch on most mice; some drivers send smaller steps, count those as one notch.
+			menu.scroll(Math.abs(wheel) >= 120 ? -wheel / 120.0 : -Math.signum(wheel));
 		}
 	}
 

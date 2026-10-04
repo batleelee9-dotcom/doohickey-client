@@ -108,6 +108,16 @@ public final class PipelineBackend implements RenderBackend {
 		return Minecraft.getInstance().getWindow().getGuiScale();
 	}
 
+	@Override
+	public void clip(int x0, int y0, int x1, int y1) {
+		g.enableScissor(x0, y0, x1, y1);
+	}
+
+	@Override
+	public void unclip() {
+		g.disableScissor();
+	}
+
 	/** A texture sampled smoothly (vanilla's DynamicTexture is nearest-neighbour). */
 	private static final class SmoothTexture extends DynamicTexture {
 		SmoothTexture(String name, int width, int height) {

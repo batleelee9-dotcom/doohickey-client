@@ -69,6 +69,7 @@ public enum Feature {
 	AUTO_TOOL(Category.PVP, "Auto tool / weapon", true),
 	RAW_INPUT(Category.PVP, "Raw mouse input"),
 	ZOOM(Category.PVP, "Zoom"),
+	ASPECT_RATIO(Category.PVP, "Aspect ratio (stretched)"),
 	FREELOOK(Category.PVP, "Freelook", true),
 	PING_REACH_DISPLAY(Category.PVP, "Ping-based reach display"),
 

@@ -73,6 +73,13 @@ public interface RenderBackend {
 	default void drawImage(int handle, float[] quads, int count, int argb) {
 	}
 
+	/** Clips drawing to this rectangle (GUI coordinates) until {@link #unclip}. Not nestable; a no-op where unsupported. */
+	default void clip(int x0, int y0, int x1, int y1) {
+	}
+
+	default void unclip() {
+	}
+
 	/** A 1-pixel rectangle outline. */
 	default void outline(int x, int y, int w, int h, int argb) {
 		fill(x, y, x + w, y + 1, argb);

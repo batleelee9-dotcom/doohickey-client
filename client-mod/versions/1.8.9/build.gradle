@@ -10,6 +10,7 @@ version = "${project.version}+${project.minecraft_version}"
 // The version-independent core (config, compat registry, feature logic) is
 // compiled into every version's jar.
 sourceSets.main.java.srcDir '../../core/src/main/java'
+sourceSets.main.resources.srcDir '../../core/src/main/resources'
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"

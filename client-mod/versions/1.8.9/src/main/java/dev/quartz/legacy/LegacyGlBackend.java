@@ -106,6 +106,20 @@ final class LegacyGlBackend implements RenderBackend {
 		return window().getScaleFactor();
 	}
 
+	@Override
+	public void clip(int x0, int y0, int x1, int y1) {
+		// glScissor wants framebuffer pixels from the bottom-left.
+		MinecraftClient mc = MinecraftClient.getInstance();
+		int s = window().getScaleFactor();
+		GL11.glEnable(GL11.GL_SCISSOR_TEST);
+		GL11.glScissor(x0 * s, mc.height - y1 * s, Math.max(0, x1 - x0) * s, Math.max(0, y1 - y0) * s);
+	}
+
+	@Override
+	public void unclip() {
+		GL11.glDisable(GL11.GL_SCISSOR_TEST);
+	}
+
 	/** Uploaded once and kept for the session; GL frees them with the context. */
 	private final Map<String, Integer> images = new HashMap<>();
 

@@ -113,6 +113,11 @@ public interface VersionAdapter {
 	/** Plays a sound to this player only, by an {@code Effects} name ("ding", "pling", ...). */
 	void playSound(String name, float volume, float pitch);
 
+	/** The game's volume for player sounds (master × players), 0–1, for sounds played outside its engine. */
+	default float soundVolume() {
+		return 1f;
+	}
+
 	/** Health as a fraction of the maximum, or -1 outside a world. */
 	float healthFraction();
 

@@ -69,6 +69,7 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Auto tool / weapon [OPT-IN / RISK] | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Switches hotbar slots for you; forbidden on many PvP servers. |
 | Raw mouse input | ⚠ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 1.8.9 (LWJGL 2) needs a separate raw-input library. |
 | Zoom | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Aspect ratio (stretched) | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Stretches the 3D view only; the HUD and menus keep their shape. |
 | Freelook [OPT-IN / RISK] | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Some servers (e.g. Hypixel) ask clients to disable it. |
 | Ping-based reach display | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Display only; never changes reach. |
 | **PERFORMANCE** | | | | | | | | |

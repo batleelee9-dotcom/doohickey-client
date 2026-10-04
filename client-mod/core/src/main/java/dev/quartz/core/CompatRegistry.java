@@ -113,6 +113,7 @@ public final class CompatRegistry {
 		row(Feature.AUTO_TOOL, "YYYYYYY", "Switches hotbar slots for you; forbidden on many PvP servers.");
 		row(Feature.RAW_INPUT, "PYYYYYY", "1.8.9 (LWJGL 2) needs a separate raw-input library.");
 		row(Feature.ZOOM, "YYYYYYY", null);
+		row(Feature.ASPECT_RATIO, "YYYYYYY", "Stretches the 3D view only; the HUD and menus keep their shape.");
 		row(Feature.FREELOOK, "YYYYYYY", "Some servers (e.g. Hypixel) ask clients to disable it.");
 		row(Feature.PING_REACH_DISPLAY, "YYYYYYY", "Display only; never changes reach.");
 
@@ -159,7 +160,7 @@ public final class CompatRegistry {
 			Feature.HUD_ARMOR, Feature.HUD_POTIONS, Feature.HUD_REACH, Feature.HUD_MEMORY, Feature.HUD_CLOCK, Feature.HUD_SERVER_IP,
 			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
-			Feature.CUSTOM_CROSSHAIR, Feature.ZOOM, Feature.HITBOXES,
+			Feature.CUSTOM_CROSSHAIR, Feature.ZOOM, Feature.ASPECT_RATIO, Feature.HITBOXES,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.ACCOUNT_SWITCHER);
 		implemented(McVersion.V26_3,
@@ -170,7 +171,7 @@ public final class CompatRegistry {
 			Feature.HUD_ARMOR, Feature.HUD_POTIONS, Feature.HUD_REACH, Feature.HUD_MEMORY, Feature.HUD_CLOCK, Feature.HUD_SERVER_IP,
 			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
-			Feature.ZOOM, Feature.HITBOXES,
+			Feature.ZOOM, Feature.ASPECT_RATIO, Feature.HITBOXES,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.TOGGLE_SPRINT_SNEAK, Feature.HIT_COLOR, Feature.CAPES, Feature.WEARABLES, Feature.MINIMAP_WAYPOINTS,
 			Feature.ACCOUNT_SWITCHER);

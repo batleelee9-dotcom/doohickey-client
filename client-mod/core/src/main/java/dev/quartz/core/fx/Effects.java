@@ -2,6 +2,7 @@ package dev.quartz.core.fx;
 
 import dev.quartz.core.Feature;
 import dev.quartz.core.Quartz;
+import dev.quartz.core.Safe;
 import dev.quartz.core.VersionAdapter;
 import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.hud.PlayerStats;
@@ -19,10 +20,10 @@ public final class Effects {
 	public static final String[] TRAIL_NAMES = {"Hearts", "Flames", "Notes", "Magic", "Clouds", "Portal", "Sparkle", "Smoke"};
 	public static final String[] KILL_EFFECTS = {"burst", "hearts", "flames", "lava", "firework"};
 	public static final String[] KILL_EFFECT_NAMES = {"Burst", "Hearts", "Flames", "Lava", "Firework"};
-	public static final String[] SOUNDS = {"ding", "pling", "bell", "click", "bass", "xp"};
-	public static final String[] SOUND_NAMES = {"Ding", "Pling", "Bell", "Click", "Bass", "Experience"};
-	public static final String[] KILL_SOUNDS = {"levelup", "firework", "ding", "anvil", "pling"};
-	public static final String[] KILL_SOUND_NAMES = {"Level up", "Firework", "Ding", "Anvil", "Pling"};
+	public static final String[] SOUNDS = {"custom", "ding", "pling", "bell", "click", "bass", "xp"};
+	public static final String[] SOUND_NAMES = {"Custom", "Ding", "Pling", "Bell", "Click", "Bass", "Experience"};
+	public static final String[] KILL_SOUNDS = {"custom", "levelup", "firework", "ding", "anvil", "pling"};
+	public static final String[] KILL_SOUND_NAMES = {"Custom", "Level up", "Firework", "Ding", "Anvil", "Pling"};
 
 	private static final long KILL_WINDOW_MS = 3000;
 
@@ -55,7 +56,7 @@ public final class Effects {
 		}
 		if (s.hitSounds && Quartz.available(Feature.HIT_SOUNDS)) {
 			// A touch of pitch variety keeps fast hits from sounding mechanical.
-			a.playSound(s.hitSound, s.hitVolume / 100f, 0.95f + (float) Math.random() * 0.1f);
+			sound(a, s.hitSound, s.hitVolume / 100f, 0.95f + (float) Math.random() * 0.1f);
 		}
 	}
 
@@ -81,6 +82,14 @@ public final class Effects {
 				kill(a, s, box);
 				lastTarget = null;
 			}
+		}
+
+		// Load the jar's own sounds ahead of the first hit.
+		if (s.hitSounds && EmbeddedSounds.has(s.hitSound)) {
+			EmbeddedSounds.warm(s.hitSound);
+		}
+		if (s.killSounds && EmbeddedSounds.has(s.killSound)) {
+			EmbeddedSounds.warm(s.killSound);
 		}
 
 		if (s.trail && Quartz.available(Feature.TRAILS) && PlayerStats.speed() > 1.0 && ticks % 2 == 0) {
@@ -119,12 +128,24 @@ public final class Effects {
 			}
 		}
 		if (s.killSounds && Quartz.available(Feature.HIT_SOUNDS)) {
-			a.playSound(s.killSound, 0.9f, 1f);
+			sound(a, s.killSound, 0.9f, 1f);
 		}
 	}
 
 	/** Plays a sound once from the menu, so picking one lets you hear it. */
 	public static void preview(String sound, float volume) {
-		Quartz.adapter().playSound(sound, volume, 1f);
+		sound(Quartz.adapter(), sound, volume, 1f);
+	}
+
+	/**
+	 * Embedded sounds play as recorded (no pitch variety) through Java audio at
+	 * the game's volume; game sounds go through the version's sound engine.
+	 */
+	private static void sound(VersionAdapter a, String name, float volume, float pitch) {
+		if (!EmbeddedSounds.has(name)) {
+			a.playSound(name, volume, pitch);
+		} else if (!Safe.test("sound.embedded", () -> EmbeddedSounds.play(name, volume * a.soundVolume()), false)) {
+			a.playSound("ding", volume, pitch);
+		}
 	}
 }

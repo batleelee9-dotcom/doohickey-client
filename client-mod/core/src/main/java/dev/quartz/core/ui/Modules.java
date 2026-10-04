@@ -7,6 +7,7 @@ import dev.quartz.core.fx.EffectSettings;
 import dev.quartz.core.fx.Effects;
 import dev.quartz.core.hud.Hud;
 import dev.quartz.core.hud.HudElement;
+import dev.quartz.core.pvp.AspectRatio;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,6 +106,8 @@ public final class Modules {
 				add(out, new Module("Hitboxes", "Show entity hitboxes", Feature.HITBOXES, GameOptions.hitboxes()));
 				break;
 			case VISUAL:
+				add(out, Module.of(Option.choice(Feature.ASPECT_RATIO, "Aspect ratio", list(AspectRatio.IDS), list(AspectRatio.NAMES),
+					() -> c().aspectRatio, v -> c().aspectRatio = v), "Stretch the view, like 4:3 stretched"));
 				add(out, new Module("Hit effects", "Particles where your hits land", Feature.HIT_EFFECTS,
 					Option.toggle(Feature.HIT_EFFECTS, "Hit effects", () -> fx().hitEffects, v -> fx().hitEffects = v),
 					Option.choice(Feature.HIT_EFFECTS, "Effect", list(Effects.HIT_STYLES), list(Effects.HIT_STYLE_NAMES), () -> fx().hitEffect, v -> fx().hitEffect = v),

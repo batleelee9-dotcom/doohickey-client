@@ -16,7 +16,7 @@ public final class EffectSettings {
 	public String killEffect = "burst";
 
 	public boolean hitSounds = false;
-	public String hitSound = "ding";
+	public String hitSound = "custom";
 	public int hitVolume = 70;
 
 	public boolean killSounds = false;

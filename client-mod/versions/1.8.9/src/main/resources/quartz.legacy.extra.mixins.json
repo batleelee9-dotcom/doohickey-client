@@ -3,6 +3,7 @@
 	"package": "dev.quartz.legacy.mixin.extra",
 	"compatibilityLevel": "JAVA_8",
 	"client": [
+		"AspectRatioMixin",
 		"CrosshairMixin",
 		"HurtCameraMixin",
 		"ZoomMixin"

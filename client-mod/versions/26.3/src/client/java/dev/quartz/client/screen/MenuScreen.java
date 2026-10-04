@@ -55,9 +55,19 @@ public final class MenuScreen extends Screen implements ClientMenu.Host {
 
 	@Override
 	public boolean mouseScrolled(double x, double y, double scrollX, double scrollY) {
-		if (scrollY != 0) {
-			menu.scroll(scrollY < 0 ? 1 : -1);
-		}
+		// Fractional on trackpads; the menu eases either way.
+		menu.scroll(-scrollY);
+		return true;
+	}
+
+	@Override
+	public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
+		return menu.drag((int) event.x(), (int) event.y());
+	}
+
+	@Override
+	public boolean mouseReleased(MouseButtonEvent event) {
+		menu.release();
 		return true;
 	}
 

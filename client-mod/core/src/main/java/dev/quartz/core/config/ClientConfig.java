@@ -80,6 +80,8 @@ public final class ClientConfig {
 	public boolean zoomEnabled = true;
 	public float zoomFactor = 4.0f;
 	public boolean zoomSmooth = true;
+	/** Stretched view: "native" or a preset like "4:3" (see AspectRatio). */
+	public String aspectRatio = "native";
 
 	// Map
 	public int minimapZoom = 1;

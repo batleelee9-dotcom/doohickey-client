@@ -135,6 +135,12 @@ public final class CoreTest {
 		Files.createDirectories(dir);
 		int mx = 200, my = 120;
 		image.shot(menu, mx, my, dir.resolve("menu-hud.png"));
+		menu.scroll(2.5);
+		Thread.sleep(120);
+		image.shot(menu, mx, my, dir.resolve("menu-scrolled.png"));
+		menu.scroll(-10);
+		Thread.sleep(120);
+		image.shot(menu, mx, my, dir.resolve("menu-hud.png"));
 		// Sidebar items start at panel top + 46, 25 apart; Visual is the third.
 		int pw = Math.min(480, 480 - 20), ph = Math.min(268, 270 - 20);
 		int px = (480 - pw) / 2, py = (270 - ph) / 2;
@@ -200,6 +206,8 @@ public final class CoreTest {
 		public void translate(float x, float y) { g.translate(x, y); }
 		public void scale(float factor) { g.scale(factor, factor); }
 		public void item(Object stack, int x, int y) { }
+		public void clip(int x0, int y0, int x1, int y1) { g.setClip(x0, y0, x1 - x0, y1 - y0); }
+		public void unclip() { g.setClip(null); }
 		final java.util.Map<String, Integer> keys = new java.util.HashMap<>();
 		final java.util.List<java.awt.image.BufferedImage> images = new java.util.ArrayList<>();
 		public float guiScale() { return s; }
@@ -400,10 +408,28 @@ public final class CoreTest {
 		check(adapter.soundLog.contains("heartbeat"), "low health plays a heartbeat");
 		adapter.health = 1f;
 
+		System.out.println("embedded sounds");
+		try (java.io.InputStream in = dev.quartz.core.fx.EmbeddedSounds.class.getResourceAsStream("/assets/quartz/sounds/custom.wav")) {
+			check(in != null, "the custom hit sound ships inside the jar");
+			javax.sound.sampled.AudioInputStream audio = javax.sound.sampled.AudioSystem.getAudioInputStream(new java.io.BufferedInputStream(in));
+			float ms = audio.getFrameLength() * 1000f / audio.getFormat().getFrameRate();
+			check(ms > 300 && ms < 500, "and decodes as a short clip (" + Math.round(ms) + " ms)");
+		}
+		check(new dev.quartz.core.fx.EffectSettings().hitSound.equals("custom") && dev.quartz.core.fx.EmbeddedSounds.has("custom"), "Custom is the default hit sound");
+
+		System.out.println("aspect ratio");
+		check(dev.quartz.core.pvp.AspectRatio.apply(16 / 9f) == 16 / 9f, "native by default");
+		ClientConfig.get().aspectRatio = "4:3";
+		check(Math.abs(dev.quartz.core.pvp.AspectRatio.apply(16 / 9f) - 4 / 3f) < 1e-6, "4:3 draws the world at 4:3");
+		check(Math.abs(dev.quartz.core.pvp.AspectRatio.width(1920, 1080) - 1440) < 0.01, "a 1080p window renders 1440 wide, then stretches");
+		ClientConfig.get().aspectRatio = "nonsense";
+		check(dev.quartz.core.pvp.AspectRatio.width(1920, 1080) == 1920, "unknown values fall back to native");
+		ClientConfig.get().aspectRatio = "native";
+
 		System.out.println("menu modules");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 21, "21 HUD modules on 1.8.9 (20 elements + style)");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.SOUND).size() == 3, "3 sound modules");
-		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 11, "11 visual modules on 1.8.9");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 12, "12 visual modules on 1.8.9");
 		dev.quartz.core.ui.ClientMenu smoke = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {
 			public void close() { }
 			public void openHudEditor() { }
@@ -411,6 +437,12 @@ public final class CoreTest {
 		for (int i = 0; i < 3; i++) {
 			smoke.render(adapter.backend, 200, 120);
 		}
+		smoke.scroll(2.5);
+		smoke.click(384, 140);
+		check(smoke.drag(384, 180), "the scrollbar can be grabbed and dragged");
+		smoke.release();
+		check(!smoke.drag(384, 120), "and lets go on release");
+		smoke.render(adapter.backend, 200, 120);
 		check(true, "the menu draws on a backend without image support (plain fallback)");
 
 		System.out.println("world controls");

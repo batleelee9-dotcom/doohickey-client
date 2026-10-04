@@ -23,6 +23,7 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -347,6 +348,11 @@ public final class ModernAdapter implements VersionAdapter {
 			case "heartbeat" -> SoundEvents.NOTE_BLOCK_BASEDRUM.value();
 			default -> SoundEvents.EXPERIENCE_ORB_PICKUP;
 		};
+	}
+
+	@Override
+	public float soundVolume() {
+		return Minecraft.getInstance().options.getFinalSoundSourceVolume(SoundSource.PLAYERS);
 	}
 
 	@Override
