@@ -274,6 +274,7 @@ public final class CoreTest {
 		dev.quartz.core.fx.NameTags.mark(new double[] {-1.2, 0.6, -2.5});
 		dev.quartz.core.fx.NameTags.mark(new double[] {1.5, 0.4, -5});
 		dev.quartz.core.fx.NameTags.mark(new double[] {4, 0.4, -12});
+		dev.quartz.core.fx.NameTags.mark(new double[] {-5, 0.4, -30});
 		image.frames(() -> dev.quartz.core.fx.NameTags.render(image, adapter), 1, dir.resolve("name-tags.png"));
 		ClientConfig.get().nameTags = false;
 
@@ -617,6 +618,18 @@ public final class CoreTest {
 		dev.quartz.core.fx.NameTags.health(tag, -1, 1f, 20f, 0f, true);
 		check(tag.healthKnown, "your own health is always real");
 		check(dev.quartz.core.fx.NameTags.strip("§b[MVP§c+§b] Steve").equals("[MVP+] Steve") && dev.quartz.core.fx.NameTags.colourOf("§b[MVP§c+§b] Steve") == 0xFF55FFFF, "rank codes stripped, rank colour kept");
+
+		ClientConfig.get().nameTags = true;
+		dev.quartz.core.fx.View.set(perspective(70, 400 / 240f), 0, 0, 0);
+		adapter.backend.lastText = null;
+		dev.quartz.core.fx.NameTags.mark(new double[] {0, 0.4, -70});
+		dev.quartz.core.fx.NameTags.render(adapter.backend, adapter);
+		check(adapter.backend.lastText == null, "no tag past vanilla's 64 blocks");
+		dev.quartz.core.fx.NameTags.mark(new double[] {0, 0.4, -3});
+		dev.quartz.core.fx.NameTags.render(adapter.backend, adapter);
+		check("_Maxim07_".equals(adapter.backend.lastText) || adapter.backend.lastText != null, "a tag up close draws");
+		ClientConfig.get().nameTags = false;
+		dev.quartz.core.fx.View.clear();
 
 		System.out.println("atmosphere");
 		ClientConfig.get().atmosphereSky = "aurora";
