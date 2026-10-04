@@ -18,7 +18,7 @@ import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.util.Mth;
 
-/** Draws the selected hat, bandana and wings on your own player. */
+/** Draws the rice hat on players, and the selected hat, bandana and wings on your own. */
 public final class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerModel> {
 	private static final int FULL_BRIGHT = 15728880;
 
@@ -29,29 +29,42 @@ public final class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerM
 	@Override
 	public void submit(PoseStack poseStack, SubmitNodeCollector collector, int light, AvatarRenderState state, float yRot, float xRot) {
 		Minecraft mc = Minecraft.getInstance();
-		if (state.isInvisible || mc.player == null || state.id != mc.player.getId()) {
+		if (state.isInvisible || mc.player == null) {
+			return;
+		}
+		boolean you = state.id == mc.player.getId();
+		PlayerModel model = this.getParentModel();
+		boolean headFree = state.headEquipment.isEmpty() && state.headItem.isEmpty() && state.wornHeadType == null;
+
+		// The rice hat goes on whoever the setting says; over a helmet it sits higher.
+		boolean riceHat = RiceHat.enabled() && RiceHat.shows(you);
+		if (riceHat) {
+			poseStack.pushPose();
+			model.root().translateAndRotate(poseStack);
+			model.head.translateAndRotate(poseStack);
+			collector.submitCustomGeometry(poseStack, RenderTypes.debugQuads(), headFree ? CosmeticsLayer::riceHat : CosmeticsLayer::riceHatLifted);
+			poseStack.popPose();
+		}
+
+		// Everything else is yours only.
+		if (!you) {
 			return;
 		}
 		ClientConfig c = ClientConfig.get();
 		int overlay = LivingEntityRenderer.getOverlayCoords(state, 0.0f);
-		PlayerModel model = this.getParentModel();
 
 		// Helmets, skulls and pumpkins win over hats — no clipping through them.
-		boolean headFree = state.headEquipment.isEmpty() && state.headItem.isEmpty() && state.wornHeadType == null;
-		String hat = Cosmetics.selected(Cosmetics.HATS, c.hat);
+		// The rice hat takes the place of any other hat.
+		String hat = riceHat ? null : Cosmetics.selected(Cosmetics.HATS, c.hat);
 		String bandana = Cosmetics.selected(Cosmetics.BANDANAS, c.bandana);
-		boolean riceHat = RiceHat.enabled();
-		if (headFree && (hat != null || bandana != null || riceHat)) {
+		if (headFree && (hat != null || bandana != null)) {
 			poseStack.pushPose();
 			model.root().translateAndRotate(poseStack);
 			model.head.translateAndRotate(poseStack);
 			if (bandana != null) {
 				submit(collector, CosmeticModels.BANDANA, poseStack, RenderTypes.entityCutoutCull(Cosmetics.texture("bandana", bandana)), light, overlay, state);
 			}
-			if (riceHat) {
-				// Takes the place of any other hat.
-				collector.submitCustomGeometry(poseStack, RenderTypes.debugQuads(), CosmeticsLayer::riceHat);
-			} else if (hat != null) {
+			if (hat != null) {
 				switch (hat) {
 					case "tophat" -> submit(collector, CosmeticModels.TOP_HAT, poseStack, RenderTypes.entityCutoutCull(Cosmetics.texture("hat", hat)), light, overlay, state);
 					case "crown" -> submit(collector, CosmeticModels.CROWN, poseStack, RenderTypes.entityCutoutCull(Cosmetics.texture("hat", hat)), light, overlay, state);
@@ -90,15 +103,23 @@ public final class CosmeticsLayer extends RenderLayer<AvatarRenderState, PlayerM
 		}
 	}
 
-	/** The cone, as quads (each triangle's last corner doubled), in blocks from the head pivot. */
 	private static void riceHat(PoseStack.Pose pose, VertexConsumer consumer) {
+		riceHat(pose, consumer, 0f);
+	}
+
+	private static void riceHatLifted(PoseStack.Pose pose, VertexConsumer consumer) {
+		riceHat(pose, consumer, RiceHat.HELMET_LIFT);
+	}
+
+	/** The hat, as quads (each triangle's last corner doubled), in blocks from the head pivot. */
+	private static void riceHat(PoseStack.Pose pose, VertexConsumer consumer, float lift) {
 		int[] corner = {0};
 		RiceHat.build((x, y, z, argb) -> {
 			consumer.addVertex(pose, x / 16f, y / 16f, z / 16f).setColor(argb);
 			if (++corner[0] % 3 == 0) {
 				consumer.addVertex(pose, x / 16f, y / 16f, z / 16f).setColor(argb);
 			}
-		}, (System.currentTimeMillis() % 1_000_000L) / 1000f);
+		}, (System.currentTimeMillis() % 1_000_000L) / 1000f, lift);
 	}
 
 	private static void submit(SubmitNodeCollector collector, ModelPart part, PoseStack poseStack, RenderType type, int light, int overlay, AvatarRenderState state) {

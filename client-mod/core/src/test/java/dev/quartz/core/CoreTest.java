@@ -123,6 +123,47 @@ public final class CoreTest {
 		public void switchSession(LauncherBridge.Session session) { }
 	}
 
+	/** Draws a skin-coloured head wearing the rice hat into a 480×360 cell, painter-sorted. */
+	static void hatView(java.awt.Graphics2D g, int left, double tiltDegrees, double yawDegrees) {
+		dev.quartz.core.fx.View.set(perspective(50, 480 / 360f), 0, 0, 0);
+		double tilt = Math.toRadians(tiltDegrees), yaw = Math.toRadians(yawDegrees);
+		java.util.List<double[]> tris = new java.util.ArrayList<>();
+		dev.quartz.core.fx.RiceHat.Sink sink = new dev.quartz.core.fx.RiceHat.Sink() {
+			final double[] t = new double[12];
+			int n;
+			public void vertex(float x, float y, float z, int argb) {
+				double bx = x / 16.0, by = -y / 16.0, bz = z / 16.0;
+				double x1 = bx * Math.cos(yaw) - bz * Math.sin(yaw), z1 = bx * Math.sin(yaw) + bz * Math.cos(yaw);
+				double y2 = by * Math.cos(tilt) - z1 * Math.sin(tilt), z2 = by * Math.sin(tilt) + z1 * Math.cos(tilt);
+				t[n * 3] = x1; t[n * 3 + 1] = y2 - 0.3; t[n * 3 + 2] = z2 - 2.0;
+				if (++n == 3) { double[] c = java.util.Arrays.copyOf(t, 10); c[9] = argb; tris.add(c); n = 0; }
+			}
+		};
+		dev.quartz.core.fx.RiceHat.build(sink, 1.5f, 0);
+		float[][] cube = {{-4,-8,-4},{4,-8,-4},{4,0,-4},{-4,0,-4},{-4,-8,4},{4,-8,4},{4,0,4},{-4,0,4}};
+		int[][] faces = {{0,1,2,3},{4,5,6,7},{0,4,7,3},{1,5,6,2},{0,1,5,4},{3,2,6,7}};
+		for (int[] fc : faces) {
+			for (int[] tr : new int[][] {{fc[0], fc[1], fc[2]}, {fc[0], fc[2], fc[3]}}) {
+				for (int i : tr) sink.vertex(cube[i][0], cube[i][1], cube[i][2], 0xFFC69C6D);
+			}
+		}
+		tris.sort((a, b) -> Double.compare(a[2] + a[5] + a[8], b[2] + b[5] + b[8]));
+		float[] q = new float[4];
+		for (double[] t : tris) {
+			java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+			boolean ok = true;
+			for (int i = 0; i < 3; i++) {
+				ok &= dev.quartz.core.fx.View.project(t[i * 3], t[i * 3 + 1], t[i * 3 + 2], 480, 360, q);
+				if (i == 0) path.moveTo(left + q[0], q[1]); else path.lineTo(left + q[0], q[1]);
+			}
+			if (!ok) continue;
+			path.closePath();
+			g.setColor(new java.awt.Color((int) t[9], true));
+			g.fill(path);
+			g.draw(path);
+		}
+	}
+
 	/** An OpenGL perspective projection (camera looking down -Z), column-major. */
 	static float[] perspective(float fovDegrees, float aspect) {
 		float f = (float) (1 / Math.tan(Math.toRadians(fovDegrees) / 2));
@@ -177,44 +218,15 @@ public final class CoreTest {
 		}
 		image.frames(() -> dev.quartz.core.fx.Sprites.render(image), 6, dir.resolve("hit-particles.png"));
 		dev.quartz.core.fx.Sprites.clear();
-		// The rice hat on a stand-in head, seen from slightly above and to the side.
+		// The rice hat on a stand-in head, from above and from below.
 		ClientConfig.get().riceHatColor = 0;
-		java.awt.image.BufferedImage hat = new java.awt.image.BufferedImage(480, 300, java.awt.image.BufferedImage.TYPE_INT_RGB);
+		java.awt.image.BufferedImage hat = new java.awt.image.BufferedImage(960, 360, java.awt.image.BufferedImage.TYPE_INT_RGB);
 		java.awt.Graphics2D hg = hat.createGraphics();
 		hg.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
 		hg.setColor(new java.awt.Color(0x7FA9FF));
-		hg.fillRect(0, 0, 480, 300);
-		dev.quartz.core.fx.View.set(perspective(50, 480 / 300f), 0, 0, 0);
-		float[] q = new float[4];
-		// Model pixels to world: head pivot 1.6 blocks ahead, tilted so we see the top.
-		java.util.function.BiFunction<float[], float[], Boolean> at = (v, out) -> {
-			double tilt = Math.toRadians(25), yaw = Math.toRadians(30);
-			double x = v[0] / 16, y = -v[1] / 16, z = v[2] / 16;
-			double x1 = x * Math.cos(yaw) - z * Math.sin(yaw), z1 = x * Math.sin(yaw) + z * Math.cos(yaw);
-			double y2 = y * Math.cos(tilt) - z1 * Math.sin(tilt), z2 = y * Math.sin(tilt) + z1 * Math.cos(tilt);
-			return dev.quartz.core.fx.View.project(x1, y2 - 0.25, z2 - 2.2, 480, 300, out);
-		};
-		float[][] cube = {{-4,-8,-4},{4,-8,-4},{4,0,-4},{-4,0,-4},{-4,-8,4},{4,-8,4},{4,0,4},{-4,0,4}};
-		int[][] faces = {{0,1,2,3},{4,5,6,7},{0,4,7,3},{1,5,6,2},{0,1,5,4}};
-		hg.setColor(new java.awt.Color(0xC69C6D));
-		for (int[] face : faces) {
-			java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
-			for (int i = 0; i < 4; i++) { at.apply(cube[face[i]], q); if (i == 0) path.moveTo(q[0], q[1]); else path.lineTo(q[0], q[1]); }
-			path.closePath();
-			hg.fill(path);
-			hg.setColor(new java.awt.Color(0x8B6A47));
-			hg.draw(path);
-			hg.setColor(new java.awt.Color(0xC69C6D));
-		}
-		java.util.List<float[]> tri = new java.util.ArrayList<>();
-		dev.quartz.core.fx.RiceHat.build((x, y, z, argb) -> tri.add(new float[] {x, y, z, Float.intBitsToFloat(argb)}), 1.5f);
-		for (int t = 0; t < tri.size(); t += 3) {
-			java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
-			for (int i = 0; i < 3; i++) { float[] v = tri.get(t + i); at.apply(v, q); if (i == 0) path.moveTo(q[0], q[1]); else path.lineTo(q[0], q[1]); }
-			path.closePath();
-			hg.setColor(new java.awt.Color(Float.floatToRawIntBits(tri.get(t + 1)[3]), true));
-			hg.fill(path);
-		}
+		hg.fillRect(0, 0, 960, 360);
+		hatView(hg, 0, 25, 30);
+		hatView(hg, 480, -18, 120);
 		javax.imageio.ImageIO.write(hat, "png", dir.resolve("rice-hat.png").toFile());
 		dev.quartz.core.fx.View.clear();
 		System.out.println("menu previews written to " + dir);
@@ -539,7 +551,7 @@ public final class CoreTest {
 		check(!dev.quartz.core.fx.RiceHat.enabled(), "off by default");
 		int[] vertices = {0};
 		float[] apexY = {0};
-		dev.quartz.core.fx.RiceHat.build((x, y, z, argb) -> { vertices[0]++; apexY[0] = Math.min(apexY[0], y); }, 0);
+		dev.quartz.core.fx.RiceHat.build((x, y, z, argb) -> { vertices[0]++; apexY[0] = Math.min(apexY[0], y); }, 0, 0);
 		check(vertices[0] % 3 == 0 && vertices[0] >= 90 && apexY[0] < -12, "a cone of triangles above the head");
 
 		System.out.println("performance presets");

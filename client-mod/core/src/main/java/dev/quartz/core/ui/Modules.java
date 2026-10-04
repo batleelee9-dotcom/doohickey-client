@@ -73,6 +73,7 @@ public final class Modules {
 	private static final List<String> AMOUNT_NAMES = Arrays.asList("1x", "2x", "3x", "4x", "5x");
 	private static final List<Integer> VOLUMES = Arrays.asList(30, 50, 70, 100);
 	private static final List<Integer> HAT_COLOURS = java.util.stream.IntStream.of(RiceHat.COLOURS).boxed().collect(java.util.stream.Collectors.toList());
+	private static final List<Integer> HAT_WHO = Arrays.asList(RiceHat.EVERYONE, RiceHat.YOU, RiceHat.OTHERS);
 	private static final List<Integer> BLOCK_ENTITY_DISTANCES = Arrays.asList(0, 16, 24, 32, 48);
 	private static final List<String> BLOCK_ENTITY_DISTANCE_NAMES = Arrays.asList("Vanilla", "16", "24", "32", "48");
 	private static final List<String> VOLUME_NAMES = Arrays.asList("Quiet", "Medium", "Loud", "Full");
@@ -112,9 +113,10 @@ public final class Modules {
 			case VISUAL:
 				add(out, Module.of(Option.choice(Feature.ASPECT_RATIO, "Aspect ratio", list(AspectRatio.IDS), list(AspectRatio.NAMES),
 					() -> c().aspectRatio, v -> c().aspectRatio = v), "Stretch the view, like 4:3 stretched"));
-				add(out, new Module("Rice hat", "A wide cone hat (only you see it)", Feature.RICE_HAT,
+				add(out, new Module("Rice hat", "A 3D cone hat on you or everyone", Feature.RICE_HAT,
 					Option.toggle(Feature.RICE_HAT, "Rice hat", () -> c().riceHat, v -> c().riceHat = v),
-					Option.choice(Feature.RICE_HAT, "Colour", HAT_COLOURS, list(RiceHat.COLOUR_NAMES), () -> c().riceHatColor, v -> c().riceHatColor = v)));
+					Option.choice(Feature.RICE_HAT, "Colour", HAT_COLOURS, list(RiceHat.COLOUR_NAMES), () -> c().riceHatColor, v -> c().riceHatColor = v),
+					Option.choice(Feature.RICE_HAT, "Shows on", HAT_WHO, list(RiceHat.WHO_NAMES), () -> c().riceHatWho, v -> c().riceHatWho = v)));
 				add(out, new Module("Hit effects", "Particles where your hits land", Feature.HIT_EFFECTS,
 					Option.toggle(Feature.HIT_EFFECTS, "Hit effects", () -> fx().hitEffects, v -> fx().hitEffects = v),
 					Option.choice(Feature.HIT_EFFECTS, "Effect", list(Effects.HIT_STYLES), list(Effects.HIT_STYLE_NAMES), () -> fx().hitEffect, v -> fx().hitEffect = v),

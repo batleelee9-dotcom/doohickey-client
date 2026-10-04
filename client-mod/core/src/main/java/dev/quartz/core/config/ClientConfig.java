@@ -96,6 +96,8 @@ public final class ClientConfig {
 	public boolean riceHat = false;
 	/** RiceHat.COLOURS; 0 is rainbow. */
 	public int riceHatColor = 0;
+	/** RiceHat.EVERYONE, YOU or OTHERS. */
+	public int riceHatWho = 0;
 
 	// World: sky, fog, weather, time
 	public EnvironmentSettings environment = new EnvironmentSettings();

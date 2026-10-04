@@ -12,7 +12,7 @@ import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import org.lwjgl.opengl.GL11;
 
-/** The rice hat on your own player (third person and the inventory). */
+/** The rice hat on players (yours in third person and the inventory, others when set to). */
 public final class RiceHatFeature implements FeatureRenderer<AbstractClientPlayerEntity> {
 	private static final RiceHat.Sink SINK = (x, y, z, argb) -> Tessellator.getInstance().getBuffer()
 		.vertex(x, y, z).color(argb >> 16 & 255, argb >> 8 & 255, argb & 255, argb >>> 24).next();
@@ -25,10 +25,11 @@ public final class RiceHatFeature implements FeatureRenderer<AbstractClientPlaye
 
 	@Override
 	public void render(AbstractClientPlayerEntity player, float handSwing, float handSwingAmount, float tickDelta, float age, float headYaw, float headPitch, float scale) {
-		// Yours only; a helmet wins (no clipping through it).
-		if (player != MinecraftClient.getInstance().player || player.isInvisible() || player.getArmorSlot(3) != null || !RiceHat.enabled()) {
+		if (player.isInvisible() || !RiceHat.enabled() || !RiceHat.shows(player == MinecraftClient.getInstance().player)) {
 			return;
 		}
+		// Over a helmet or skull it sits a little higher instead of clipping.
+		float lift = player.getArmorSlot(3) != null ? RiceHat.HELMET_LIFT : 0f;
 		GlStateManager.pushMatrix();
 		if (player.isSneaking()) {
 			GlStateManager.translate(0.0F, 0.2F, 0.0F);
@@ -38,16 +39,19 @@ public final class RiceHatFeature implements FeatureRenderer<AbstractClientPlaye
 		GlStateManager.disableTexture();
 		GlStateManager.disableLighting();
 		GlStateManager.disableCull();
+		// Blend the baked shading across each face (entities draw flat-shaded).
+		GlStateManager.shadeModel(GL11.GL_SMOOTH);
 		GlStateManager.enableBlend();
 		GlStateManager.blendFuncSeparate(770, 771, 1, 0);
 		try {
 			BufferBuilder buffer = Tessellator.getInstance().getBuffer();
 			buffer.begin(GL11.GL_TRIANGLES, VertexFormats.POSITION_COLOR);
-			RiceHat.build(SINK, (System.currentTimeMillis() % 1_000_000L) / 1000f);
+			RiceHat.build(SINK, (System.currentTimeMillis() % 1_000_000L) / 1000f, lift);
 			Tessellator.getInstance().draw();
 		} catch (Throwable t) {
 			Safe.report("ricehat", t);
 		}
+		GlStateManager.shadeModel(GL11.GL_FLAT);
 		GlStateManager.disableBlend();
 		GlStateManager.enableCull();
 		GlStateManager.enableLighting();
