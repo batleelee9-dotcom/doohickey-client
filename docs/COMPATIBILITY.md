@@ -32,7 +32,7 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Item physics / 2D items | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Chunk borders | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Light level overlay | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
-| TNT countdown | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | A timer over lit TNT within 24 blocks, from its own fuse. |
+| TNT countdown | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | A timer over lit TNT within 24 blocks. 1.8.9 servers don't send the fuse, so its length is a setting there (3.5s by default). |
 | Low fire and no pumpkin blur | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | **HUD** | | | | | | | | |
 | Draggable HUD editor | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |

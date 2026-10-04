@@ -216,14 +216,21 @@ pub async fn launch(
         }
     }
 
+    #[cfg(windows)]
+    if settings.high_performance_gpu {
+        prefer_dedicated_gpu(&prepared.java).await;
+    }
+
     let mut cmd = tokio::process::Command::new(&prepared.java);
     cmd.args(&args)
         .current_dir(&game_dir)
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped());
+    // No console window, and above-normal priority: the game gets the CPU
+    // first when other programs are busy (not "high", which can starve audio and input).
     #[cfg(windows)]
-    cmd.creation_flags(0x0800_0000); // CREATE_NO_WINDOW
+    cmd.creation_flags(0x0800_0000 | 0x0000_8000); // CREATE_NO_WINDOW | ABOVE_NORMAL_PRIORITY_CLASS
     let mut child = cmd
         .spawn()
         .map_err(|e| AppError::Invalid(format!("Couldn't start Java ({}): {e}", prepared.java.display())))?;
@@ -541,7 +548,7 @@ pub fn build_args(i: &ArgInputs) -> Vec<String> {
         out
     };
 
-    let mut args = presets::memory_flags(i.memory_mb);
+    let mut args = presets::memory_flags(i.memory_mb, i.preset);
     args.extend(presets::gc_flags(i.preset, p.java_major));
     args.extend(presets::split_args(i.extra_jvm_args));
     args.extend(i.system_props.iter().cloned());
@@ -613,6 +620,26 @@ fn maybe_argfile(args: Vec<String>, java_major: u32, game_dir: &Path) -> Result<
     std::fs::create_dir_all(path.parent().expect("has parent"))?;
     std::fs::write(&path, body.join("\n"))?;
     Ok(vec![format!("@{}", path.to_string_lossy())])
+}
+
+/// Asks Windows to run the game's Java on the high-performance GPU: laptops
+/// with integrated and dedicated graphics otherwise often pick the slow one.
+/// It's the same per-app choice as Settings › System › Display › Graphics,
+/// per user, and only made when there's no choice for this Java yet.
+#[cfg(windows)]
+async fn prefer_dedicated_gpu(java: &Path) {
+    const KEY: &str = r"HKCU\Software\Microsoft\DirectX\UserGpuPreferences";
+    let exe = java.to_string_lossy().into_owned();
+    let reg = |args: Vec<&str>| {
+        let mut c = tokio::process::Command::new("reg");
+        c.args(args).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+        c.creation_flags(0x0800_0000);
+        c
+    };
+    let chosen = reg(vec!["query", KEY, "/v", &exe]).status().await.map(|s| s.success()).unwrap_or(true);
+    if !chosen {
+        let _ = reg(vec!["add", KEY, "/v", &exe, "/t", "REG_SZ", "/d", "GpuPreference=2;", "/f"]).status().await;
+    }
 }
 
 #[cfg(test)]

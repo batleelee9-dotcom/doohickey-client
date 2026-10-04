@@ -55,6 +55,7 @@ export interface Settings {
   opacity: number;
   onLaunch: OnLaunch;
   discordRpc: boolean;
+  highPerformanceGpu: boolean;
   defaultMemoryMb: number;
   defaultJvmPreset: JvmPreset;
   selectedInstance: string | null;

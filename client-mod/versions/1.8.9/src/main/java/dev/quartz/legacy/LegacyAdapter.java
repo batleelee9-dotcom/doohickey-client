@@ -400,7 +400,8 @@ final class LegacyAdapter implements VersionAdapter {
 			double dy = y - View.camY();
 			double dz = z - View.camZ();
 			if (dx * dx + dy * dy + dz * dz <= r2) {
-				sink.tnt(x, y + 1.3, z, ((TntEntity) e).fuseTimer - pt);
+				// 1.8.9 servers don't send the fuse: the client always starts at 80 ticks.
+				sink.tnt(x, y + 1.3, z, TntTimers.assumedFuse(((TntEntity) e).fuseTimer - pt));
 			}
 		}
 	}

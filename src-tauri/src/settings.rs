@@ -57,7 +57,15 @@ pub struct Settings {
     pub manifest_url: Option<String>,
     /// Azure app (client) ID pasted on the sign-in screen; None uses the built-in one.
     pub ms_client_id: Option<String>,
+    /// Ask Windows to run the game on the dedicated GPU (laptops with two GPUs).
+    pub high_performance_gpu: bool,
+    /// Which defaults this file has been brought up to (0 = before they were tracked).
+    #[serde(default)]
+    pub defaults_version: u32,
 }
+
+/// Bumped when a default changes in a way existing settings should follow.
+const DEFAULTS_VERSION: u32 = 2;
 
 impl Default for Settings {
     fn default() -> Self {
@@ -69,12 +77,14 @@ impl Default for Settings {
             on_launch: OnLaunch::Close,
             discord_rpc: true,
             default_memory_mb: system::recommended_memory_mb(),
-            default_jvm_preset: JvmPreset::Balanced,
+            default_jvm_preset: JvmPreset::Performance,
             selected_instance: None,
             selected_build: None,
             selected_loader: None,
             manifest_url: option_env!("QUARTZ_MANIFEST_URL").map(str::to_owned),
             ms_client_id: None,
+            high_performance_gpu: true,
+            defaults_version: DEFAULTS_VERSION,
         }
     }
 }
@@ -86,7 +96,15 @@ pub struct SettingsStore {
 
 impl SettingsStore {
     pub fn load(path: PathBuf) -> Result<Self, AppError> {
-        let data = fsutil::read_json(&path)?.unwrap_or_default();
+        let mut data: Settings = fsutil::read_json(&path)?.unwrap_or_default();
+        if data.defaults_version < 2 {
+            // 0.2: the tuned Performance preset became the default. Follow it unless
+            // a different preset was picked on purpose.
+            if data.default_jvm_preset == JvmPreset::Balanced {
+                data.default_jvm_preset = JvmPreset::Performance;
+            }
+            data.defaults_version = DEFAULTS_VERSION;
+        }
         Ok(Self { path, data: Mutex::new(data) })
     }
 

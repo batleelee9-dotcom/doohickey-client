@@ -113,7 +113,7 @@ public final class CompatRegistry {
 		row(Feature.AUTO_TOOL, "YYYYYYY", "Switches hotbar slots for you; forbidden on many PvP servers.");
 		row(Feature.RAW_INPUT, "PYYYYYY", "1.8.9 (LWJGL 2) needs a separate raw-input library.");
 		row(Feature.ZOOM, "YYYYYYY", null);
-		row(Feature.TNT_COUNTDOWN, "YYYYYYY", "A timer over lit TNT within 24 blocks, from its own fuse.");
+		row(Feature.TNT_COUNTDOWN, "YYYYYYY", "A timer over lit TNT within 24 blocks. 1.8.9 servers don't send the fuse, so its length is a setting there (3.5s by default).");
 		row(Feature.CLEAN_VIEW, "YYYYYYY", null);
 		row(Feature.TAB_PING, "YYYYYYY", null);
 		row(Feature.SMOOTH_HOTBAR, "YYYYYYY", null);

@@ -218,6 +218,13 @@
           {#each PRESETS as p (p.id)}<option value={p.id}>{p.label}</option>{/each}
         </select>
       </div>
+      <div class="setting">
+        <div class="setting-text">
+          <div class="setting-title">Use the high-performance GPU</div>
+          <div class="setting-desc">On laptops with two GPUs, asks Windows to run the game on the fast one. Only set when you haven't picked one in Windows' Graphics settings.</div>
+        </div>
+        <button class="switch" aria-pressed={s.highPerformanceGpu} aria-label="Use the high-performance GPU" onclick={() => store.updateSettings({ highPerformanceGpu: !s.highPerformanceGpu })}></button>
+      </div>
     </div>
 
     <!-- Java -->

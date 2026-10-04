@@ -126,6 +126,8 @@ public final class ClientConfig {
 
 	// Quality of life
 	public boolean tntCountdown = true;
+	/** TNT fuse in tenths of a second, for versions that don't send it (1.8.9). */
+	public int tntFuse = 35;
 	public boolean tabPing = true;
 	public boolean smoothHotbar = true;
 	public boolean lowFire = false;

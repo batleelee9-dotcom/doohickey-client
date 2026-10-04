@@ -54,10 +54,12 @@ pub fn gc_flags(preset: JvmPreset, java_major: u32) -> Vec<String> {
     flags.into_iter().map(str::to_owned).collect()
 }
 
-/// Heap flags. The initial heap stays small so an idle game doesn't claim
-/// its whole maximum up front.
-pub fn memory_flags(max_mb: u32) -> Vec<String> {
-    vec![format!("-Xms{}m", max_mb.min(1024)), format!("-Xmx{max_mb}m")]
+/// Heap flags. Performance reserves the whole heap up front, so the game
+/// never stalls to grow it mid-fight; the others start small so an idle
+/// game doesn't claim its whole maximum.
+pub fn memory_flags(max_mb: u32, preset: JvmPreset) -> Vec<String> {
+    let initial = if preset == JvmPreset::Performance { max_mb } else { max_mb.min(1024) };
+    vec![format!("-Xms{initial}m"), format!("-Xmx{max_mb}m")]
 }
 
 /// Splits user-entered JVM arguments, honouring double quotes.
@@ -99,6 +101,12 @@ mod tests {
         assert_eq!(gc_flags(JvmPreset::LowLatency, 21), ["-XX:+UseZGC", "-XX:+ZGenerational"]);
         assert_eq!(gc_flags(JvmPreset::LowLatency, 25), ["-XX:+UseZGC"]);
         assert_eq!(gc_flags(JvmPreset::LowLatency, 8)[0], "-XX:+UseG1GC");
+    }
+
+    #[test]
+    fn performance_reserves_the_whole_heap() {
+        assert_eq!(memory_flags(4096, JvmPreset::Performance), ["-Xms4096m", "-Xmx4096m"]);
+        assert_eq!(memory_flags(4096, JvmPreset::Balanced), ["-Xms1024m", "-Xmx4096m"]);
     }
 
     #[test]

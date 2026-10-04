@@ -117,7 +117,9 @@ public final class Modules {
 				add(out, new Module("Toggle sneak", "Sneak without holding the key", Feature.TOGGLE_SPRINT_SNEAK, GameOptions.toggleSneak()));
 				add(out, new Module("Hitboxes", "Show entity hitboxes", Feature.HITBOXES, GameOptions.hitboxes()));
 				add(out, new Module("TNT countdown", "A timer over lit TNT so you know when it blows", Feature.TNT_COUNTDOWN,
-					Option.toggle(Feature.TNT_COUNTDOWN, "TNT countdown", () -> c().tntCountdown, v -> c().tntCountdown = v)));
+					Option.toggle(Feature.TNT_COUNTDOWN, "TNT countdown", () -> c().tntCountdown, v -> c().tntCountdown = v),
+					Option.choice(Feature.TNT_COUNTDOWN, "Fuse length", ints(25, 30, 35, 40, 50), Arrays.asList("2.5s", "3s", "3.5s", "4s", "5s"),
+						() -> c().tntFuse, v -> c().tntFuse = v)));
 				add(out, new Module("No speed FOV", "Sprinting and speed effects don't zoom your view", Feature.STATIC_FOV,
 					Option.toggle(Feature.STATIC_FOV, "No speed FOV", () -> c().staticFov, v -> c().staticFov = v)));
 				add(out, new Module("Mouse delay fix", "Your aim follows the crosshair the same tick (1.8 bug)", Feature.MOUSE_DELAY_FIX,

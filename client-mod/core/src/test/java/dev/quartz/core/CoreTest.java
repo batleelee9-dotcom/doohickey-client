@@ -636,6 +636,7 @@ public final class CoreTest {
 		check(slide < 0 && slide > -80, "switching slots glides from the old one (" + slide + " px)");
 		for (int i = 0; i < 40; i++) { Thread.sleep(5); dev.quartz.core.ui.SmoothHotbar.offset(6); }
 		check(dev.quartz.core.ui.SmoothHotbar.offset(6) == 0, "and settles on the new one");
+		check(dev.quartz.core.fx.TntTimers.assumedFuse(80) == 70, "a freshly lit TNT reads 3.5s on 1.8.9 (fuse not sent)");
 		check(dev.quartz.core.hud.TabPing.label(87).equals("87") && dev.quartz.core.hud.TabPing.colour(30) != dev.quartz.core.hud.TabPing.colour(400), "tab ping as coloured numbers");
 		dev.quartz.core.fx.View.set(perspective(70, 400 / 240f), 0, 0, 0);
 		dev.quartz.core.fx.TntTimers.render(adapter.backend, adapter);

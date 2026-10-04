@@ -27,6 +27,11 @@ public final class TntTimers {
 	private TntTimers() {
 	}
 
+	/** Fuse ticks left for a TNT whose fuse started at vanilla's 80 but really lasts the configured length. */
+	public static float assumedFuse(float vanillaTicksLeft) {
+		return vanillaTicksLeft - (80 - ClientConfig.get().tntFuse * 2);
+	}
+
 	public static boolean enabled() {
 		return ClientConfig.get().tntCountdown && Quartz.available(Feature.TNT_COUNTDOWN);
 	}
@@ -64,8 +69,8 @@ public final class TntTimers {
 		int colour = seconds > 2 ? 0xFF4ADE80 : seconds > 1 ? 0xFFFBBF24 : 0xFFF87171;
 		Smooth.roundRect(r, left, top, left + w, top + h, h * 0.45f, 0xB00E0F14);
 		Smooth.text(r, label, left + 5 * s, top + 5.6f * s - Smooth.lineHeight(r, textSize, true) / 2, textSize, colour, true);
-		// The fuse burning down (a full fuse is 4 seconds).
-		float frac = Math.min(1f, seconds / 4f);
+		// The fuse burning down, against the configured fuse length.
+		float frac = Math.min(1f, seconds / Math.max(0.5f, ClientConfig.get().tntFuse / 10f));
 		float bar = (w - 10 * s) * frac;
 		Smooth.rect(r, left + 5 * s, top + h - 3.2f * s, left + w - 5 * s, top + h - 2.2f * s, 0x30FFFFFF);
 		Smooth.rect(r, left + 5 * s, top + h - 3.2f * s, left + 5 * s + bar, top + h - 2.2f * s, colour);
