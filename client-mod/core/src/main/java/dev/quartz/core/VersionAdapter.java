@@ -127,6 +127,16 @@ public interface VersionAdapter {
 		return false;
 	}
 
+	/** Fills {@code out} for a player's name tag (position at {@code View.partialTicks()}); false if it isn't a player. */
+	default boolean nameTag(Object player, dev.quartz.core.fx.NameTags.Tag out) {
+		return false;
+	}
+
+	/** Your own player while the camera is in third person (for your own tag), else null. */
+	default Object selfTagEntity() {
+		return null;
+	}
+
 	/**
 	 * Max FPS on: remember the player's video settings in {@code restore},
 	 * then switch to the fastest ones. Off: put back what's in {@code restore}.

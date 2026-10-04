@@ -98,6 +98,24 @@ public final class ClientConfig {
 	public int riceHatColor = 0;
 	/** RiceHat.EVERYONE, YOU or OTHERS. */
 	public int riceHatWho = 0;
+	/** Rice hat shape and placement: sizes in percent, offsets in model pixels, tilt in degrees, spin 0 (off) to 3. */
+	public int riceHatSize = 100;
+	public int riceHatHeight = 100;
+	public int riceHatX = 0;
+	public int riceHatY = 0;
+	public int riceHatZ = 0;
+	public int riceHatTilt = 0;
+	public int riceHatOpacity = 100;
+	public int riceHatSpin = 0;
+
+	// Name tags: health 0 = HP, 1 = percent, 2 = off; opacity and scale in percent.
+	public boolean nameTags = false;
+	public int nameTagHealth = 0;
+	public boolean nameTagItems = true;
+	public int nameTagOpacity = 60;
+	public int nameTagScale = 100;
+	public boolean nameTagTeamColours = true;
+	public boolean nameTagSelf = false;
 
 	// World: sky, fog, weather, time
 	public EnvironmentSettings environment = new EnvironmentSettings();

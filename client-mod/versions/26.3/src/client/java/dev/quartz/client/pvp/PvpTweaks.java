@@ -5,10 +5,12 @@ import dev.quartz.client.adapter.PipelineBackend;
 import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.fx.Effects;
+import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.Sprites;
 import dev.quartz.core.fx.View;
 import dev.quartz.core.hud.ReachTracker;
 import net.minecraft.client.Camera;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -94,16 +96,18 @@ public final class PvpTweaks {
 	private static final Matrix4f VIEW_MATRIX = new Matrix4f();
 	private static final float[] VIEW = new float[16];
 
-	/** The client's own hit particles, placed with this frame's camera. Under the vanilla HUD. */
-	public static void renderHitParticles(GuiGraphicsExtractor g) {
-		if (Sprites.alive() == 0) {
+	/** Name tags and the client's own hit particles, placed with this frame's camera. Under the vanilla HUD. */
+	public static void renderWorldOverlays(GuiGraphicsExtractor g, DeltaTracker delta) {
+		if (Sprites.alive() == 0 && !NameTags.pending()) {
 			return;
 		}
+		View.setPartialTicks(delta.getGameTimeDeltaPartialTick(false));
 		Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
 		camera.getViewRotationProjectionMatrix(VIEW_MATRIX).get(VIEW);
 		Vec3 pos = camera.position();
 		View.set(VIEW, pos.x, pos.y, pos.z);
 		PipelineBackend.begin(g);
+		Safe.run("nametags", NameTags::renderHud);
 		Safe.run("sprites", Sprites::renderHud);
 	}
 

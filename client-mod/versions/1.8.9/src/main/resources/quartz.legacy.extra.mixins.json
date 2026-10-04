@@ -9,6 +9,7 @@
 		"CrosshairMixin",
 		"HurtCameraMixin",
 		"LivingEntityHurtMixin",
+		"NameTagMixin",
 		"ParticleCullMixin",
 		"PlayerRendererMixin",
 		"ZoomMixin"

@@ -4,6 +4,8 @@ import dev.quartz.core.McVersion;
 import dev.quartz.core.RenderBackend;
 import dev.quartz.core.VersionAdapter;
 import dev.quartz.core.accounts.LauncherBridge;
+import dev.quartz.core.fx.NameTags;
+import dev.quartz.core.fx.View;
 import dev.quartz.core.hud.HudData;
 import dev.quartz.core.hud.Input;
 import dev.quartz.legacy.mixin.MinecraftClientAccessor;
@@ -337,6 +339,36 @@ final class LegacyAdapter implements VersionAdapter {
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public boolean nameTag(Object player, NameTags.Tag t) {
+		if (!(player instanceof PlayerEntity)) {
+			return false;
+		}
+		PlayerEntity p = (PlayerEntity) player;
+		float pt = View.partialTicks();
+		t.x = p.prevTickX + (p.x - p.prevTickX) * pt;
+		t.y = p.prevTickY + (p.y - p.prevTickY) * pt + p.height + 0.5;
+		t.z = p.prevTickZ + (p.z - p.prevTickZ) * pt;
+		// The display name carries the team prefix and its colour codes.
+		String formatted = p.getName().asFormattedString();
+		t.name = NameTags.strip(formatted);
+		t.nameColour = NameTags.colourOf(formatted);
+		t.health = p.getHealth();
+		t.maxHealth = p.getMaxHealth();
+		t.absorption = p.getAbsorption();
+		for (int i = 0; i < 4; i++) {
+			t.items[i] = p.getArmorSlot(3 - i);
+		}
+		t.items[4] = p.getStackInHand();
+		return true;
+	}
+
+	@Override
+	public Object selfTagEntity() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		return client.player != null && client.options.perspective > 0 && !client.player.isSneaking() ? client.player : null;
 	}
 
 	/** Within 3 blocks of the target's box: projectiles cover up to ~3 blocks a tick. */

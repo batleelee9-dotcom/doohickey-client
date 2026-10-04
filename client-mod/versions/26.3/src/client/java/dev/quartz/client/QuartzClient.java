@@ -66,7 +66,7 @@ public final class QuartzClient implements ClientModInitializer {
 
 		// Damage tint sits under the vanilla HUD; our modules and waypoint
 		// labels draw on top of it.
-		HudElementRegistry.addFirst(id("hit_particles"), (g, delta) -> PvpTweaks.renderHitParticles(g));
+		HudElementRegistry.addFirst(id("world_overlays"), PvpTweaks::renderWorldOverlays);
 		HudElementRegistry.addFirst(id("damage_tint"), (g, delta) -> PvpTweaks.renderDamageTint(g));
 		HudElementRegistry.addLast(id("waypoints"), (g, delta) -> Waypoints.renderLabels(g));
 		HudElementRegistry.addLast(id("hud"), (g, delta) -> HudRenderer.renderInGame(g));

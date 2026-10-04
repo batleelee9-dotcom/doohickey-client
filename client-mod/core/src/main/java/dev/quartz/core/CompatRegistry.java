@@ -109,7 +109,7 @@ public final class CompatRegistry {
 		row(Feature.HIT_COLOR, "YYYYYYY", null);
 		row(Feature.NO_HIT_DELAY, "Y------", "Removes 1.8.9's click delay after a miss; a gameplay change some servers ban.");
 		row(Feature.HITBOXES, "YYYYYYY", null);
-		row(Feature.NAMETAGS, "YYYYYYY", null);
+		row(Feature.NAMETAGS, "YYYYYYY", "Replaces vanilla player tags only where vanilla would show one (teams, sneaking and invisibility still apply).");
 		row(Feature.AUTO_TOOL, "YYYYYYY", "Switches hotbar slots for you; forbidden on many PvP servers.");
 		row(Feature.RAW_INPUT, "PYYYYYY", "1.8.9 (LWJGL 2) needs a separate raw-input library.");
 		row(Feature.ZOOM, "YYYYYYY", null);
@@ -162,7 +162,7 @@ public final class CompatRegistry {
 			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
 			Feature.CUSTOM_CROSSHAIR, Feature.ZOOM, Feature.ASPECT_RATIO, Feature.HITBOXES,
-			Feature.RICE_HAT, Feature.FPS_CAP, Feature.TILE_ENTITY_CULLING, Feature.PARTICLE_CULLING,
+			Feature.RICE_HAT, Feature.NAMETAGS, Feature.FPS_CAP, Feature.TILE_ENTITY_CULLING, Feature.PARTICLE_CULLING,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.ACCOUNT_SWITCHER);
 		implemented(McVersion.V26_3,
@@ -174,7 +174,7 @@ public final class CompatRegistry {
 			Feature.HUD_DIRECTION, Feature.HUD_SPEED, Feature.HUD_DAY, Feature.HUD_SATURATION, Feature.HUD_ITEM_COUNTER,
 			Feature.HUD_COMBO, Feature.HUD_BLOCK_INFO, Feature.HUD_BIOME,
 			Feature.ZOOM, Feature.ASPECT_RATIO, Feature.HITBOXES,
-			Feature.RICE_HAT, Feature.FPS_CAP,
+			Feature.RICE_HAT, Feature.NAMETAGS, Feature.FPS_CAP,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.TOGGLE_SPRINT_SNEAK, Feature.HIT_COLOR, Feature.CAPES, Feature.WEARABLES, Feature.MINIMAP_WAYPOINTS,
 			Feature.ACCOUNT_SWITCHER);

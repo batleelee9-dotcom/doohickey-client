@@ -65,7 +65,7 @@ public enum Feature {
 	HIT_COLOR(Category.PVP, "Hit colour"),
 	NO_HIT_DELAY(Category.PVP, "No hit delay", true),
 	HITBOXES(Category.PVP, "Hitboxes"),
-	NAMETAGS(Category.PVP, "Nametag tweaks"),
+	NAMETAGS(Category.PVP, "Custom name tags (health, armour)"),
 	AUTO_TOOL(Category.PVP, "Auto tool / weapon", true),
 	RAW_INPUT(Category.PVP, "Raw mouse input"),
 	ZOOM(Category.PVP, "Zoom"),

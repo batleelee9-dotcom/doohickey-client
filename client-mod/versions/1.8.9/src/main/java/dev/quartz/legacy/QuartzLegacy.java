@@ -5,6 +5,7 @@ import dev.quartz.core.Quartz;
 import dev.quartz.core.RenderBackend;
 import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
+import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.Sprites;
 import dev.quartz.core.hud.CpsTracker;
 import dev.quartz.core.hud.Hud;
@@ -98,6 +99,7 @@ public final class QuartzLegacy implements ClientModInitializer {
 			return;
 		}
 		// Hit particles sit in the world, so they show with F3 open too.
+		Safe.run("nametags", NameTags::renderHud);
 		Safe.run("sprites", Sprites::renderHud);
 		if (client.options.debugEnabled) {
 			return;

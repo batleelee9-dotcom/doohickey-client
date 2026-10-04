@@ -357,6 +357,36 @@ public final class ModernAdapter implements VersionAdapter {
 	}
 
 	@Override
+	public boolean nameTag(Object player, dev.quartz.core.fx.NameTags.Tag t) {
+		if (!(player instanceof net.minecraft.world.entity.player.Player p)) {
+			return false;
+		}
+		net.minecraft.world.phys.Vec3 pos = p.getPosition(dev.quartz.core.fx.View.partialTicks());
+		t.x = pos.x;
+		t.y = pos.y + p.getBbHeight() + 0.5;
+		t.z = pos.z;
+		t.name = p.getDisplayName().getString();
+		t.nameColour = 0xFF000000 | p.getTeamColor();
+		t.health = p.getHealth();
+		t.maxHealth = p.getMaxHealth();
+		t.absorption = p.getAbsorptionAmount();
+		net.minecraft.world.entity.EquipmentSlot[] slots = {net.minecraft.world.entity.EquipmentSlot.HEAD, net.minecraft.world.entity.EquipmentSlot.CHEST,
+			net.minecraft.world.entity.EquipmentSlot.LEGS, net.minecraft.world.entity.EquipmentSlot.FEET};
+		for (int i = 0; i < 4; i++) {
+			net.minecraft.world.item.ItemStack stack = p.getItemBySlot(slots[i]);
+			t.items[i] = stack.isEmpty() ? null : stack;
+		}
+		t.items[4] = p.getMainHandItem().isEmpty() ? null : p.getMainHandItem();
+		return true;
+	}
+
+	@Override
+	public Object selfTagEntity() {
+		Minecraft mc = Minecraft.getInstance();
+		return mc.player != null && !mc.options.getCameraType().isFirstPerson() && !mc.player.isDiscrete() ? mc.player : null;
+	}
+
+	@Override
 	public void applyMaxFps(boolean on, java.util.Map<String, String> restore) {
 		Options o = Minecraft.getInstance().options;
 		if (on) {

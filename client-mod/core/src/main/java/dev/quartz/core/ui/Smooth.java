@@ -382,6 +382,11 @@ public final class Smooth {
 			case "bolt":
 				g.fill(poly(13.5f, 2, 5, 13.5f, 11, 13.5f, 9.5f, 22, 19, 9.5f, 13, 9.5f));
 				break;
+			case "more":
+				g.fill(new Ellipse2D.Float(10, 3, 4, 4));
+				g.fill(new Ellipse2D.Float(10, 10, 4, 4));
+				g.fill(new Ellipse2D.Float(10, 17, 4, 4));
+				break;
 			case "close":
 				g.draw(new Line2D.Float(6, 6, 18, 18));
 				g.draw(new Line2D.Float(18, 6, 6, 18));

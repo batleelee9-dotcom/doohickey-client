@@ -56,17 +56,34 @@ public final class RiceHat {
 	 * The hat's triangles, raised by {@code lift} model pixels (over a
 	 * helmet). {@code seconds} drives the rainbow's slow spin.
 	 */
-	public static void build(Sink sink, float seconds, float lift) {
-		int colour = ClientConfig.get().riceHatColor;
-		float apexY = APEX_Y - lift;
-		float rimY = RIM_Y - lift;
-		float bottomY = rimY + RIM_DEPTH;
-		float innerY = INNER_APEX_Y - lift;
+	public static void build(Sink out, float seconds, float lift) {
+		ClientConfig c = ClientConfig.get();
+		int colour = c.riceHatColor;
+		float size = c.riceHatSize / 100f;
+		float height = c.riceHatHeight / 100f;
+		// Built around the brim's centre, then turned, tilted and moved into place.
+		float spin = c.riceHatSpin * seconds * 1.4f;
+		float tilt = (float) Math.toRadians(c.riceHatTilt);
+		PLACED.out = out;
+		PLACED.alpha = Math.max(0, Math.min(255, Math.round(c.riceHatOpacity * 2.55f)));
+		PLACED.cosS = (float) Math.cos(spin);
+		PLACED.sinS = (float) Math.sin(spin);
+		PLACED.cosT = (float) Math.cos(tilt);
+		PLACED.sinT = (float) Math.sin(tilt);
+		PLACED.tx = c.riceHatX;
+		PLACED.ty = RIM_Y - lift - c.riceHatY;
+		PLACED.tz = c.riceHatZ;
+		Sink sink = PLACED;
+		float radius = RADIUS * size;
+		float apexY = (APEX_Y - RIM_Y) * height;
+		float rimY = 0;
+		float bottomY = RIM_DEPTH;
+		float innerY = (INNER_APEX_Y - RIM_Y) * height;
 		// Cone surface normal tilt: rises (rimY - apexY) over RADIUS.
 		float rise = rimY - apexY;
-		float len = (float) Math.sqrt(rise * rise + RADIUS * RADIUS);
+		float len = (float) Math.sqrt(rise * rise + radius * radius);
 		float nh = rise / len;
-		float nv = -RADIUS / len;
+		float nv = -radius / len;
 		for (int i = 0; i < SEGMENTS; i++) {
 			float a0 = (float) (Math.PI * 2 * i / SEGMENTS);
 			float a1 = (float) (Math.PI * 2 * (i + 1) / SEGMENTS);
@@ -78,10 +95,10 @@ public final class RiceHat {
 			int base0 = base(colour, a0, seconds);
 			int base1 = base(colour, a1, seconds);
 			int baseM = base(colour, am, seconds);
-			float x0 = c0 * RADIUS;
-			float z0 = s0 * RADIUS;
-			float x1 = c1 * RADIUS;
-			float z1 = s1 * RADIUS;
+			float x0 = c0 * radius;
+			float z0 = s0 * radius;
+			float x1 = c1 * radius;
+			float z1 = s1 * radius;
 
 			// Top: lit by how much each part faces the light.
 			sink.vertex(0, apexY, 0, shade(baseM, top(am, nh, nv), 0.12f));
@@ -104,6 +121,30 @@ public final class RiceHat {
 			sink.vertex(x1, bottomY, z1, shade(base1, 0.42f, 0f));
 		}
 	}
+
+	/** Moves the hat from its own space onto the head: spin, tilt (front down), offset, opacity. */
+	private static final class Placed implements Sink {
+		Sink out;
+		int alpha;
+		float cosS;
+		float sinS;
+		float cosT;
+		float sinT;
+		float tx;
+		float ty;
+		float tz;
+
+		@Override
+		public void vertex(float x, float y, float z, int argb) {
+			float x1 = x * cosS - z * sinS;
+			float z1 = x * sinS + z * cosS;
+			float y2 = y * cosT - z1 * sinT;
+			float z2 = y * sinT + z1 * cosT;
+			out.vertex(x1 + tx, y2 + ty, z2 + tz, alpha << 24 | (argb & 0xFFFFFF));
+		}
+	}
+
+	private static final Placed PLACED = new Placed();
 
 	/** Brightness of the top surface at angle {@code a}: ambient plus diffuse. */
 	private static float top(float a, float nh, float nv) {

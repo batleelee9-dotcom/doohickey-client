@@ -109,6 +109,14 @@ public final class CoreTest {
 		public void playSound(String name, float volume, float pitch) { soundLog.add(name); }
 		public float healthFraction() { return health; }
 		boolean projectileNear;
+		public boolean nameTag(Object p, dev.quartz.core.fx.NameTags.Tag t) {
+			if (!(p instanceof double[])) return false;
+			double[] at = (double[]) p;
+			t.x = at[0]; t.y = at[1]; t.z = at[2];
+			t.name = "_Maxim07_"; t.nameColour = 0xFFFFFFFF; t.health = 11; t.maxHealth = 20; t.absorption = 0;
+			java.util.Arrays.fill(t.items, null);
+			return true;
+		}
 		public boolean ownProjectileNear(Object e) { return projectileNear; }
 		final java.util.List<Boolean> maxFpsLog = new java.util.ArrayList<>();
 		public void applyMaxFps(boolean on, java.util.Map<String, String> restore) { maxFpsLog.add(on); if (on) restore.put("vsync", "true"); else restore.clear(); }
@@ -210,8 +218,8 @@ public final class CoreTest {
 		menu.click(px + 30, py + 57 + 2 * 24 + 10);
 		ClientConfig.get().effects.hitEffects = true;
 		image.shot(menu, px + 150, py + 60, dir.resolve("menu-visual.png"));
-		// The second card's gear (Rice hat) opens its settings page.
-		menu.click(px + 405, py + 74);
+		// The second card's ⋮ (Rice hat) opens its settings page.
+		menu.click(px + 408, py + 69);
 		image.shot(menu, px + 200, py + 90, dir.resolve("menu-settings.png"));
 		menu.escape();
 		for (char c : "zo".toCharArray()) menu.typed(c);
@@ -223,6 +231,15 @@ public final class CoreTest {
 		}
 		image.frames(() -> dev.quartz.core.fx.Sprites.render(image), 6, dir.resolve("hit-particles.png"));
 		dev.quartz.core.fx.Sprites.clear();
+		// Name tags at a few distances.
+		ClientConfig.get().nameTags = true;
+		dev.quartz.core.fx.View.set(perspective(70, 480 / 270f), 0, 0, 0);
+		dev.quartz.core.fx.NameTags.mark(new double[] {-1.2, 0.6, -2.5});
+		dev.quartz.core.fx.NameTags.mark(new double[] {1.5, 0.4, -5});
+		dev.quartz.core.fx.NameTags.mark(new double[] {4, 0.4, -12});
+		image.frames(() -> dev.quartz.core.fx.NameTags.render(image, adapter), 1, dir.resolve("name-tags.png"));
+		ClientConfig.get().nameTags = false;
+
 		// The rice hat on a stand-in head, from above and from below.
 		ClientConfig.get().riceHatColor = 0;
 		java.awt.image.BufferedImage hat = new java.awt.image.BufferedImage(960, 360, java.awt.image.BufferedImage.TYPE_INT_RGB);
@@ -572,7 +589,7 @@ public final class CoreTest {
 		System.out.println("menu modules");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 21, "21 HUD modules on 1.8.9 (20 elements + style)");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.SOUND).size() == 3, "3 sound modules");
-		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 13, "13 visual modules on 1.8.9");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 14, "14 visual modules on 1.8.9");
 		dev.quartz.core.ui.ClientMenu smoke = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {
 			public void close() { }
 			public void openHudEditor() { }

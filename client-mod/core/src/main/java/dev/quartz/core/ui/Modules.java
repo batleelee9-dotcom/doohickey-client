@@ -5,6 +5,7 @@ import dev.quartz.core.Quartz;
 import dev.quartz.core.config.ClientConfig;
 import dev.quartz.core.fx.EffectSettings;
 import dev.quartz.core.fx.Effects;
+import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.RiceHat;
 import dev.quartz.core.hud.Hud;
 import dev.quartz.core.hud.HudElement;
@@ -116,7 +117,23 @@ public final class Modules {
 				add(out, new Module("Rice hat", "A 3D cone hat on you or everyone", Feature.RICE_HAT,
 					Option.toggle(Feature.RICE_HAT, "Rice hat", () -> c().riceHat, v -> c().riceHat = v),
 					Option.choice(Feature.RICE_HAT, "Colour", HAT_COLOURS, list(RiceHat.COLOUR_NAMES), () -> c().riceHatColor, v -> c().riceHatColor = v),
-					Option.choice(Feature.RICE_HAT, "Shows on", HAT_WHO, list(RiceHat.WHO_NAMES), () -> c().riceHatWho, v -> c().riceHatWho = v)));
+					Option.choice(Feature.RICE_HAT, "Shows on", HAT_WHO, list(RiceHat.WHO_NAMES), () -> c().riceHatWho, v -> c().riceHatWho = v),
+					Option.choice(Feature.RICE_HAT, "Size", ints(50, 75, 90, 100, 110, 125, 150, 175, 200), names("%", 50, 75, 90, 100, 110, 125, 150, 175, 200), () -> c().riceHatSize, v -> c().riceHatSize = v),
+					Option.choice(Feature.RICE_HAT, "Height", ints(50, 75, 100, 125, 150, 200), names("%", 50, 75, 100, 125, 150, 200), () -> c().riceHatHeight, v -> c().riceHatHeight = v),
+					Option.choice(Feature.RICE_HAT, "Up / down", ints(-3, -2, -1, 0, 1, 2, 3, 4, 6, 8), names(" px", -3, -2, -1, 0, 1, 2, 3, 4, 6, 8), () -> c().riceHatY, v -> c().riceHatY = v),
+					Option.choice(Feature.RICE_HAT, "Left / right", ints(-4, -3, -2, -1, 0, 1, 2, 3, 4), names(" px", -4, -3, -2, -1, 0, 1, 2, 3, 4), () -> c().riceHatX, v -> c().riceHatX = v),
+					Option.choice(Feature.RICE_HAT, "Forward / back", ints(-4, -3, -2, -1, 0, 1, 2, 3, 4), names(" px", -4, -3, -2, -1, 0, 1, 2, 3, 4), () -> c().riceHatZ, v -> c().riceHatZ = v),
+					Option.choice(Feature.RICE_HAT, "Tilt", ints(-30, -20, -10, 0, 10, 20, 30), names("°", -30, -20, -10, 0, 10, 20, 30), () -> c().riceHatTilt, v -> c().riceHatTilt = v),
+					Option.choice(Feature.RICE_HAT, "Opacity", ints(40, 60, 80, 100), names("%", 40, 60, 80, 100), () -> c().riceHatOpacity, v -> c().riceHatOpacity = v),
+					Option.choice(Feature.RICE_HAT, "Spin", ints(0, 1, 3), Arrays.asList("Off", "Slow", "Fast"), () -> c().riceHatSpin, v -> c().riceHatSpin = v)));
+				add(out, new Module("Name tags", "Player tags with health, armour and held item", Feature.NAMETAGS,
+					Option.toggle(Feature.NAMETAGS, "Name tags", () -> c().nameTags, v -> c().nameTags = v),
+					Option.choice(Feature.NAMETAGS, "Health", ints(0, 1, 2), list(NameTags.HEALTH_NAMES), () -> c().nameTagHealth, v -> c().nameTagHealth = v),
+					Option.toggle(Feature.NAMETAGS, "Armour and held item", () -> c().nameTagItems, v -> c().nameTagItems = v),
+					Option.toggle(Feature.NAMETAGS, "Team colours", () -> c().nameTagTeamColours, v -> c().nameTagTeamColours = v),
+					Option.choice(Feature.NAMETAGS, "Background", ints(25, 40, 60, 80), names("%", 25, 40, 60, 80), () -> c().nameTagOpacity, v -> c().nameTagOpacity = v),
+					Option.choice(Feature.NAMETAGS, "Size", ints(75, 100, 125, 150), names("%", 75, 100, 125, 150), () -> c().nameTagScale, v -> c().nameTagScale = v),
+					Option.toggle(Feature.NAMETAGS, "Your own tag (third person)", () -> c().nameTagSelf, v -> c().nameTagSelf = v)));
 				add(out, new Module("Hit effects", "Particles where your hits land", Feature.HIT_EFFECTS,
 					Option.toggle(Feature.HIT_EFFECTS, "Hit effects", () -> fx().hitEffects, v -> fx().hitEffects = v),
 					Option.choice(Feature.HIT_EFFECTS, "Effect", list(Effects.HIT_STYLES), list(Effects.HIT_STYLE_NAMES), () -> fx().hitEffect, v -> fx().hitEffect = v),
@@ -181,6 +198,24 @@ public final class Modules {
 		if (Quartz.available(m.feature)) {
 			out.add(m);
 		}
+	}
+
+	private static List<Integer> ints(int... values) {
+		List<Integer> out = new ArrayList<>(values.length);
+		for (int v : values) {
+			out.add(v);
+		}
+		return out;
+	}
+
+	/** Labels for numeric choices: "+2 px", "0 px", "-10°"; positive offsets get a plus. */
+	private static List<String> names(String unit, int... values) {
+		List<String> out = new ArrayList<>(values.length);
+		boolean signed = unit.equals(" px") || unit.equals("°");
+		for (int v : values) {
+			out.add((signed && v > 0 ? "+" : "") + v + unit);
+		}
+		return out;
 	}
 
 	private static List<String> list(String[] values) {

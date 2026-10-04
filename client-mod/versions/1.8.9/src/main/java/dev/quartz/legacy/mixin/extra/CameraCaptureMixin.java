@@ -50,6 +50,7 @@ public abstract class CameraCaptureMixin {
 				}
 			}
 			// Chunks and entities are drawn relative to the interpolated camera entity.
+			View.setPartialTicks(tickDelta);
 			View.set(QUARTZ_M, cam.prevTickX + (cam.x - cam.prevTickX) * tickDelta,
 				cam.prevTickY + (cam.y - cam.prevTickY) * tickDelta, cam.prevTickZ + (cam.z - cam.prevTickZ) * tickDelta);
 		} catch (Throwable t) {

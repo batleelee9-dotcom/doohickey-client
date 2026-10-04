@@ -35,13 +35,13 @@ public final class ClientMenu {
 	private static final int ACCENT_LIGHT = 0xFFB9AEFF;
 	private static final int PANEL = 0xFA121317;
 	private static final int SIDEBAR = 0xFF0E0F12;
-	private static final int CARD = 0xFF18191E;
-	private static final int CARD_HOVER = 0xFF1E1F25;
+	private static final int CARD = 0xFF1A1B21;
+	private static final int CARD_HOVER = 0xFF202128;
 	private static final int BORDER = 0x14FFFFFF;
 	private static final int TEXT = 0xFFEDEEF2;
 	private static final int MUTED = 0xFF9C9EAA;
 	private static final int FAINT = 0xFF62646F;
-	private static final int SWITCH_OFF = 0xFF2C2E36;
+	private static final int SWITCH_OFF = 0xFF3A3C45;
 	private static final String[] COUNTS = new String[100];
 
 	static {
@@ -51,7 +51,7 @@ public final class ClientMenu {
 	}
 
 	private static final int SIDE_W = 112;
-	private static final int CARD_H = 38;
+	private static final int CARD_H = 46;
 	private static final int ROW_H = 28;
 	private static final int GAP = 7;
 	private static final int HIT_LIMIT = 256;
@@ -389,8 +389,8 @@ public final class ClientMenu {
 
 		float top = py + 55;
 		float bottom = py + ph - 32;
-		// Three columns only when each card still fits its name; short lists get two wide ones.
-		int cols = list.size() > 6 && (w - GAP * 2) / 3 >= 125 ? 3 : 2;
+		// Two roomy columns: names and two-line descriptions fit without cutting.
+		int cols = 2;
 		float cardW = (w - GAP * (cols - 1)) / cols;
 		int rows = (list.size() + cols - 1) / cols;
 		float rowH = CARD_H + GAP;
@@ -443,62 +443,96 @@ public final class ClientMenu {
 		}
 		float h = m.hover = approach(m.hover, hot ? 1f : 0f, 18);
 		boolean enabled = m.on();
-		int border = enabled ? Smooth.mix(0x508B7CF6, 0x808B7CF6, h) : Smooth.mix(0x0EFFFFFF, 0x20FFFFFF, h);
-		Smooth.roundBox(r, x, y, x + w, y + CARD_H, 6, Smooth.mix(CARD, CARD_HOVER, h), border);
+		int border = enabled ? Smooth.mix(0x488B7CF6, 0x788B7CF6, h) : Smooth.mix(0x10FFFFFF, 0x22FFFFFF, h);
+		Smooth.roundBox(r, x, y, x + w, y + CARD_H, 8, Smooth.mix(CARD, CARD_HOVER, h), border);
 
-		// Right side: switch (+ gear) for modules with a switch, a value for single settings.
+		// The title line holds the controls on the right: switch and "⋮" for settings, or the value.
 		boolean single = m.toggle == null && m.settings.size() == 1;
+		float lineMid = y + 13.5f;
 		float right;
 		if (m.toggle != null) {
-			right = 30 + (m.configurable() ? 17 : 0);
+			right = 26 + (m.configurable() ? 18 : 0);
 		} else if (single) {
-			right = Math.min(w * 0.45f, Smooth.width(r, m.settings.get(0).value(), 7, true) + 22);
+			right = Math.min(w * 0.5f, Smooth.width(r, m.settings.get(0).value(), 7, true) + 20);
 		} else {
 			right = 20;
 		}
 		if (m.fitWidth != w) {
-			m.fitName = Smooth.fit(r, m.name, 8.5f, true, w - right - 14);
-			m.fitDescription = Smooth.fit(r, m.description, 6.5f, false, w - right - 14);
+			m.fitName = Smooth.fit(r, m.name, 8.5f, true, w - right - 18);
+			wrap(r, m, 6.5f, w - 20);
 			m.fitWidth = w;
 		}
-		Smooth.text(r, m.fitName, x + 10, y + 8.5f, 8.5f, TEXT, true);
-		Smooth.text(r, m.fitDescription, x + 10, y + 21.5f, 6.5f, FAINT, false);
+		Smooth.text(r, m.fitName, x + 10, lineMid - Smooth.lineHeight(r, 8.5f, true) / 2, 8.5f, TEXT, true);
+		Smooth.text(r, m.fitDescription, x + 10, y + 23, 6.5f, FAINT, false);
+		if (!m.fitDescription2.isEmpty()) {
+			Smooth.text(r, m.fitDescription2, x + 10, y + 32, 6.5f, FAINT, false);
+		}
 
-		float mid = y + CARD_H / 2f;
 		if (m.toggle != null) {
 			float k = m.knob = m.knob < 0 ? (enabled ? 1f : 0f) : approach(m.knob, enabled ? 1f : 0f, 16);
-			toggle(r, x + w - 30, mid - 5.5f, k);
+			toggle(r, x + w - 28, lineMid - 5, k);
 			hit(x, y, x + w, y + CARD_H, m.toggle.clicker, null);
 			if (m.configurable()) {
-				float gx = x + w - 47;
-				float gy = mid - 6;
-				boolean gHot = inside(mouseX, mouseY, gx - 2, gy - 2, gx + 14, gy + 14);
-				if (gHot) {
-					Smooth.roundRect(r, gx - 3, gy - 3, gx + 15, gy + 15, 4, 0x14FFFFFF);
-				}
-				Smooth.icon(r, "gear", gx, gy, 12, gHot ? TEXT : Smooth.mix(FAINT, MUTED, h));
-				hit(gx - 3, gy - 3, gx + 15, gy + 15, opener(m), null);
+				more(r, m, x + w - 46, lineMid, h, mouseX, mouseY);
 			}
 		} else if (single) {
 			Option o = m.settings.get(0);
 			String value = o.value();
-			float vw = Math.min(right - 8, Smooth.width(r, value, 7, true) + 12);
-			float vx = x + w - vw - 9;
-			Smooth.roundRect(r, vx, mid - 6.5f, vx + vw, mid + 6.5f, 4, Smooth.mix(0xFF2A2B31, 0xFF33343B, h));
-			Smooth.text(r, Smooth.fit(r, value, 7, true, vw - 10), vx + 6, mid - Smooth.lineHeight(r, 7, true) / 2, 7, TEXT, true);
+			float vw = Math.min(right - 6, Smooth.width(r, value, 7, true) + 12);
+			float vx = x + w - vw - 10;
+			Smooth.roundRect(r, vx, lineMid - 6.5f, vx + vw, lineMid + 6.5f, 4, Smooth.mix(0xFF2C2D34, 0xFF35363E, h));
+			Smooth.text(r, Smooth.fit(r, value, 7, true, vw - 10), vx + 6, lineMid - Smooth.lineHeight(r, 7, true) / 2, 7, TEXT, true);
 			hit(x, y, x + w, y + CARD_H, o.clicker, o.backer);
 		} else {
-			Smooth.icon(r, "right", x + w - 18, mid - 5, 10, Smooth.mix(FAINT, TEXT, h));
 			hit(x, y, x + w, y + CARD_H, opener(m), null);
+			more(r, m, x + w - 22, lineMid, h, mouseX, mouseY);
 		}
+	}
+
+	/** The "⋮" button that opens a module's settings page. */
+	private void more(RenderBackend r, Module m, float x, float mid, float cardHover, int mouseX, int mouseY) {
+		float y = mid - 7;
+		boolean hot = inside(mouseX, mouseY, x - 2, y, x + 14, y + 14);
+		if (hot) {
+			Smooth.roundRect(r, x - 2, y, x + 14, y + 14, 4, 0x16FFFFFF);
+		}
+		Smooth.icon(r, "more", x + 1, y + 1, 12, hot ? TEXT : Smooth.mix(FAINT, MUTED, cardHover));
+		hit(x - 2, y, x + 14, y + 14, opener(m), null);
+	}
+
+	/** Wraps a card's description into up to two lines; the second ends in "…" if it still doesn't fit. */
+	private static void wrap(RenderBackend r, Module m, float size, float width) {
+		String text = m.description;
+		m.fitDescription2 = "";
+		m.cut = false;
+		if (Smooth.width(r, text, size, false) <= width) {
+			m.fitDescription = text;
+			return;
+		}
+		int split = -1;
+		for (int i = text.indexOf(' '); i > 0; i = text.indexOf(' ', i + 1)) {
+			if (Smooth.width(r, text.substring(0, i), size, false) > width) {
+				break;
+			}
+			split = i;
+		}
+		if (split < 0) {
+			m.fitDescription = Smooth.fit(r, text, size, false, width);
+			m.cut = true;
+			return;
+		}
+		m.fitDescription = text.substring(0, split);
+		String rest = text.substring(split + 1);
+		m.fitDescription2 = Smooth.fit(r, rest, size, false, width);
+		m.cut = !m.fitDescription2.equals(rest);
 	}
 
 	/** A switch: track and knob, {@code k} from 0 (off) to 1 (on). */
 	private static void toggle(RenderBackend r, float sx, float sy, float k) {
-		Smooth.roundRect(r, sx, sy, sx + 21, sy + 11, 5.5f, Smooth.mix(SWITCH_OFF, ACCENT, k));
-		float kx = sx + 5.5f + k * 10;
-		Smooth.circle(r, kx, sy + 6f, 4.3f, 0x38000000);
-		Smooth.circle(r, kx, sy + 5.5f, 4.1f, 0xFFFFFFFF);
+		Smooth.roundRect(r, sx, sy, sx + 18, sy + 10, 5, Smooth.mix(SWITCH_OFF, ACCENT, k));
+		float kx = sx + 5 + k * 8;
+		Smooth.circle(r, kx, sy + 5.4f, 3.7f, 0x30000000);
+		Smooth.circle(r, kx, sy + 5, 3.5f, 0xFFFFFFFF);
 	}
 
 	private final java.util.IdentityHashMap<Module, Runnable> openers = new java.util.IdentityHashMap<>();
@@ -555,7 +589,7 @@ public final class ClientMenu {
 		float mid = y + ROW_H / 2f;
 		Smooth.text(r, label, x + 11, mid - Smooth.lineHeight(r, 8, false) / 2, 8, TEXT, false);
 		if (on != null) {
-			toggle(r, x + w - 32, mid - 5.5f, on ? 1f : 0f);
+			toggle(r, x + w - 30, mid - 5, on ? 1f : 0f);
 			hit(x, y, x + w, y + ROW_H, o.clicker, null);
 		} else {
 			// ‹ value ›: the arrows step, clicking the row steps forward.
@@ -627,7 +661,7 @@ public final class ClientMenu {
 	/** The full description of a card whose text was cut short, after a short hover. */
 	private void tooltip(RenderBackend r, int mouseX, int mouseY, int sw) {
 		Module m = hovered;
-		if (m == null || m.description.equals(m.fitDescription) || System.currentTimeMillis() - hoveredSince < 450) {
+		if (m == null || !m.cut || System.currentTimeMillis() - hoveredSince < 450) {
 			return;
 		}
 		float w = Smooth.width(r, m.description, 7, false) + 14;

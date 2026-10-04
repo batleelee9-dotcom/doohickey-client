@@ -24,6 +24,9 @@ public final class Module {
 	float knob = -1;
 	String fitName;
 	String fitDescription;
+	/** The description's second line, and whether it still had to be cut short. */
+	String fitDescription2 = "";
+	boolean cut;
 	float fitWidth = -1;
 
 	public Module(String name, String description, Feature feature, Option toggle, Option... settings) {

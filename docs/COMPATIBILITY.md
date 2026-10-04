@@ -65,7 +65,7 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Hit colour | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | No hit delay [OPT-IN / RISK] | ✅ | N/A | N/A | N/A | N/A | N/A | N/A | Removes 1.8.9's click delay after a miss; a gameplay change some servers ban. |
 | Hitboxes | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
-| Nametag tweaks | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Custom name tags (health, armour) | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Replaces vanilla player tags only where vanilla would show one (teams, sneaking and invisibility still apply). |
 | Auto tool / weapon [OPT-IN / RISK] | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Switches hotbar slots for you; forbidden on many PvP servers. |
 | Raw mouse input | ⚠ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | 1.8.9 (LWJGL 2) needs a separate raw-input library. |
 | Zoom | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |

@@ -7,7 +7,8 @@
 		"AspectRatioHandMixin",
 		"CameraZoomMixin",
 		"DamageEventMixin",
-		"HurtCameraMixin"
+		"HurtCameraMixin",
+		"NameTagMixin"
 	],
 	"injectors": {
 		"defaultRequire": 0

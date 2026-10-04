@@ -15,6 +15,7 @@ public final class View {
 	private static float scaleX;
 	private static float scaleY;
 	private static boolean valid;
+	private static float partialTicks = 1f;
 
 	private View() {
 	}
@@ -28,6 +29,15 @@ public final class View {
 		scaleX = (float) Math.sqrt(M[0] * M[0] + M[4] * M[4] + M[8] * M[8]);
 		scaleY = (float) Math.sqrt(M[1] * M[1] + M[5] * M[5] + M[9] * M[9]);
 		valid = true;
+	}
+
+	/** How far between game ticks this frame is (for placing moving things smoothly). */
+	public static float partialTicks() {
+		return partialTicks;
+	}
+
+	public static void setPartialTicks(float t) {
+		partialTicks = t;
 	}
 
 	public static void clear() {
