@@ -117,8 +117,12 @@ public final class CompatRegistry {
 		row(Feature.CLEAN_VIEW, "YYYYYYY", null);
 		row(Feature.TAB_PING, "YYYYYYY", null);
 		row(Feature.SMOOTH_HOTBAR, "YYYYYYY", null);
+		row(Feature.PICKUP_FEED, "YYYYYYY", "Counts your inventory; nothing is sent to the server.");
 		row(Feature.STATIC_FOV, "YYYYYY-", "26.3 has this built in (FOV Effects slider).");
 		row(Feature.MOUSE_DELAY_FIX, "Y------", "A 1.8 bug (aim lagging a tick behind the crosshair); fixed in later versions.");
+		row(Feature.HIT_MARKER, "YYYYYYY", "Shows when the server confirms your hit did damage.");
+		row(Feature.DAMAGE_NUMBERS, "YYYYYYY", "From the health the server sends; left out where a server hides it.");
+		row(Feature.KILL_BANNER, "YYYYYYY", null);
 		row(Feature.ASPECT_RATIO, "YYYYYYY", "Stretches the 3D view only; the HUD and menus keep their shape.");
 		row(Feature.FREELOOK, "YYYYYYY", "Some servers (e.g. Hypixel) ask clients to disable it.");
 		row(Feature.PING_REACH_DISPLAY, "YYYYYYY", "Display only; never changes reach.");
@@ -133,6 +137,10 @@ public final class CompatRegistry {
 		row(Feature.DYNAMIC_RENDER_DISTANCE, "YYYYYYY", null);
 		row(Feature.SMART_ANIMATIONS, "YYYYYYY", null);
 		row(Feature.BORDERLESS, "PYYYYYY", "LWJGL 2 has no borderless mode; 1.8.9 needs a window-style workaround.");
+		row(Feature.HIDE_PLANTS, "YYYYYYY", "Visual only: the plants are still there. Switching it rebuilds the world view once.");
+		row(Feature.STATIC_TEXTURES, "YYYYYYY", "Compasses and clocks keep moving.");
+		row(Feature.SIMPLE_ITEMS, "YYYYYYY", null);
+		row(Feature.HIDE_ARMOR_STANDS, "YYYYYYY", "Invisible ones (floating text on servers) still show their text.");
 		row(Feature.THREADED_CHUNKS, "P------", "1.8.9 already builds chunks on worker threads; Doohickey can only tune the count.");
 
 		row(Feature.SOUND_VOLUMES, "YYYYYYY", null);
@@ -171,10 +179,12 @@ public final class CompatRegistry {
 			Feature.RICE_HAT, Feature.NAMETAGS, Feature.SKY_TEXTURE, Feature.FPS_CAP, Feature.TILE_ENTITY_CULLING, Feature.PARTICLE_CULLING,
 			Feature.TNT_COUNTDOWN, Feature.CLEAN_VIEW, Feature.TAB_PING, Feature.SMOOTH_HOTBAR, Feature.STATIC_FOV, Feature.MOUSE_DELAY_FIX,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
+			Feature.HIDE_PLANTS, Feature.STATIC_TEXTURES, Feature.SIMPLE_ITEMS, Feature.HIDE_ARMOR_STANDS,
+			Feature.HIT_MARKER, Feature.DAMAGE_NUMBERS, Feature.KILL_BANNER, Feature.PICKUP_FEED,
 			Feature.ACCOUNT_SWITCHER);
 		implemented(McVersion.V26_3,
 			Feature.SKY_COLOR, Feature.TIME_LOCK, Feature.FOG, Feature.FOG_COLOR, Feature.WEATHER_OVERRIDE,
-			Feature.FULLBRIGHT, Feature.DYNAMIC_RENDER_DISTANCE,
+			Feature.FULLBRIGHT, Feature.DYNAMIC_RENDER_DISTANCE, Feature.ENTITY_DISTANCE,
 			Feature.PARTICLES, Feature.DAMAGE_TINT, Feature.CUSTOM_CROSSHAIR,
 			Feature.HUD_EDITOR, Feature.HUD_FPS, Feature.HUD_CPS, Feature.HUD_PING, Feature.HUD_COORDINATES, Feature.HUD_KEYSTROKES,
 			Feature.HUD_ARMOR, Feature.HUD_POTIONS, Feature.HUD_REACH, Feature.HUD_MEMORY, Feature.HUD_CLOCK, Feature.HUD_SERVER_IP,
@@ -185,6 +195,8 @@ public final class CompatRegistry {
 			Feature.TNT_COUNTDOWN, Feature.CLEAN_VIEW, Feature.TAB_PING, Feature.SMOOTH_HOTBAR,
 			Feature.HIT_EFFECTS, Feature.TRAILS, Feature.KILL_EFFECTS, Feature.HIT_SOUNDS, Feature.LOW_HEALTH_ALERT, Feature.HURT_CAMERA,
 			Feature.TOGGLE_SPRINT_SNEAK, Feature.HIT_COLOR, Feature.CAPES, Feature.WEARABLES, Feature.MINIMAP_WAYPOINTS,
+			Feature.HIDE_PLANTS, Feature.STATIC_TEXTURES, Feature.SIMPLE_ITEMS, Feature.HIDE_ARMOR_STANDS,
+			Feature.HIT_MARKER, Feature.DAMAGE_NUMBERS, Feature.KILL_BANNER, Feature.PICKUP_FEED,
 			Feature.ACCOUNT_SWITCHER);
 
 		for (Feature f : Feature.values()) {

@@ -15,6 +15,15 @@ public final class PerformanceSettings {
 	public boolean maxFps = true;
 	public boolean maxFpsApplied = false;
 	public java.util.Map<String, String> maxFpsRestore = new java.util.HashMap<>();
+	/** Leave grass, ferns and dead bushes (and flowers) out of the world's meshes. */
+	public boolean hideGrass = false;
+	public boolean hideFlowers = false;
+	/** Water, lava, fire and portals stop animating: no texture uploads every tick. */
+	public boolean staticTextures = false;
+	/** One model per dropped stack instead of up to five. */
+	public boolean simpleItems = false;
+	/** Skip armor stand models; invisible ones (floating text) still show their text. */
+	public boolean hideArmorStands = false;
 
 	public void sanitize() {
 		targetFps = Math.max(20, Math.min(360, targetFps));

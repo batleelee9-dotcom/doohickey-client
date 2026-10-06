@@ -5,12 +5,14 @@ import dev.quartz.core.Quartz;
 import dev.quartz.core.RenderBackend;
 import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
+import dev.quartz.core.fx.Combat;
 import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.Sprites;
 import dev.quartz.core.fx.TntTimers;
 import dev.quartz.core.fx.Weather;
 import dev.quartz.core.hud.CpsTracker;
 import dev.quartz.core.hud.Hud;
+import dev.quartz.core.hud.Pickups;
 import dev.quartz.core.pvp.CrosshairStyle;
 import dev.quartz.core.pvp.PvpState;
 import net.fabricmc.api.ClientModInitializer;
@@ -105,6 +107,7 @@ public final class QuartzLegacy implements ClientModInitializer {
 		Safe.run("nametags", NameTags::renderHud);
 		Safe.run("tnt", TntTimers::renderHud);
 		Safe.run("sprites", Sprites::renderHud);
+		Safe.run("combat", Combat::renderHud);
 		if (client.options.debugEnabled) {
 			return;
 		}
@@ -113,5 +116,8 @@ public final class QuartzLegacy implements ClientModInitializer {
 			Safe.run("crosshair", () -> CrosshairStyle.draw(r, r.screenWidth() / 2, r.screenHeight() / 2));
 		}
 		Hud.renderAll(r);
+		if (Pickups.pending()) {
+			Safe.run("pickups", Pickups::renderHud);
+		}
 	}
 }

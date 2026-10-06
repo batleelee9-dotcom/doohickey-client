@@ -19,6 +19,8 @@ public final class Performance {
 	private static int lastSet = -1;
 	private static long lowSince;
 	private static long highSince;
+	/** Which plants the world was last built without (-1 before the first tick). */
+	private static int plantsBuilt = -1;
 
 	private Performance() {
 	}
@@ -37,6 +39,14 @@ public final class Performance {
 			s.maxFpsApplied = on;
 			Safe.run("perf.maxfps", () -> adapter.applyMaxFps(on, s.maxFpsRestore));
 			ClientConfig.get().save();
+		}
+		// Hidden plants are left out of chunk meshes, so a change needs the world rebuilt.
+		int plants = (hideGrass() ? 1 : 0) | (hideFlowers() ? 2 : 0);
+		if (plants != plantsBuilt) {
+			if (plantsBuilt >= 0 && adapter.inWorld()) {
+				adapter.reloadChunks();
+			}
+			plantsBuilt = plants;
 		}
 		boolean on = Quartz.available(Feature.DYNAMIC_RENDER_DISTANCE) && s.dynamicRenderDistance && adapter.inWorld();
 		if (!on) {
@@ -100,5 +110,27 @@ public final class Performance {
 	public static boolean drawEntity(double distanceSquared) {
 		int limit = settings().entityDistance;
 		return limit <= 0 || !Quartz.available(Feature.ENTITY_DISTANCE) || distanceSquared <= (double) limit * limit;
+	}
+
+	// Read by render and chunk-building threads: plain field reads, nothing that allocates.
+
+	public static boolean hideGrass() {
+		return settings().hideGrass && Quartz.available(Feature.HIDE_PLANTS);
+	}
+
+	public static boolean hideFlowers() {
+		return settings().hideFlowers && Quartz.available(Feature.HIDE_PLANTS);
+	}
+
+	public static boolean staticTextures() {
+		return settings().staticTextures && Quartz.available(Feature.STATIC_TEXTURES);
+	}
+
+	public static boolean simpleItems() {
+		return settings().simpleItems && Quartz.available(Feature.SIMPLE_ITEMS);
+	}
+
+	public static boolean hideArmorStands() {
+		return settings().hideArmorStands && Quartz.available(Feature.HIDE_ARMOR_STANDS);
 	}
 }

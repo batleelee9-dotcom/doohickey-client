@@ -7,11 +7,15 @@
 		"AspectRatioHandMixin",
 		"CameraZoomMixin",
 		"DamageEventMixin",
+		"EntityCullMixin",
 		"FireOverlayMixin",
+		"HidePlantsMixin",
 		"HudExtrasMixin",
 		"HurtCameraMixin",
 		"NameTagMixin",
+		"SimpleItemsMixin",
 		"SkyRendererMixin",
+		"StaticTexturesMixin",
 		"TabPingMixin"
 	],
 	"injectors": {

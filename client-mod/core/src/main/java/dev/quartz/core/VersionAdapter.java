@@ -141,6 +141,36 @@ public interface VersionAdapter {
 		return true;
 	}
 
+	/**
+	 * Health plus absorption of a living entity a hook handed us, or -1 when
+	 * it isn't living or the server hides it (players it fakes as 1).
+	 */
+	default float entityHealth(Object entity) {
+		return -1;
+	}
+
+	/** An entity's name without formatting codes ("Steve", "Zombie"). */
+	default String entityName(Object entity) {
+		return "";
+	}
+
+	/**
+	 * Calls {@code sink} for each stack in your inventory (main, armour and
+	 * off hand) and returns your player, or null outside a world.
+	 */
+	default Object inventory(dev.quartz.core.hud.Pickups.Sink sink) {
+		return null;
+	}
+
+	/** Whether a screen (inventory, chest, menu, chat) is open over the game. */
+	default boolean screenOpen() {
+		return false;
+	}
+
+	/** Rebuilds the world's chunk meshes (after a change to what's drawn in them). */
+	default void reloadChunks() {
+	}
+
 	/** Your own player while the camera is in third person (for your own tag), else null. */
 	default Object selfTagEntity() {
 		return null;

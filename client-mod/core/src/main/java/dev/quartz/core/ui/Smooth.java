@@ -441,6 +441,16 @@ public final class Smooth {
 					new Color[] {Color.WHITE, new Color(255, 255, 255, 150), new Color(255, 255, 255, 0)}));
 				g.fill(new Ellipse2D.Float(1, 1, 22, 22));
 				break;
+			case "hitmarker":
+				// Four short strokes round the crosshair, like a shooter's hit marker.
+				g.setStroke(new BasicStroke(2.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+				for (int i = 0; i < 4; i++) {
+					java.awt.geom.AffineTransform t = g.getTransform();
+					g.rotate(Math.PI / 4 + Math.PI / 2 * i, 12, 12);
+					g.draw(new Line2D.Float(12, 5.5f, 12, 1.8f));
+					g.setTransform(t);
+				}
+				break;
 			case "p.confetti":
 				g.fill(new RoundRectangle2D.Float(1, 1, 22, 22, 5, 5));
 				break;

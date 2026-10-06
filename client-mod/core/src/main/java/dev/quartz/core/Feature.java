@@ -60,6 +60,7 @@ public enum Feature {
 	HUD_BLOCK_INFO(Category.HUD, "Block info"),
 	TAB_PING(Category.HUD, "Ping numbers in the tab list"),
 	SMOOTH_HOTBAR(Category.HUD, "Smooth hotbar"),
+	PICKUP_FEED(Category.HUD, "Item pickup feed"),
 
 	// PvP / gameplay
 	TOGGLE_SPRINT_SNEAK(Category.PVP, "Toggle sprint and sneak"),
@@ -78,6 +79,9 @@ public enum Feature {
 	PING_REACH_DISPLAY(Category.PVP, "Ping-based reach display"),
 	STATIC_FOV(Category.PVP, "No speed FOV"),
 	MOUSE_DELAY_FIX(Category.PVP, "Mouse delay fix"),
+	HIT_MARKER(Category.PVP, "Hit marker"),
+	DAMAGE_NUMBERS(Category.PVP, "Damage numbers"),
+	KILL_BANNER(Category.PVP, "Kill banner and streaks"),
 
 	// Performance
 	SODIUM_INTEGRATION(Category.PERFORMANCE, "Sodium / Iris integration"),
@@ -91,6 +95,10 @@ public enum Feature {
 	SMART_ANIMATIONS(Category.PERFORMANCE, "Smart animations"),
 	BORDERLESS(Category.PERFORMANCE, "Borderless fullscreen"),
 	THREADED_CHUNKS(Category.PERFORMANCE, "Multithreaded chunk building"),
+	HIDE_PLANTS(Category.PERFORMANCE, "Hide grass and flowers"),
+	STATIC_TEXTURES(Category.PERFORMANCE, "Static water, lava and fire"),
+	SIMPLE_ITEMS(Category.PERFORMANCE, "One model per dropped stack"),
+	HIDE_ARMOR_STANDS(Category.PERFORMANCE, "Hide armor stands"),
 
 	// Audio
 	SOUND_VOLUMES(Category.AUDIO, "Per-category volume"),

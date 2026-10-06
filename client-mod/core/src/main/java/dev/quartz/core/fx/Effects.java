@@ -59,6 +59,7 @@ public final class Effects {
 	public static void onAttack(Object target) {
 		meleeTarget = target;
 		meleeMs = System.currentTimeMillis();
+		Combat.onSwing(Quartz.adapter(), target);
 	}
 
 	/**
@@ -90,6 +91,7 @@ public final class Effects {
 		lastTarget = target;
 		lastBox = box;
 		lastHitMs = System.currentTimeMillis();
+		Combat.onHit(a, target);
 		if (s.hitEffects && Quartz.available(Feature.HIT_EFFECTS)) {
 			// A burst around the upper body, scaled to the target's size.
 			int sprite = Sprites.kind(s.hitEffect);
@@ -127,6 +129,7 @@ public final class Effects {
 					box = lastBox;
 				}
 				kill(a, s, box);
+				Combat.onKill(a, lastTarget);
 				lastTarget = null;
 			}
 		}

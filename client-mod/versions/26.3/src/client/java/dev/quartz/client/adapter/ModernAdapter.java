@@ -29,6 +29,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -382,6 +383,49 @@ public final class ModernAdapter implements VersionAdapter {
 		net.minecraft.world.scores.DisplaySlot.BELOW_NAME, net.minecraft.world.scores.DisplaySlot.LIST};
 
 	/** The server's health score for a player (below the name, else in the tab list), or -1 if it shows none. */
+	private final dev.quartz.core.fx.NameTags.Tag healthProbe = new dev.quartz.core.fx.NameTags.Tag();
+
+	@Override
+	public float entityHealth(Object entity) {
+		if (entity instanceof Player p) {
+			dev.quartz.core.fx.NameTags.health(healthProbe, scoreHealth(p), p.getHealth(), p.getMaxHealth(), p.getAbsorptionAmount(), false);
+			return healthProbe.healthKnown ? healthProbe.health + healthProbe.absorption : -1;
+		}
+		return entity instanceof LivingEntity l ? l.getHealth() + l.getAbsorptionAmount() : -1;
+	}
+
+	@Override
+	public String entityName(Object entity) {
+		return entity instanceof Entity e ? e.getName().getString() : "";
+	}
+
+	@Override
+	public Object inventory(dev.quartz.core.hud.Pickups.Sink sink) {
+		Player p = Minecraft.getInstance().player;
+		if (p == null) {
+			return null;
+		}
+		// Main inventory, then armour and the off hand.
+		Inventory inv = p.getInventory();
+		for (int i = 0; i < inv.getContainerSize(); i++) {
+			ItemStack stack = inv.getItem(i);
+			if (!stack.isEmpty()) {
+				sink.stack(stack.getHoverName().getString(), stack.getCount(), stack);
+			}
+		}
+		return p;
+	}
+
+	@Override
+	public boolean screenOpen() {
+		return Minecraft.getInstance().gui.screen() != null;
+	}
+
+	@Override
+	public void reloadChunks() {
+		Minecraft.getInstance().levelExtractor.allChanged();
+	}
+
 	private static int scoreHealth(net.minecraft.world.entity.player.Player p) {
 		net.minecraft.world.scores.Scoreboard board = p.level().getScoreboard();
 		for (net.minecraft.world.scores.DisplaySlot slot : HEALTH_SLOTS) {

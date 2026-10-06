@@ -4,12 +4,14 @@ import com.mojang.blaze3d.platform.NativeImage;
 import dev.quartz.client.adapter.PipelineBackend;
 import dev.quartz.core.Safe;
 import dev.quartz.core.config.ClientConfig;
+import dev.quartz.core.fx.Combat;
 import dev.quartz.core.fx.Effects;
 import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.Sprites;
 import dev.quartz.core.fx.TntTimers;
 import dev.quartz.core.fx.View;
 import dev.quartz.core.fx.Weather;
+import dev.quartz.core.hud.Pickups;
 import dev.quartz.core.hud.ReachTracker;
 import net.minecraft.client.Camera;
 import net.minecraft.client.DeltaTracker;
@@ -98,9 +100,9 @@ public final class PvpTweaks {
 	private static final Matrix4f VIEW_MATRIX = new Matrix4f();
 	private static final float[] VIEW = new float[16];
 
-	/** Name tags and the client's own hit particles, placed with this frame's camera. Under the vanilla HUD. */
+	/** Name tags, hit particles, combat feedback and pickups, placed with this frame's camera. Under the vanilla HUD. */
 	public static void renderWorldOverlays(GuiGraphicsExtractor g, DeltaTracker delta) {
-		if (Sprites.alive() == 0 && !NameTags.pending() && Weather.active() == 0 && !TntTimers.enabled()) {
+		if (Sprites.alive() == 0 && !NameTags.pending() && Weather.active() == 0 && !TntTimers.enabled() && !Combat.pending() && !Pickups.pending()) {
 			return;
 		}
 		View.setPartialTicks(delta.getGameTimeDeltaPartialTick(false));
@@ -113,6 +115,10 @@ public final class PvpTweaks {
 		Safe.run("nametags", NameTags::renderHud);
 		Safe.run("tnt", TntTimers::renderHud);
 		Safe.run("sprites", Sprites::renderHud);
+		Safe.run("combat", Combat::renderHud);
+		if (Pickups.pending()) {
+			Safe.run("pickups", Pickups::renderHud);
+		}
 	}
 
 	public static void renderDamageTint(GuiGraphicsExtractor g) {

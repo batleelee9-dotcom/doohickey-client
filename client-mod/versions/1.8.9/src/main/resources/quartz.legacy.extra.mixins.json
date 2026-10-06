@@ -8,6 +8,7 @@
 		"CameraCaptureMixin",
 		"CrosshairMixin",
 		"FireOverlayMixin",
+		"HidePlantsMixin",
 		"HurtCameraMixin",
 		"InGameHudExtrasMixin",
 		"LivingEntityHurtMixin",
@@ -15,8 +16,10 @@
 		"NameTagMixin",
 		"ParticleCullMixin",
 		"PlayerRendererMixin",
+		"SimpleItemsMixin",
 		"SkyMixin",
 		"StaticFovMixin",
+		"StaticTexturesMixin",
 		"TabPingMixin",
 		"ZoomMixin"
 	],

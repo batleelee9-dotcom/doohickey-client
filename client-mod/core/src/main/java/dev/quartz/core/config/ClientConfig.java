@@ -134,6 +134,11 @@ public final class ClientConfig {
 	public boolean noPumpkinBlur = false;
 	public boolean staticFov = false;
 	public boolean mouseDelayFix = true;
+	// Combat feedback and the pickup feed
+	public boolean hitMarker = true;
+	public boolean damageNumbers = true;
+	public boolean killBanner = true;
+	public boolean pickupFeed = true;
 
 	// World: sky, fog, weather, time
 	public EnvironmentSettings environment = new EnvironmentSettings();

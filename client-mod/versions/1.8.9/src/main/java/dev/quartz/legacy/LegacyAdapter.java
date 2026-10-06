@@ -8,6 +8,7 @@ import dev.quartz.core.fx.NameTags;
 import dev.quartz.core.fx.TntTimers;
 import dev.quartz.core.fx.View;
 import dev.quartz.core.hud.HudData;
+import dev.quartz.core.hud.Pickups;
 import dev.quartz.core.hud.Input;
 import dev.quartz.legacy.mixin.MinecraftClientAccessor;
 import net.fabricmc.loader.api.FabricLoader;
@@ -22,6 +23,7 @@ import net.minecraft.client.sound.PositionedSoundInstance;
 import net.minecraft.client.sound.SoundCategory;
 import net.minecraft.client.util.Session;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.TntEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -366,6 +368,53 @@ final class LegacyAdapter implements VersionAdapter {
 		}
 		t.items[4] = p.getStackInHand();
 		return true;
+	}
+
+	private final NameTags.Tag healthProbe = new NameTags.Tag();
+
+	@Override
+	public float entityHealth(Object entity) {
+		if (entity instanceof PlayerEntity) {
+			PlayerEntity p = (PlayerEntity) entity;
+			NameTags.health(healthProbe, scoreHealth(p), p.getHealth(), p.getMaxHealth(), p.getAbsorption(), false);
+			return healthProbe.healthKnown ? healthProbe.health + healthProbe.absorption : -1;
+		}
+		return entity instanceof LivingEntity ? ((LivingEntity) entity).getHealth() + ((LivingEntity) entity).getAbsorption() : -1;
+	}
+
+	@Override
+	public String entityName(Object entity) {
+		// getTranslationKey is 1.8.9's getName: the player's name, a custom name, or "Zombie".
+		return entity instanceof Entity ? NameTags.strip(((Entity) entity).getTranslationKey()) : "";
+	}
+
+	@Override
+	public Object inventory(Pickups.Sink sink) {
+		PlayerEntity p = MinecraftClient.getInstance().player;
+		if (p == null) {
+			return null;
+		}
+		for (ItemStack[] slots : new ItemStack[][] {p.inventory.main, p.inventory.armor}) {
+			for (ItemStack stack : slots) {
+				if (stack != null && stack.getItem() != null && stack.count > 0) {
+					sink.stack(NameTags.strip(stack.getCustomName()), stack.count, stack);
+				}
+			}
+		}
+		return p;
+	}
+
+	@Override
+	public boolean screenOpen() {
+		return MinecraftClient.getInstance().currentScreen != null;
+	}
+
+	@Override
+	public void reloadChunks() {
+		MinecraftClient client = MinecraftClient.getInstance();
+		if (client.worldRenderer != null && client.world != null) {
+			client.worldRenderer.reload();
+		}
 	}
 
 	/** The server's health score for a player (below the name, else in the tab list), or -1 if it shows none. */

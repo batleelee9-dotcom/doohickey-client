@@ -130,6 +130,15 @@ public final class CoreTest {
 		public boolean sessionOffline() { return offline; }
 		public boolean canSwitchSession() { return true; }
 		public void switchSession(LauncherBridge.Session session) { }
+		float targetHealth = 20;
+		public float entityHealth(Object e) { return e == null ? -1 : targetHealth; }
+		public String entityName(Object e) { return "Steve"; }
+		final java.util.Map<String, Integer> inv = new java.util.LinkedHashMap<>();
+		public Object inventory(dev.quartz.core.hud.Pickups.Sink sink) { inv.forEach((k, v) -> sink.stack(k, v, k)); return this; }
+		boolean screen;
+		public boolean screenOpen() { return screen; }
+		int reloads;
+		public void reloadChunks() { reloads++; }
 	}
 
 	/** Draws a skin-coloured head wearing the rice hat into a 480×360 cell, painter-sorted. */
@@ -279,6 +288,34 @@ public final class CoreTest {
 		image.frames(() -> dev.quartz.core.fx.NameTags.render(image, adapter), 1, dir.resolve("name-tags.png"));
 		ClientConfig.get().nameTags = false;
 
+		// Combat feedback: damage numbers over a target, the hit marker, a double-kill banner and the pickup feed.
+		dev.quartz.core.fx.View.set(perspective(70, 480 / 270f), 3.6, 65.2, 8.5);
+		Object foe = new Object();
+		adapter.targetHealth = 20;
+		dev.quartz.core.fx.Combat.onSwing(adapter, foe);
+		adapter.targetHealth = 13.5f;
+		dev.quartz.core.fx.Combat.onHit(adapter, foe);
+		dev.quartz.core.fx.Combat.tick(adapter);
+		Object other = new Object();
+		adapter.targetHealth = 20;
+		dev.quartz.core.fx.Combat.onHit(adapter, other);
+		adapter.targetHealth = 18.5f;
+		dev.quartz.core.fx.Combat.tick(adapter);
+		dev.quartz.core.fx.Combat.onKill(adapter, foe);
+		dev.quartz.core.fx.Combat.onKill(adapter, foe);
+		ClientConfig.get().pickupFeed = true;
+		adapter.inv.put("Iron Ingot", 2);
+		for (int i = 0; i < 40; i++) dev.quartz.core.hud.Pickups.tick(adapter);
+		adapter.inv.put("Iron Ingot", 18);
+		adapter.inv.put("Gold Ingot", 3);
+		adapter.inv.put("Emerald", 1);
+		for (int i = 0; i < 4; i++) dev.quartz.core.hud.Pickups.tick(adapter);
+		image.frames(() -> {
+			dev.quartz.core.fx.Combat.render(image);
+			dev.quartz.core.hud.Pickups.render(image, System.currentTimeMillis());
+		}, 6, dir.resolve("combat.png"));
+		dev.quartz.core.fx.View.clear();
+
 		// The rice hat on a stand-in head, from above and from below.
 		ClientConfig.get().riceHatColor = 0;
 		java.awt.image.BufferedImage hat = new java.awt.image.BufferedImage(960, 360, java.awt.image.BufferedImage.TYPE_INT_RGB);
@@ -346,7 +383,7 @@ public final class CoreTest {
 		public void pop() { g.setTransform(stack.pop()); }
 		public void translate(float x, float y) { g.translate(x, y); }
 		public void scale(float factor) { g.scale(factor, factor); }
-		public void item(Object stack, int x, int y) { }
+		public void item(Object stack, int x, int y) { g.setColor(new java.awt.Color(0xD9DDE3)); g.fillRoundRect(x + 2, y + 2, 12, 12, 4, 4); }
 		public void clip(int x0, int y0, int x1, int y1) { g.setClip(x0, y0, x1 - x0, y1 - y0); }
 		public void unclip() { g.setClip(null); }
 		final java.util.Map<String, Integer> keys = new java.util.HashMap<>();
@@ -681,8 +718,90 @@ public final class CoreTest {
 		dev.quartz.core.perf.Performance.tick(adapter);
 		check(adapter.maxFpsLog.equals(java.util.Arrays.asList(true, false)) && ClientConfig.get().performance.maxFpsRestore.isEmpty(), "switching it off puts them back");
 
+		System.out.println("lighter world");
+		adapter.reloads = 0;
+		ClientConfig.get().performance.hideGrass = true;
+		dev.quartz.core.perf.Performance.tick(adapter);
+		check(adapter.reloads == 1 && dev.quartz.core.perf.Performance.hideGrass(), "hiding grass rebuilds the world once");
+		dev.quartz.core.perf.Performance.tick(adapter);
+		check(adapter.reloads == 1, "and not again while nothing changes");
+		ClientConfig.get().performance.hideGrass = false;
+		dev.quartz.core.perf.Performance.tick(adapter);
+		check(adapter.reloads == 2 && !dev.quartz.core.perf.Performance.hideGrass(), "showing it again rebuilds once more");
+		check(!dev.quartz.core.perf.Performance.staticTextures() && !dev.quartz.core.perf.Performance.simpleItems() && !dev.quartz.core.perf.Performance.hideArmorStands(), "the others start off");
+
+		System.out.println("combat feedback");
+		// Dying ends the streak from the kill test above; the banner is off while numbers are checked.
+		adapter.health = 0;
+		dev.quartz.core.fx.Combat.tick(adapter);
+		adapter.health = 1f;
+		ClientConfig.get().killBanner = false;
+		Object foe = new Object();
+		adapter.targetHealth = 20;
+		dev.quartz.core.fx.Effects.onAttack(foe);
+		// The server's new health can arrive before its hurt event: the swing remembered 20.
+		adapter.targetHealth = 16.5f;
+		dev.quartz.core.fx.Effects.onDamaged(foe, dev.quartz.core.fx.Effects.UNKNOWN);
+		check(dev.quartz.core.fx.Combat.pending(), "a landed hit shows the hit marker");
+		dev.quartz.core.fx.Combat.tick(adapter);
+		dev.quartz.core.fx.View.set(perspective(70, 400 / 240f), 5, 65.5, 10);
+		adapter.backend.lastText = null;
+		dev.quartz.core.fx.Combat.render(adapter.backend);
+		check("3.5".equals(adapter.backend.lastText), "and a damage number of what it took off (" + adapter.backend.lastText + ")");
+		dev.quartz.core.fx.View.clear();
+		Object hidden = new Object();
+		adapter.targetHealth = -1;
+		dev.quartz.core.fx.Effects.onAttack(hidden);
+		dev.quartz.core.fx.Effects.onDamaged(hidden, dev.quartz.core.fx.Effects.UNKNOWN);
+		dev.quartz.core.fx.Combat.tick(adapter);
+		check(true, "a target whose health the server hides gets the marker only");
+		adapter.targetHealth = 20;
+		ClientConfig.get().killBanner = true;
+		adapter.targetDead = true;
+		dev.quartz.core.fx.Effects.onAttack(foe);
+		dev.quartz.core.fx.Effects.onDamaged(foe, dev.quartz.core.fx.Effects.UNKNOWN);
+		dev.quartz.core.fx.Effects.tick(adapter);
+		adapter.backend.lastText = null;
+		dev.quartz.core.fx.Combat.render(adapter.backend);
+		check("Steve".equals(adapter.backend.lastText), "a kill shows the banner with their name");
+		Object second = new Object();
+		dev.quartz.core.fx.Effects.onAttack(second);
+		dev.quartz.core.fx.Effects.onDamaged(second, dev.quartz.core.fx.Effects.UNKNOWN);
+		dev.quartz.core.fx.Effects.tick(adapter);
+		dev.quartz.core.fx.Combat.render(adapter.backend);
+		check("2 kill streak".equals(adapter.backend.lastText), "a second kill counts the streak (" + adapter.backend.lastText + ")");
+		adapter.targetDead = false;
+		adapter.health = 0;
+		dev.quartz.core.fx.Combat.tick(adapter);
+		adapter.health = 1f;
+
+		System.out.println("pickup feed");
+		adapter.inv.clear();
+		adapter.inv.put("Iron Ingot", 3);
+		for (int i = 0; i < 40; i++) dev.quartz.core.hud.Pickups.tick(adapter);
+		check(!dev.quartz.core.hud.Pickups.pending(), "what you carry when you join isn't a pickup");
+		adapter.inv.put("Iron Ingot", 5);
+		for (int i = 0; i < 4; i++) dev.quartz.core.hud.Pickups.tick(adapter);
+		check(dev.quartz.core.hud.Pickups.pending(), "picking up 2 more shows");
+		adapter.backend.lastText = null;
+		dev.quartz.core.hud.Pickups.render(adapter.backend, System.currentTimeMillis());
+		check("Iron Ingot".equals(adapter.backend.lastText), "named after the item");
+		dev.quartz.core.hud.Pickups.render(adapter.backend, System.currentTimeMillis() + 5000);
+		check(!dev.quartz.core.hud.Pickups.pending(), "and leaves after a few seconds");
+		adapter.inv.put("Iron Ingot", 2);
+		adapter.inv.put("Iron Ingot", 5);
+		for (int i = 0; i < 8; i++) dev.quartz.core.hud.Pickups.tick(adapter);
+		check(!dev.quartz.core.hud.Pickups.pending(), "moving items around shows nothing");
+		adapter.screen = true;
+		adapter.inv.put("Iron Ingot", 30);
+		for (int i = 0; i < 8; i++) dev.quartz.core.hud.Pickups.tick(adapter);
+		adapter.screen = false;
+		for (int i = 0; i < 8; i++) dev.quartz.core.hud.Pickups.tick(adapter);
+		check(!dev.quartz.core.hud.Pickups.pending(), "nor does taking things out of a chest");
+
 		System.out.println("menu modules");
-		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 23, "23 HUD modules on 1.8.9 (20 elements, smooth hotbar, tab ping, style)");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.HUD).size() == 24, "24 HUD modules on 1.8.9 (20 elements, pickups, smooth hotbar, tab ping, style)");
+		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.PERFORMANCE).size() == 9, "9 performance modules on 1.8.9");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.SOUND).size() == 3, "3 sound modules");
 		check(dev.quartz.core.ui.Modules.of(dev.quartz.core.ui.Modules.Category.VISUAL).size() == 17, "17 visual modules on 1.8.9");
 		dev.quartz.core.ui.ClientMenu smoke = new dev.quartz.core.ui.ClientMenu(new dev.quartz.core.ui.ClientMenu.Host() {

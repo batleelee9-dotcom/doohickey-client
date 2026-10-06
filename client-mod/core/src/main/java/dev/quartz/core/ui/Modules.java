@@ -102,6 +102,8 @@ public final class Modules {
 				}
 				add(out, new Module("Smooth hotbar", "The selection box glides between slots", Feature.SMOOTH_HOTBAR,
 					Option.toggle(Feature.SMOOTH_HOTBAR, "Smooth hotbar", () -> c().smoothHotbar, v -> c().smoothHotbar = v)));
+				add(out, new Module("Item pickups", "+16 Iron Ingot slides in as you pick things up", Feature.PICKUP_FEED,
+					Option.toggle(Feature.PICKUP_FEED, "Item pickups", () -> c().pickupFeed, v -> c().pickupFeed = v)));
 				add(out, new Module("Tab ping", "Ping numbers in the player list, not bars", Feature.TAB_PING,
 					Option.toggle(Feature.TAB_PING, "Tab ping", () -> c().tabPing, v -> c().tabPing = v)));
 				add(out, new Module("HUD style", "Backgrounds, shadows and text colour", Feature.HUD_EDITOR, null,
@@ -116,6 +118,12 @@ public final class Modules {
 				add(out, new Module("Toggle sprint", "Sprint without holding the key", Feature.TOGGLE_SPRINT_SNEAK, GameOptions.toggleSprint()));
 				add(out, new Module("Toggle sneak", "Sneak without holding the key", Feature.TOGGLE_SPRINT_SNEAK, GameOptions.toggleSneak()));
 				add(out, new Module("Hitboxes", "Show entity hitboxes", Feature.HITBOXES, GameOptions.hitboxes()));
+				add(out, new Module("Hit marker", "A flash round your crosshair when a hit lands", Feature.HIT_MARKER,
+					Option.toggle(Feature.HIT_MARKER, "Hit marker", () -> c().hitMarker, v -> c().hitMarker = v)));
+				add(out, new Module("Damage numbers", "How much each of your hits took off, popping off the target", Feature.DAMAGE_NUMBERS,
+					Option.toggle(Feature.DAMAGE_NUMBERS, "Damage numbers", () -> c().damageNumbers, v -> c().damageNumbers = v)));
+				add(out, new Module("Kill banner", "ELIMINATED, double kills and your streak", Feature.KILL_BANNER,
+					Option.toggle(Feature.KILL_BANNER, "Kill banner", () -> c().killBanner, v -> c().killBanner = v)));
 				add(out, new Module("TNT countdown", "A timer over lit TNT so you know when it blows", Feature.TNT_COUNTDOWN,
 					Option.toggle(Feature.TNT_COUNTDOWN, "TNT countdown", () -> c().tntCountdown, v -> c().tntCountdown = v),
 					Option.choice(Feature.TNT_COUNTDOWN, "Fuse length", ints(25, 30, 35, 40, 50), Arrays.asList("2.5s", "3s", "3.5s", "4s", "5s"),
@@ -209,6 +217,15 @@ public final class Modules {
 					() -> c().performance.blockEntityDistance, v -> c().performance.blockEntityDistance = v), "How far signs, chests and heads are drawn"));
 				add(out, Module.of(GameOptions.particles(), "Fewer particles, more frames"));
 				add(out, Module.of(GameOptions.entityDistance(), "Skip drawing far-away entities"));
+				add(out, new Module("Hide grass", "Grass, ferns and dead bushes aren't drawn", Feature.HIDE_PLANTS,
+					Option.toggle(Feature.HIDE_PLANTS, "Hide grass", () -> c().performance.hideGrass, v -> c().performance.hideGrass = v),
+					Option.toggle(Feature.HIDE_PLANTS, "Hide flowers too", () -> c().performance.hideFlowers, v -> c().performance.hideFlowers = v)));
+				add(out, new Module("Static textures", "Water, lava and fire stop animating", Feature.STATIC_TEXTURES,
+					Option.toggle(Feature.STATIC_TEXTURES, "Static textures", () -> c().performance.staticTextures, v -> c().performance.staticTextures = v)));
+				add(out, new Module("Simple dropped items", "One model per dropped stack, not up to five", Feature.SIMPLE_ITEMS,
+					Option.toggle(Feature.SIMPLE_ITEMS, "Simple dropped items", () -> c().performance.simpleItems, v -> c().performance.simpleItems = v)));
+				add(out, new Module("Hide armor stands", "Skip their models; floating text stays", Feature.HIDE_ARMOR_STANDS,
+					Option.toggle(Feature.HIDE_ARMOR_STANDS, "Hide armor stands", () -> c().performance.hideArmorStands, v -> c().performance.hideArmorStands = v)));
 		}
 		if (EXTRA.containsKey(category)) {
 			for (java.util.function.Supplier<Module> extra : EXTRA.get(category)) {

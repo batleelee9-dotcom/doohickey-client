@@ -61,6 +61,7 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Block info | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Ping numbers in the tab list | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Smooth hotbar | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Item pickup feed | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Counts your inventory; nothing is sent to the server. |
 | **PVP** | | | | | | | | |
 | Toggle sprint and sneak | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Sprint reset on hit [OPT-IN / RISK] | ✅ | N/A | N/A | N/A | N/A | N/A | N/A | Automates a combat technique; many servers treat that as a macro. |
@@ -78,9 +79,12 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Ping-based reach display | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | Display only; never changes reach. |
 | No speed FOV | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | N/A | 26.3 has this built in (FOV Effects slider). |
 | Mouse delay fix | ✅ ● | N/A | N/A | N/A | N/A | N/A | N/A | A 1.8 bug (aim lagging a tick behind the crosshair); fixed in later versions. |
+| Hit marker | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Shows when the server confirms your hit did damage. |
+| Damage numbers | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | From the health the server sends; left out where a server hides it. |
+| Kill banner and streaks | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | **PERFORMANCE** | | | | | | | | |
 | Sodium / Iris integration | N/A | N/A | ✅ | ✅ | ✅ | ✅ | ✅ | Sodium exists from 1.16. |
-| Entity render distance | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
+| Entity render distance | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
 | Entity culling | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Block entity culling | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Particle culling | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
@@ -90,6 +94,10 @@ Only features marked ● appear in the in-game menu; everything else is hidden r
 | Smart animations | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Borderless fullscreen | ⚠ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | LWJGL 2 has no borderless mode; 1.8.9 needs a window-style workaround. |
 | Multithreaded chunk building | ⚠ | N/A | N/A | N/A | N/A | N/A | N/A | 1.8.9 already builds chunks on worker threads; Doohickey can only tune the count. |
+| Hide grass and flowers | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Visual only: the plants are still there. Switching it rebuilds the world view once. |
+| Static water, lava and fire | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Compasses and clocks keep moving. |
+| One model per dropped stack | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● |  |
+| Hide armor stands | ✅ ● | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ ● | Invisible ones (floating text on servers) still show their text. |
 | **AUDIO** | | | | | | | | |
 | Per-category volume | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
 | Custom sound packs | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |  |
